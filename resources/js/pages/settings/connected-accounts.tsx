@@ -216,8 +216,8 @@ export default function EmailAccountsSettings({ accounts, providers, breadcrumbs
                                                     <button
                                                         key={key}
                                                         className={`relative flex flex-col items-center gap-2 rounded-lg border p-3 transition-colors ${selectedProvider === key
-                                                                ? "border-primary bg-primary/5"
-                                                                : "border-border hover:bg-muted/50"
+                                                            ? "border-primary bg-primary/5"
+                                                            : "border-border hover:bg-muted/50"
                                                             } ${!provider.enabled ? "cursor-not-allowed opacity-50" : ""}`}
                                                         onClick={() => provider.enabled && setSelectedProvider(key)}
                                                         disabled={!provider.enabled}
@@ -270,27 +270,14 @@ export default function EmailAccountsSettings({ accounts, providers, breadcrumbs
 
                     {/* NEW: Setup Required Alert */}
                     {accounts.some((account) => account.needsSetup) && (
-                        <Alert className="border-orange-200 bg-orange-50 dark:border-orange-900/50 dark:bg-orange-900/10">
-                            <AlertTriangle className="h-4 w-4 text-orange-600" />
-                            <AlertDescription className="text-orange-800 dark:text-orange-200">
+                        <Alert className="bg-primary-foreground">
+                            <AlertTriangle className="h-4 w-4 text-red-600" />
+                            <AlertDescription className="text-red-800 dark:text-red-200">
                                 <div className="flex items-center justify-between">
                                     <span>
                                         {accounts.filter((account) => account.needsSetup).length} account(s) require setup to start sending
                                         emails.
                                     </span>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            const firstIncompleteAccount = accounts.find((account) => account.needsSetup)
-                                            if (firstIncompleteAccount) {
-                                                handleSetupAccount(firstIncompleteAccount.id)
-                                            }
-                                        }}
-                                        className="ml-4 border-orange-300 text-orange-700 hover:bg-orange-100"
-                                    >
-                                        Complete Setup
-                                    </Button>
                                 </div>
                             </AlertDescription>
                         </Alert>
@@ -301,7 +288,7 @@ export default function EmailAccountsSettings({ accounts, providers, breadcrumbs
                         {accounts.map((account) => (
                             <Card
                                 key={account.id}
-                                className={`border ${account.needsSetup ? "border-orange-200 bg-orange-50/30 dark:border-orange-900/50 dark:bg-orange-900/5" : "border-border"}`}
+                                className={`border ${account.needsSetup ? "border-accent shadow-none" : "border-border"}`}
                             >
                                 <CardContent className="p-4">
                                     <div className="flex items-center justify-between">
@@ -349,10 +336,10 @@ export default function EmailAccountsSettings({ accounts, providers, breadcrumbs
                                             {/* NEW: Setup Button - PRIORITY ACTION! */}
                                             {account.needsSetup && (
                                                 <Button
-                                                    variant="default"
+                                                    variant="destructive"
                                                     size="sm"
                                                     onClick={() => handleSetupAccount(account.id)}
-                                                    className="hidden sm:flex bg-orange-600 hover:bg-orange-700"
+                                                    className="hidden sm:flex "
                                                 >
                                                     <Settings className="mr-2 h-4 w-4" />
                                                     Complete Setup

@@ -18,14 +18,18 @@ class GmailService
         $this->client->setClientId(config('services.gmail.client_id'));
         $this->client->setClientSecret(config('services.gmail.client_secret'));
         $this->client->setRedirectUri(config('services.gmail.redirect_uri'));
+
+        // 🔥 FIXED SCOPES - ADD ALL NECESSARY PERMISSIONS
         $this->client->addScope([
-            Gmail::GMAIL_SEND,
-            Gmail::GMAIL_READONLY,
-            'https://www.googleapis.com/auth/userinfo.email',
-            'https://www.googleapis.com/auth/userinfo.profile'
+            Gmail::GMAIL_SEND,                                    // Send emails
+            Gmail::GMAIL_READONLY,                                // Read emails
+            Gmail::GMAIL_MODIFY,                                  // Modify emails (mark as read, etc.)
+            'https://www.googleapis.com/auth/userinfo.email',     // User email
+            'https://www.googleapis.com/auth/userinfo.profile'    // User profile
         ]);
+
         $this->client->setAccessType('offline');
-        $this->client->setPrompt('consent');
+        $this->client->setPrompt('consent'); // 🔥 FORCE CONSENT TO GET NEW SCOPES
     }
 
     /**
@@ -41,21 +45,19 @@ class GmailService
         ]);
 
         $this->client->setState($state);
-
         $authUrl = $this->client->createAuthUrl();
 
-        Log::info('Generated Gmail OAuth URL', [
+        Log::info('Generated Gmail OAuth URL with FULL SCOPES', [
             'account_id' => $account->id,
+            'scopes' => $this->client->getScopes(),
             'redirect_uri' => $this->client->getRedirectUri(),
-            'auth_url_length' => strlen($authUrl),
-            'state' => $state,
         ]);
 
         return $authUrl;
     }
 
     /**
-     * Handle OAuth callback - FIXED TO SAVE TOKENS! 🔥💪
+     * Handle OAuth callback - SAVE ALL SCOPES
      */
     public function handleCallback(string $code, string $state): array
     {
@@ -86,24 +88,16 @@ class GmailService
                 throw new \Exception('Account not found with ID: ' . $stateData['account_id']);
             }
 
-            Log::info('Found placeholder account', [
-                'account_id' => $account->id,
-                'current_email' => $account->email,
-                'status' => $account->status,
-            ]);
-
             // Exchange code for tokens
             $token = $this->client->fetchAccessTokenWithAuthCode($code);
-
             if (isset($token['error'])) {
                 throw new \Exception('Token exchange failed: ' . $token['error']);
             }
 
-            Log::info('Token exchange successful', [
+            Log::info('Token exchange successful with FULL SCOPES', [
                 'has_access_token' => isset($token['access_token']),
                 'has_refresh_token' => isset($token['refresh_token']),
                 'expires_in' => $token['expires_in'] ?? null,
-                'token_type' => $token['token_type'] ?? null,
                 'scope' => $token['scope'] ?? null,
             ]);
 
@@ -112,39 +106,32 @@ class GmailService
             $oauth2 = new Oauth2($this->client);
             $userInfo = $oauth2->userinfo->get();
 
-            Log::info('Retrieved Google user info', [
-                'email' => $userInfo->email,
-                'name' => $userInfo->name,
-                'google_id' => $userInfo->id,
-                'verified_email' => $userInfo->verifiedEmail,
-            ]);
-
-            // 🔥 THE CRITICAL FIX - SAVE THE ACTUAL TOKENS!
+            // 🔥 SAVE WITH FULL SCOPES
             $updateData = [
-                'email' => $userInfo->email, // REAL EMAIL!
+                'email' => $userInfo->email,
                 'status' => 'active',
                 'is_connected' => true,
                 'is_verified' => true,
-
-                // 💪 SAVE THE OAUTH TOKENS (ENCRYPTED AUTOMATICALLY)!
                 'encrypted_access_token' => $token['access_token'],
                 'encrypted_refresh_token' => $token['refresh_token'] ?? null,
                 'token_expires_at' => isset($token['expires_in']) ?
                     now()->addSeconds($token['expires_in']) : null,
                 'oauth_provider_id' => $userInfo->id,
+
+                // 🔥 SAVE ALL GRANTED SCOPES
                 'oauth_scopes' => isset($token['scope']) ?
                     explode(' ', $token['scope']) : [
                         'https://www.googleapis.com/auth/gmail.send',
                         'https://www.googleapis.com/auth/gmail.readonly',
-                        'https://www.googleapis.com/auth/userinfo.email'
+                        'https://www.googleapis.com/auth/gmail.modify',
+                        'https://www.googleapis.com/auth/gmail.metadata',
+                        'https://www.googleapis.com/auth/userinfo.email',
+                        'https://www.googleapis.com/auth/userinfo.profile'
                     ],
 
-                // Update activity timestamps
                 'last_activity' => now(),
                 'last_sync' => now(),
                 'last_health_check' => now(),
-
-                // Update metadata
                 'metadata' => array_merge($account->metadata ?? [], [
                     'oauth_completed' => now()->toISOString(),
                     'google_user_id' => $userInfo->id,
@@ -153,34 +140,30 @@ class GmailService
                     'google_verified_email' => $userInfo->verifiedEmail,
                     'token_scope' => $token['scope'] ?? null,
                     'token_type' => $token['token_type'] ?? 'Bearer',
+                    'scopes_granted' => explode(' ', $token['scope'] ?? ''),
                 ]),
             ];
 
             $account->update($updateData);
 
-            Log::info('Gmail OAuth completed successfully - ALL DATA SAVED!', [
+            Log::info('Gmail OAuth completed with FULL PERMISSIONS', [
                 'account_id' => $account->id,
                 'email' => $userInfo->email,
-                'user_id' => $account->user_id,
-                'status' => $account->status,
-                'has_access_token' => !empty($account->encrypted_access_token),
-                'has_refresh_token' => !empty($account->encrypted_refresh_token),
-                'token_expires_at' => $account->token_expires_at?->toISOString(),
-                'oauth_scopes_count' => count($account->oauth_scopes ?? []),
+                'scopes_count' => count($account->oauth_scopes ?? []),
+                'scopes' => $account->oauth_scopes,
             ]);
 
             return [
                 'success' => true,
                 'account_id' => $account->id,
                 'email' => $userInfo->email,
-                'account' => $account->fresh(), // Get updated account
+                'account' => $account->fresh(),
             ];
         } catch (\Exception $e) {
             Log::error('Gmail OAuth callback processing failed', [
                 'error' => $e->getMessage(),
                 'code_length' => strlen($code ?? ''),
                 'state' => $state,
-                'trace' => $e->getTraceAsString(),
             ]);
 
             return [
@@ -207,7 +190,6 @@ class GmailService
             // Check if token needs refresh
             if ($this->client->isAccessTokenExpired()) {
                 $newToken = $this->client->fetchAccessTokenWithRefreshToken($account->encrypted_refresh_token);
-
                 if (isset($newToken['error'])) {
                     throw new \Exception('Token refresh failed: ' . $newToken['error']);
                 }
@@ -261,6 +243,27 @@ class GmailService
                 'error' => $e->getMessage(),
             ];
         }
+    }
+
+    /**
+     * 🔥 NEW: Check if account has required scopes for inbox access
+     */
+    public function hasInboxScopes(EmailAccount $account): bool
+    {
+        $requiredScopes = [
+            'https://www.googleapis.com/auth/gmail.readonly',
+            'https://www.googleapis.com/auth/gmail.modify',
+        ];
+
+        $grantedScopes = $account->oauth_scopes ?? [];
+
+        foreach ($requiredScopes as $scope) {
+            if (!in_array($scope, $grantedScopes)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

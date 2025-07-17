@@ -61,7 +61,7 @@ class EmailAccountSetupController extends Controller
         // Check if setup is complete
         $isSetupComplete = $this->isSetupComplete($account);
 
-        return Inertia::render('Settings/EmailAccounts/Setup', [
+        return Inertia::render('settings/setup', [
             'account' => $account->load('user'),
             'setupData' => $setupData,
             'isSetupComplete' => $isSetupComplete,

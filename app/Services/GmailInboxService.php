@@ -20,33 +20,49 @@ class GmailInboxService
         $this->client->setClientId(config('services.gmail.client_id'));
         $this->client->setClientSecret(config('services.gmail.client_secret'));
         $this->client->setRedirectUri(config('services.gmail.redirect_uri'));
+
+        // 🔥 MATCH THE SCOPES FROM GmailService
         $this->client->addScope([
             Gmail::GMAIL_READONLY,
+            Gmail::GMAIL_MODIFY,
             Gmail::GMAIL_SEND,
             'https://www.googleapis.com/auth/userinfo.email',
         ]);
     }
 
     /**
-     * Fetch inbox messages for an account 📬 - BULLETPROOF VERSION! 🛡️
+     * Fetch inbox messages - WITH SCOPE VALIDATION 🔥
      */
     public function fetchInboxMessages(EmailAccount $account, int $maxResults = 50): array
     {
         try {
+            // 🔥 CHECK SCOPES FIRST
+            if (!$this->hasRequiredScopes($account)) {
+                Log::error('Account missing required scopes for inbox access', [
+                    'account_id' => $account->id,
+                    'granted_scopes' => $account->oauth_scopes ?? [],
+                ]);
+
+                return [
+                    'success' => false,
+                    'error' => 'Account needs re-authorization with inbox permissions. Please reconnect your Gmail account.',
+                    'needs_reauth' => true,
+                ];
+            }
+
             // Set up the client with account tokens
             $this->setupClientForAccount($account);
             $this->gmail = new Gmail($this->client);
 
-            Log::info('Starting inbox fetch', [
+            Log::info('Starting inbox fetch with proper scopes', [
                 'account_id' => $account->id,
                 'email' => $account->email,
                 'max_results' => $maxResults,
+                'scopes' => $account->oauth_scopes ?? [],
             ]);
 
             // Get list of messages from inbox
-            $query = 'in:inbox'; // Only fetch inbox messages
             $messages = $this->gmail->users_messages->listUsersMessages('me', [
-                'q' => $query,
                 'maxResults' => $maxResults,
                 'labelIds' => ['INBOX'],
             ]);
@@ -64,7 +80,6 @@ class GmailInboxService
                             ->first();
 
                         if ($existingMessage) {
-                            // Update sync timestamp
                             $existingMessage->update(['synced_at' => now()]);
                             $fetchedCount++;
                             continue;
@@ -73,16 +88,10 @@ class GmailInboxService
                         // Fetch full message details
                         $fullMessage = $this->gmail->users_messages->get('me', $message->getId());
 
-                        // Parse and store the message - WITH UTF-8 PROTECTION! 🛡️
+                        // Parse and store the message
                         $emailMessage = $this->parseAndStoreMessage($account, $fullMessage);
-
                         if ($emailMessage) {
                             $newCount++;
-                            Log::info('New email stored', [
-                                'message_id' => $emailMessage->id,
-                                'subject' => mb_substr($emailMessage->subject ?? '', 0, 100),
-                                'from' => mb_substr($emailMessage->from_email ?? '', 0, 100),
-                            ]);
                         }
 
                         $fetchedCount++;
@@ -92,7 +101,7 @@ class GmailInboxService
                             'message_id' => $message->getId(),
                             'error' => $e->getMessage(),
                         ]);
-                        // Continue processing other messages
+                        continue;
                     }
                 }
             }
@@ -103,7 +112,7 @@ class GmailInboxService
                 'last_activity' => now(),
             ]);
 
-            Log::info('Inbox fetch completed', [
+            Log::info('Inbox fetch completed successfully', [
                 'account_id' => $account->id,
                 'fetched_count' => $fetchedCount,
                 'new_count' => $newCount,
@@ -115,6 +124,31 @@ class GmailInboxService
                 'fetched_count' => $fetchedCount,
                 'new_count' => $newCount,
                 'error_count' => $errorCount,
+            ];
+        } catch (\Google\Service\Exception $e) {
+            // Handle Google API specific errors
+            $error = json_decode($e->getMessage(), true);
+            $errorMessage = $error['error']['message'] ?? $e->getMessage();
+
+            Log::error('Gmail API error during inbox fetch', [
+                'account_id' => $account->id,
+                'error_code' => $e->getCode(),
+                'error_message' => $errorMessage,
+                'granted_scopes' => $account->oauth_scopes ?? [],
+            ]);
+
+            // Check if it's a scope issue
+            if ($e->getCode() === 403 && str_contains($errorMessage, 'insufficient')) {
+                return [
+                    'success' => false,
+                    'error' => 'Gmail account needs re-authorization with inbox permissions. Please reconnect your account.',
+                    'needs_reauth' => true,
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => $errorMessage,
             ];
         } catch (\Exception $e) {
             Log::error('Inbox fetch failed', [
@@ -131,7 +165,39 @@ class GmailInboxService
     }
 
     /**
-     * Parse Gmail message and store in database 📝 - UTF-8 SAFE VERSION! 🛡️
+     * 🔥 NEW: Check if account has required scopes
+     */
+    private function hasRequiredScopes(EmailAccount $account): bool
+    {
+        $requiredScopes = [
+            'https://www.googleapis.com/auth/gmail.readonly',
+            'https://www.googleapis.com/auth/gmail.modify',
+        ];
+
+        $grantedScopes = $account->oauth_scopes ?? [];
+
+        foreach ($requiredScopes as $scope) {
+            $hasScope = false;
+            foreach ($grantedScopes as $grantedScope) {
+                if (
+                    str_contains($grantedScope, 'gmail.readonly') ||
+                    str_contains($grantedScope, 'gmail.modify') ||
+                    $grantedScope === $scope
+                ) {
+                    $hasScope = true;
+                    break;
+                }
+            }
+            if (!$hasScope) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Parse Gmail message and store in database - SAFE VERSION
      */
     private function parseAndStoreMessage(EmailAccount $account, $gmailMessage): ?EmailMessage
     {
@@ -157,7 +223,7 @@ class GmailInboxService
             // Determine if this is a reply
             $isReply = !empty($headerMap['in-reply-to']) || !empty($headerMap['references']);
 
-            // Create email message record with UTF-8 protection
+            // Create email message record
             $emailMessage = EmailMessage::create([
                 'user_id' => $account->user_id,
                 'email_account_id' => $account->id,
@@ -200,18 +266,6 @@ class GmailInboxService
                 ],
             ]);
 
-            // Detect if this is a cold email safely
-            try {
-                $emailMessage->update([
-                    'is_cold_email' => $emailMessage->detectIfColdEmail()
-                ]);
-            } catch (\Exception $e) {
-                Log::warning('Cold email detection failed', [
-                    'message_id' => $emailMessage->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-
             return $emailMessage;
         } catch (\Exception $e) {
             Log::error('Failed to parse and store message', [
@@ -223,8 +277,35 @@ class GmailInboxService
     }
 
     /**
-     * SAFE: Sanitize text to prevent UTF-8 errors 🧹
+     * Setup Gmail client for specific account
      */
+    private function setupClientForAccount(EmailAccount $account): void
+    {
+        $this->client->setAccessToken([
+            'access_token' => $account->encrypted_access_token,
+            'refresh_token' => $account->encrypted_refresh_token,
+            'expires_in' => $account->token_expires_at ?
+                $account->token_expires_at->diffInSeconds(now()) : 3600,
+        ]);
+
+        // Check if token needs refresh
+        if ($this->client->isAccessTokenExpired()) {
+            $newToken = $this->client->fetchAccessTokenWithRefreshToken($account->encrypted_refresh_token);
+            if (isset($newToken['error'])) {
+                throw new \Exception('Token refresh failed: ' . $newToken['error']);
+            }
+
+            // Update account with new token
+            $account->update([
+                'encrypted_access_token' => $newToken['access_token'],
+                'token_expires_at' => isset($newToken['expires_in']) ?
+                    now()->addSeconds($newToken['expires_in']) : null,
+                'last_sync' => now(),
+            ]);
+        }
+    }
+
+    // Keep all your existing helper methods (sanitizeText, extractEmailAddress, etc.)
     private function sanitizeText(?string $text): ?string
     {
         if (empty($text)) {
@@ -232,36 +313,23 @@ class GmailInboxService
         }
 
         try {
-            // Remove invalid UTF-8 characters
             $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
-
-            // Remove null bytes and dangerous control characters
             $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $text);
 
-            // Ensure it's valid UTF-8
             if (!mb_check_encoding($text, 'UTF-8')) {
-                Log::warning('Invalid UTF-8 detected, using fallback');
                 return '(Invalid encoding)';
             }
 
-            // Truncate if extremely long (prevent memory issues)
             if (mb_strlen($text) > 50000) {
                 $text = mb_substr($text, 0, 50000) . '... (truncated)';
             }
 
             return $text;
         } catch (\Exception $e) {
-            Log::warning('Text sanitization failed', [
-                'original_length' => strlen($text ?? ''),
-                'error' => $e->getMessage(),
-            ]);
             return '(Text encoding error)';
         }
     }
 
-    /**
-     * Extract body content from Gmail message 📄 - SAFE VERSION
-     */
     private function extractBodyContent($payload): array
     {
         $body = ['text' => '', 'html' => ''];
@@ -278,7 +346,6 @@ class GmailInboxService
                 }
             }
 
-            // Handle multipart messages
             if ($payload->getParts()) {
                 foreach ($payload->getParts() as $part) {
                     try {
@@ -290,55 +357,18 @@ class GmailInboxService
                             $body['html'] .= $partBody['html'];
                         }
                     } catch (\Exception $e) {
-                        Log::warning('Failed to extract part body', [
-                            'error' => $e->getMessage(),
-                        ]);
                         continue;
                     }
                 }
             }
         } catch (\Exception $e) {
-            Log::warning('Failed to extract body content', [
-                'error' => $e->getMessage(),
-            ]);
+            Log::warning('Failed to extract body content', ['error' => $e->getMessage()]);
         }
 
         return $body;
     }
 
-    /**
-     * Setup Gmail client for specific account 🔧
-     */
-    private function setupClientForAccount(EmailAccount $account): void
-    {
-        $this->client->setAccessToken([
-            'access_token' => $account->encrypted_access_token,
-            'refresh_token' => $account->encrypted_refresh_token,
-            'expires_in' => $account->token_expires_at ?
-                $account->token_expires_at->diffInSeconds(now()) : 3600,
-        ]);
-
-        // Check if token needs refresh
-        if ($this->client->isAccessTokenExpired()) {
-            $newToken = $this->client->fetchAccessTokenWithRefreshToken($account->encrypted_refresh_token);
-
-            if (isset($newToken['error'])) {
-                throw new \Exception('Token refresh failed: ' . $newToken['error']);
-            }
-
-            // Update account with new token
-            $account->update([
-                'encrypted_access_token' => $newToken['access_token'],
-                'token_expires_at' => isset($newToken['expires_in']) ?
-                    now()->addSeconds($newToken['expires_in']) : null,
-                'last_sync' => now(),
-            ]);
-        }
-    }
-
-    /**
-     * Helper methods for parsing email data 🛠️ - ALL SAFE VERSIONS
-     */
+    // Add all your other helper methods here...
     private function extractEmailAddress(string $emailString): string
     {
         try {
@@ -372,7 +402,6 @@ class GmailInboxService
             if (empty($emailList)) {
                 return null;
             }
-
             $emails = explode(',', $emailList);
             return array_map('trim', $emails);
         } catch (\Exception $e) {
@@ -387,7 +416,6 @@ class GmailInboxService
             if (empty($references)) {
                 return null;
             }
-
             return array_map('trim', explode(' ', $references));
         } catch (\Exception $e) {
             return null;
@@ -426,7 +454,6 @@ class GmailInboxService
     {
         try {
             $attachments = [];
-
             if ($payload->getParts()) {
                 foreach ($payload->getParts() as $part) {
                     if ($part->getFilename()) {
@@ -439,41 +466,9 @@ class GmailInboxService
                     }
                 }
             }
-
             return empty($attachments) ? null : $attachments;
         } catch (\Exception $e) {
             return null;
         }
-    }
-
-    /**
-     * Sync all messages for user's accounts 🔄
-     */
-    public function syncAllAccountsForUser(int $userId): array
-    {
-        $accounts = EmailAccount::where('user_id', $userId)
-            ->where('is_connected', true)
-            ->where('status', 'active')
-            ->get();
-
-        $results = [];
-
-        foreach ($accounts as $account) {
-            try {
-                $result = $this->fetchInboxMessages($account);
-                $results[$account->id] = $result;
-            } catch (\Exception $e) {
-                Log::error('Failed to sync account', [
-                    'account_id' => $account->id,
-                    'error' => $e->getMessage(),
-                ]);
-                $results[$account->id] = [
-                    'success' => false,
-                    'error' => $e->getMessage(),
-                ];
-            }
-        }
-
-        return $results;
     }
 }
