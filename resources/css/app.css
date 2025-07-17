@@ -1,0 +1,388 @@
+@import 'tailwindcss';
+/* @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&display=swap'); */
+
+@plugin 'tailwindcss-animate';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+    --font-sans:
+        "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+:root {
+    --background: oklch(0.98 0.01 100);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(32.5% 0.02 270);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.53 0.04 264.8);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(93.741% 0.01391 88.674);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.87 0 0);
+    --chart-1: oklch(0.646 0.222 41.116);
+    --chart-2: oklch(0.6 0.118 184.704);
+    --chart-3: oklch(0.398 0.07 227.392);
+    --chart-4: oklch(0.828 0.189 84.429);
+    --chart-5: oklch(0.769 0.188 70.08);
+    --radius: 0.625rem;
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.87 0 0);
+}
+
+.dark {
+    --background: oklch(0 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.18 0.01 260);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.145 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.92 0.01 100);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.78 0.01 260);
+    /* Silver Mist: muted gray for labels/descriptions */
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.396 0.141 25.723);
+    --destructive-foreground: oklch(0.637 0.237 25.331);
+    --border: oklch(0.269 0 0);
+    --input: oklch(0.269 0 0);
+    --ring: oklch(0.439 0 0);
+    --chart-1: oklch(0.488 0.243 264.376);
+    --chart-2: oklch(0.696 0.17 162.48);
+    --chart-3: oklch(0.769 0.188 70.08);
+    --chart-4: oklch(0.627 0.265 303.9);
+    --chart-5: oklch(0.645 0.246 16.439);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.985 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(0.269 0 0);
+    --sidebar-ring: oklch(0.439 0 0);
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+/* Custom timeline animations */
+@layer components {
+    .timeline-entry {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .timeline-entry:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+
+    .timeline-entry:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .timeline-entry:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+
+    .timeline-entry:nth-child(4) {
+        animation-delay: 0.4s;
+    }
+
+    .timeline-entry:nth-child(5) {
+        animation-delay: 0.5s;
+    }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .group:hover .timeline-card {
+        transform: translateY(-2px);
+    } }
+
+/* Custom Scrollbar */
+@layer components {
+    .custom-scrollbar {
+        scrollbar-width: 2px;
+        scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: hsl(var(--muted-foreground) / 0.3);
+        border-radius: 3px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: hsl(var(--muted-foreground) / 0.5);
+    }
+
+    /* EditorJS Enhanced Styles */
+    .codex-editor {
+        @apply text-foreground;
+    }
+
+    .codex-editor__redactor {
+        @apply pb-8;
+    }
+
+    .ce-block__content {
+        @apply max-w-none;
+    }
+
+    .ce-paragraph {
+        @apply text-foreground leading-relaxed text-base;
+        line-height: 1.6 !important;
+    }
+
+    .ce-header {
+        @apply text-foreground font-bold;
+    }
+
+    .ce-toolbar__content {
+        @apply max-w-none;
+    }
+
+    .ce-toolbar__plus {
+        @apply text-muted-foreground hover:text-foreground transition-colors;
+    }
+
+    .ce-toolbar__settings-btn {
+        @apply text-muted-foreground hover:text-foreground transition-colors;
+    }
+
+    .ce-inline-toolbar {
+        @apply bg-card border border-border rounded-lg shadow-xl backdrop-blur-sm;
+    }
+
+    .ce-inline-tool {
+        @apply text-muted-foreground hover:text-foreground hover:bg-accent transition-colors;
+    }
+
+    .ce-inline-tool--active {
+        @apply text-primary bg-primary/10;
+    }
+
+    .ce-popover {
+        @apply bg-card border border-border rounded-lg shadow-xl;
+    }
+
+    .ce-popover__item {
+        @apply text-foreground hover:bg-accent transition-colors;
+    }
+
+    /* Enhanced Selection Styles */
+    .email-subject::selection,
+    .codex-editor ::selection {
+        @apply bg-primary/20 text-primary-foreground;
+    }
+
+    .email-subject::-moz-selection,
+    .codex-editor ::-moz-selection {
+        @apply bg-primary/20 text-primary-foreground;
+    }
+
+    /* Subject Placeholder */
+    .email-subject:empty:before {
+        content: attr(data-placeholder);
+        @apply text-muted-foreground;
+    }
+
+    /* Enhanced Block Styling */
+    .ce-block--selected .ce-block__content {
+        @apply bg-primary/5 rounded-lg;
+    }
+
+    .ce-block:hover .ce-block__content {
+        @apply bg-accent/50 rounded-lg transition-colors duration-200;
+    }
+
+    /* Enhanced Focus States */
+    .codex-editor:focus-within {
+        @apply ring-2 ring-primary/20 rounded-lg;
+    }
+
+    /* Custom Block Styles */
+    .ce-quote {
+        @apply border-l-4 border-primary/30 pl-4 italic text-muted-foreground;
+    }
+
+    .ce-delimiter {
+        @apply border-t border-border my-8;
+    }
+
+    /* Improved List Styling */
+    .cdx-list {
+        @apply space-y-1;
+    }
+
+    .cdx-list__item {
+        @apply text-foreground;
+    }
+
+    /* Better paragraph spacing */
+    .ce-paragraph[data-placeholder]:empty::before {
+        @apply text-muted-foreground;
+    }
+
+    /* Ensure proper editing experience */
+    .ce-block__content,
+    .ce-paragraph {
+        @apply cursor-text;
+    }
+
+    .ce-block--focused .ce-block__content {
+        @apply bg-transparent;
+    }
+
+    /* Smooth Animations */
+    .ce-toolbar,
+    .ce-inline-toolbar,
+    .ce-popover {
+        @apply transition-all duration-200 ease-out;
+    }
+
+    /* Animation keyframes */
+    @keyframes slide-in-from-bottom-2 {
+        from {
+            transform: translateY(8px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .slide-in-from-bottom-2 {
+        animation: slide-in-from-bottom-2 0.3s ease-out;
+    }
+
+    /* Line clamp utility */
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+}
+
+/* Custom selection highlight color */
+::selection {
+    background: color-mix(in oklab, orange 80%, white 30%);
+    color: #7a2e00; /* dark orange for contrast */
+}
+
+::-moz-selection {
+    background: color-mix(in oklab, orange 80%, white 30%);
+    color: #7a2e00;
+}
+
+ 

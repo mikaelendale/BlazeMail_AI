@@ -1,0 +1,27 @@
+import FAQs from '@/components/faqs-section';
+import FeaturesSection from '@/components/features';
+import FeaturesMulti from '@/components/features-multi';
+import HowItWorks from '@/components/how-it-works';
+import Integrations from '@/components/integrations-two';
+import ProblemSolutionSection from '@/components/prob-sol';
+import Pricing from './landing/Pricing';
+import Feature from './landing/Feature';
+import Hero from './landing/hero';
+import LandingLayout from './landing/landing-layout';
+
+export default function Welcome() {
+    return (
+        <>
+            <LandingLayout>
+                <Hero />
+                <Feature id="features" />
+                <ProblemSolutionSection />
+                <HowItWorks />
+                <FeaturesSection />
+                <Integrations />
+                <FeaturesMulti />
+                <Pricing />
+            </LandingLayout>
+        </>
+    );
+}
