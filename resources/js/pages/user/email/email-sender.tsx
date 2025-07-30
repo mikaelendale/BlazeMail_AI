@@ -126,7 +126,6 @@ export default function EmailSender({
                 {
                     preserveScroll: true,
                     onSuccess: () => {
-                        toast.success("Email sent successfully!")
                         setSelectedEmails([])
                     },
                     onError: (errors) => {

@@ -1,5 +1,6 @@
 import AppNavbar from '@/components/app-navbar';
 import FloatingActionButtons from '@/components/floating-logout';
+import JobTracker from '@/components/JobTracker';
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -22,9 +23,10 @@ export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => {
     return (
         <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
             <AppNavbar />
-            <ModeToggle />
+            {/* <ModeToggle /> */}
             <div style={{ paddingLeft: 24, paddingRight: 24, marginTop: 80 }}>{children}</div>
             <FloatingActionButtons />
+            <JobTracker />
         </AppLayoutTemplate>
     );
 };

@@ -54,28 +54,28 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
 
 //blog
 
-Route::prefix('blog')->name('blog.')->group(function () {
-    Route::get('/', [BlogController::class, 'index'])->name('index');
-    Route::get('/search', [BlogController::class, 'search'])->name('search');
-    Route::get('/category/{category:slug}', [BlogController::class, 'category'])->name('category');
-    Route::get('/tag/{tag:slug}', [BlogController::class, 'tag'])->name('tag');
-    Route::get('/author/{user:name}', [BlogController::class, 'author'])->name('author');
-    Route::get('/{post:slug}', [BlogController::class, 'show'])->name('show');
+// Route::prefix('blog')->name('blog.')->group(function () {
+//     Route::get('/', [BlogController::class, 'index'])->name('index');
+//     Route::get('/search', [BlogController::class, 'search'])->name('search');
+//     Route::get('/category/{category:slug}', [BlogController::class, 'category'])->name('category');
+//     Route::get('/tag/{tag:slug}', [BlogController::class, 'tag'])->name('tag');
+//     Route::get('/author/{user:name}', [BlogController::class, 'author'])->name('author');
+//     Route::get('/{post:slug}', [BlogController::class, 'show'])->name('show');
     
-    // Comments
-    Route::middleware('auth')->group(function () {
-        Route::post('/{post:slug}/comments', [CommentController::class, 'store'])->name('comments.store');
-    });
-});
+//     // Comments
+//     Route::middleware('auth')->group(function () {
+//         Route::post('/{post:slug}/comments', [CommentController::class, 'store'])->name('comments.store');
+//     });
+// });
 
-// SEO Routes
-Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
-Route::get('/rss', [RssController::class, 'index'])->name('rss');
+// // SEO Routes
+// Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+// Route::get('/rss', [RssController::class, 'index'])->name('rss');
 
-// Newsletter Routes
-Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
-Route::get('/newsletter/verify/{token}', [NewsletterController::class, 'verify'])->name('newsletter.verify');
-Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
+// // Newsletter Routes
+// Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
+// Route::get('/newsletter/verify/{token}', [NewsletterController::class, 'verify'])->name('newsletter.verify');
+// Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
 
 // Credit management routes
 Route::middleware('auth')->group(function () {

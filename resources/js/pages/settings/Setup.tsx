@@ -1,22 +1,20 @@
 "use client"
 
 import type React from "react"
-
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useForm } from "@inertiajs/react"
+import { AlertCircle, CheckCircle, Clock, HelpCircle, Mail, Save, Settings2, Zap } from "lucide-react"
+import { useState } from "react"
 import AppLayout from "@/layouts/app-layout"
 import SettingsLayout from "@/layouts/settings/layout"
-import { useForm } from "@inertiajs/react"
-import { AlertCircle, CheckCircle, Clock, Mail, Save, Settings, Shield, TrendingUp, Zap } from "lucide-react"
-import { useState } from "react"
 
 interface EmailAccount {
     id: number
@@ -35,28 +33,59 @@ interface SetupData {
     from_email: string
     reply_to_email: string
     signature: string
-    warmup_enabled: boolean
-    warmup_daily_volume: number
-    warmup_timezone: string
-    warmup_template_style: string
-    auto_unsubscribe: boolean
-    tracking_enabled: boolean
-    compliance_confirmed: boolean
+    batch_size: number
+    batch_delay_minutes: number
     max_emails_per_day: number
     send_window_start: string
     send_window_end: string
+    auto_unsubscribe: boolean
+    tracking_enabled: boolean
+    compliance_confirmed: boolean
     retry_failed_emails: boolean
     max_retry_attempts: number
     pause_on_errors: boolean
     notify_on_errors: boolean
 }
 
+interface BestPractices {
+    content: {
+        title: string
+        items: string[]
+    }
+    sending: {
+        title: string
+        items: string[]
+    }
+    compliance: {
+        title: string
+        items: string[]
+    }
+}
+
+interface BatchingGuidelines {
+    recommended_settings: {
+        title: string
+        batch_size: number
+        delay_minutes: number
+        daily_limit: number
+        description: string
+    }
+    campaign_examples: Array<{
+        name: string
+        batch_size: number
+        batches: number
+        total_time: string
+        description: string
+    }>
+    timing_tips: string[]
+}
+
 interface Props {
     account: EmailAccount
     setupData: SetupData
     isSetupComplete: boolean
-    timezones: Record<string, string>
-    templateStyles: Record<string, { name: string; description: string }>
+    bestPractices: BestPractices
+    batchingGuidelines: BatchingGuidelines
     breadcrumbs: Array<{ title: string; href: string }>
 }
 
@@ -64,480 +93,546 @@ export default function EmailAccountSetup({
     account,
     setupData,
     isSetupComplete,
-    timezones,
-    templateStyles,
+    bestPractices,
+    batchingGuidelines,
     breadcrumbs,
 }: Props) {
-    const [currentStep, setCurrentStep] = useState(1)
-    const totalSteps = 5
-
-    const { data, setData, post, processing, errors, reset } = useForm<SetupData>(setupData)
+    const { data, setData, post, processing, errors } = useForm<SetupData>(setupData)
+    const [showAdvanced, setShowAdvanced] = useState(false)
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         post(`/settings/email-accounts/${account.id}/setup`, {
             preserveScroll: true,
-            onSuccess: () => {
-                // Will redirect to accounts page with success message
-            },
+            onSuccess: () => { },
             onError: (errors) => {
                 console.error("Setup failed:", errors)
             },
         })
     }
 
-    const getStepIcon = (step: number) => {
-        switch (step) {
-            case 1:
-                return <Mail className="h-5 w-5" />
-            case 2:
-                return <TrendingUp className="h-5 w-5" />
-            case 3:
-                return <Shield className="h-5 w-5" />
-            case 4:
-                return <Settings className="h-5 w-5" />
-            case 5:
-                return <Zap className="h-5 w-5" />
-            default:
-                return <Settings className="h-5 w-5" />
-        }
+    const isFormValid = () => {
+        return (
+            data.sender_name &&
+            data.reply_to_email &&
+            data.compliance_confirmed &&
+            data.batch_size > 0 &&
+            data.batch_delay_minutes > 0 &&
+            data.max_emails_per_day > 0 &&
+            data.send_window_start &&
+            data.send_window_end
+        )
     }
 
-    const getStepTitle = (step: number) => {
-        switch (step) {
-            case 1:
-                return "Sender Profile"
-            case 2:
-                return "Warm-up Settings"
-            case 3:
-                return "Compliance & Safety"
-            case 4:
-                return "Sending Limits"
-            case 5:
-                return "Fallback Behavior"
-            default:
-                return "Setup"
-        }
-    }
-
-    const isStepComplete = (step: number) => {
-        switch (step) {
-            case 1:
-                return data.sender_name && data.reply_to_email
-            case 2:
-                return data.warmup_timezone && data.warmup_template_style
-            case 3:
-                return data.compliance_confirmed
-            case 4:
-                return data.max_emails_per_day > 0 && data.send_window_start && data.send_window_end
-            case 5:
-                return data.max_retry_attempts > 0
-            default:
-                return false
-        }
-    }
-
-    const canProceedToNext = () => {
-        return isStepComplete(currentStep)
-    }
-
-    const allStepsComplete = () => {
-        for (let i = 1; i <= totalSteps; i++) {
-            if (!isStepComplete(i)) return false
-        }
-        return true
+    const calculateCampaignTime = (recipients: number) => {
+        const batches = Math.ceil(recipients / data.batch_size)
+        const totalMinutes = (batches - 1) * data.batch_delay_minutes
+        const hours = Math.floor(totalMinutes / 60)
+        const minutes = totalMinutes % 60
+        return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
     }
 
     return (
         <AppLayout>
             <SettingsLayout>
-                <div className="max-w-4xl mx-auto space-y-6">
-                    {/* Header */}
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-2xl font-bold text-foreground">Email Account Setup</h1>
-                            <p className="text-muted-foreground">
-                                Configure your email account: <span className="font-medium">{account.email}</span>
-                            </p>
+
+                <TooltipProvider>
+                    <div className="space-y-6">
+                        {/* Header */}
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-2xl font-bold">Gmail Confirmation Email Setup</h1>
+                                <p className="text-muted-foreground">Configure {account.email} for batch confirmation emails</p>
+                            </div>
+                            {isSetupComplete && (
+                                <Badge>
+                                    <CheckCircle className="mr-1 h-3 w-3" />
+                                    Ready for Campaigns
+                                </Badge>
+                            )}
                         </div>
-                        {isSetupComplete && (
-                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                <CheckCircle className="mr-1 h-3 w-3" />
-                                Setup Complete
-                            </Badge>
-                        )}
-                    </div>
 
-                    {/* Progress Steps */}
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
-                                    <div key={step} className="flex items-center">
-                                        <button
-                                            onClick={() => setCurrentStep(step)}
-                                            className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${step === currentStep
-                                                    ? "border-primary bg-primary text-primary-foreground"
-                                                    : isStepComplete(step)
-                                                        ? "border-green-500 bg-green-500 text-white"
-                                                        : "border-muted bg-background text-muted-foreground hover:border-primary/50"
-                                                }`}
-                                        >
-                                            {isStepComplete(step) ? <CheckCircle className="h-5 w-5" /> : getStepIcon(step)}
-                                        </button>
-                                        {step < totalSteps && (
-                                            <div className={`w-16 h-0.5 mx-2 ${isStepComplete(step) ? "bg-green-500" : "bg-muted"}`} />
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="text-center">
-                                <h3 className="font-medium text-foreground">{getStepTitle(currentStep)}</h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Step {currentStep} of {totalSteps}
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Setup Form */}
-                    <form onSubmit={handleSubmit}>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    {getStepIcon(currentStep)}
-                                    {getStepTitle(currentStep)}
-                                </CardTitle>
-                                <CardDescription>
-                                    {currentStep === 1 && "Configure your sender identity and email signature"}
-                                    {currentStep === 2 && "Set up email warm-up to improve deliverability"}
-                                    {currentStep === 3 && "Ensure compliance with email regulations"}
-                                    {currentStep === 4 && "Define your sending limits and schedule"}
-                                    {currentStep === 5 && "Configure error handling and retry behavior"}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                {/* Step 1: Sender Profile */}
-                                {currentStep === 1 && (
-                                    <div className="space-y-4">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="sender_name">Sender Name *</Label>
+                        <form onSubmit={handleSubmit}>
+                            {/* Main Grid Layout */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Left Column */}
+                                <div className="space-y-4">
+                                    {/* Basic Settings */}
+                                    <Card>
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-lg flex items-center gap-2">
+                                                <Mail className="h-4 w-4" />
+                                                Sender Settings
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-1">
+                                                    <Label htmlFor="sender_name" className="text-sm">
+                                                        Sender Name *
+                                                    </Label>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Name that appears in the "From" field of confirmation emails</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </div>
                                                 <Input
                                                     id="sender_name"
                                                     value={data.sender_name}
                                                     onChange={(e) => setData("sender_name", e.target.value)}
-                                                    placeholder="Your Name or Company"
-                                                    className={errors.sender_name ? "border-red-500" : ""}
+                                                    placeholder="Your Company Name"
+                                                    className={errors.sender_name ? "border-destructive" : ""}
                                                 />
-                                                {errors.sender_name && <p className="text-sm text-red-500">{errors.sender_name}</p>}
+                                                {errors.sender_name && <p className="text-xs text-destructive">{errors.sender_name}</p>}
                                             </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="from_email">From Email</Label>
-                                                <Input id="from_email" value={data.from_email} disabled className="bg-muted" />
-                                                <p className="text-xs text-muted-foreground">This is your connected email address</p>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="reply_to_email">Reply-To Email *</Label>
-                                            <Input
-                                                id="reply_to_email"
-                                                type="email"
-                                                value={data.reply_to_email}
-                                                onChange={(e) => setData("reply_to_email", e.target.value)}
-                                                placeholder="replies@yourdomain.com"
-                                                className={errors.reply_to_email ? "border-red-500" : ""}
-                                            />
-                                            {errors.reply_to_email && <p className="text-sm text-red-500">{errors.reply_to_email}</p>}
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="signature">Email Signature (Optional)</Label>
-                                            <Textarea
-                                                id="signature"
-                                                value={data.signature}
-                                                onChange={(e) => setData("signature", e.target.value)}
-                                                placeholder="Best regards,&#10;Your Name&#10;Your Company"
-                                                rows={4}
-                                                className={errors.signature ? "border-red-500" : ""}
-                                            />
-                                            {errors.signature && <p className="text-sm text-red-500">{errors.signature}</p>}
-                                        </div>
-                                    </div>
-                                )}
 
-                                {/* Step 2: Warm-up Settings */}
-                                {currentStep === 2 && (
-                                    <div className="space-y-6">
-                                        <div className="flex items-center justify-between p-4 border rounded-lg">
-                                            <div>
-                                                <h4 className="font-medium">Enable Email Warm-up</h4>
-                                                <p className="text-sm text-muted-foreground">
-                                                    Gradually increase sending volume to improve deliverability
-                                                </p>
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-1">
+                                                    <Label htmlFor="reply_to_email" className="text-sm">
+                                                        Reply-To Email *
+                                                    </Label>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Email address where replies will be sent</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </div>
+                                                <Input
+                                                    id="reply_to_email"
+                                                    type="email"
+                                                    value={data.reply_to_email}
+                                                    onChange={(e) => setData("reply_to_email", e.target.value)}
+                                                    placeholder="support@yourcompany.com"
+                                                    className={errors.reply_to_email ? "border-destructive" : ""}
+                                                />
+                                                {errors.reply_to_email && <p className="text-xs text-destructive">{errors.reply_to_email}</p>}
                                             </div>
-                                            <Switch
-                                                checked={data.warmup_enabled}
-                                                onCheckedChange={(checked) => setData("warmup_enabled", checked)}
-                                            />
-                                        </div>
 
-                                        {data.warmup_enabled && (
-                                            <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="warmup_daily_volume">Daily Warm-up Volume</Label>
-                                                        <Input
-                                                            id="warmup_daily_volume"
-                                                            type="number"
-                                                            min="5"
-                                                            max="200"
-                                                            value={data.warmup_daily_volume}
-                                                            onChange={(e) => setData("warmup_daily_volume", Number.parseInt(e.target.value) || 30)}
-                                                            className={errors.warmup_daily_volume ? "border-red-500" : ""}
-                                                        />
-                                                        <p className="text-xs text-muted-foreground">
-                                                            Start with 5-10 emails, gradually increase to this amount
-                                                        </p>
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="warmup_timezone">Timezone</Label>
-                                                        <Select
-                                                            value={data.warmup_timezone}
-                                                            onValueChange={(value) => setData("warmup_timezone", value)}
-                                                        >
-                                                            <SelectTrigger className={errors.warmup_timezone ? "border-red-500" : ""}>
-                                                                <SelectValue placeholder="Select timezone" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                {Object.entries(timezones).map(([key, label]) => (
-                                                                    <SelectItem key={key} value={key}>
-                                                                        {label}
-                                                                    </SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-1">
+                                                    <Label htmlFor="signature" className="text-sm">
+                                                        Email Signature
+                                                    </Label>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Text automatically added to the end of confirmation emails</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
                                                 </div>
-                                                <div className="space-y-2">
-                                                    <Label>Email Template Style</Label>
-                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                                        {Object.entries(templateStyles).map(([key, style]) => (
-                                                            <button
-                                                                key={key}
-                                                                type="button"
-                                                                onClick={() => setData("warmup_template_style", key)}
-                                                                className={`p-3 border rounded-lg text-left transition-colors ${data.warmup_template_style === key
-                                                                        ? "border-primary bg-primary/5"
-                                                                        : "border-border hover:bg-muted/50"
-                                                                    }`}
-                                                            >
-                                                                <h5 className="font-medium">{style.name}</h5>
-                                                                <p className="text-xs text-muted-foreground">{style.description}</p>
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Step 3: Compliance & Safety */}
-                                {currentStep === 3 && (
-                                    <div className="space-y-6">
-                                        <div className="space-y-4">
-                                            <div className="flex items-center justify-between p-4 border rounded-lg">
-                                                <div>
-                                                    <h4 className="font-medium">Auto-append Unsubscribe Link</h4>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Automatically add unsubscribe links to all emails
-                                                    </p>
-                                                </div>
-                                                <Switch
-                                                    checked={data.auto_unsubscribe}
-                                                    onCheckedChange={(checked) => setData("auto_unsubscribe", checked)}
+                                                <Textarea
+                                                    id="signature"
+                                                    value={data.signature}
+                                                    onChange={(e) => setData("signature", e.target.value)}
+                                                    placeholder="Best regards,&#10;Your Company Team"
+                                                    rows={3}
+                                                    className="resize-none"
                                                 />
                                             </div>
+                                        </CardContent>
+                                    </Card>
 
-                                            <div className="flex items-center justify-between p-4 border rounded-lg">
-                                                <div>
-                                                    <h4 className="font-medium">Email Tracking</h4>
-                                                    <p className="text-sm text-muted-foreground">Track email opens and link clicks</p>
-                                                </div>
-                                                <Switch
-                                                    checked={data.tracking_enabled}
-                                                    onCheckedChange={(checked) => setData("tracking_enabled", checked)}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <Alert>
-                                            <AlertCircle className="h-4 w-4" />
-                                            <AlertDescription>
-                                                <div className="space-y-3">
-                                                    <p className="font-medium">Email Compliance Confirmation</p>
-                                                    <div className="flex items-start space-x-2">
-                                                        <Checkbox
-                                                            id="compliance_confirmed"
-                                                            checked={data.compliance_confirmed}
-                                                            onCheckedChange={(checked) => setData("compliance_confirmed", !!checked)}
-                                                            className={errors.compliance_confirmed ? "border-red-500" : ""}
-                                                        />
-                                                        <Label htmlFor="compliance_confirmed" className="text-sm leading-relaxed">
-                                                            I confirm that my email sending complies with applicable laws including CAN-SPAM Act,
-                                                            GDPR, and other email regulations. I will only send emails to recipients who have given
-                                                            consent to receive them.
+                                    {/* Batch Configuration */}
+                                    <Card>
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-lg flex items-center gap-2">
+                                                <Zap className="h-4 w-4" />
+                                                Batch Configuration
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-1">
+                                                        <Label htmlFor="batch_size" className="text-sm">
+                                                            Batch Size *
                                                         </Label>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                <p>Number of emails to send in each batch (recommended: 50)</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
                                                     </div>
-                                                    {errors.compliance_confirmed && (
-                                                        <p className="text-sm text-red-500">{errors.compliance_confirmed}</p>
-                                                    )}
-                                                </div>
-                                            </AlertDescription>
-                                        </Alert>
-                                    </div>
-                                )}
-
-                                {/* Step 4: Sending Limits */}
-                                {currentStep === 4 && (
-                                    <div className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="max_emails_per_day">Maximum Emails Per Day</Label>
-                                            <Input
-                                                id="max_emails_per_day"
-                                                type="number"
-                                                min="10"
-                                                max="1000"
-                                                value={data.max_emails_per_day}
-                                                onChange={(e) => setData("max_emails_per_day", Number.parseInt(e.target.value) || 50)}
-                                                className={errors.max_emails_per_day ? "border-red-500" : ""}
-                                            />
-                                            <p className="text-xs text-muted-foreground">
-                                                Recommended: Gmail (50-150), Outlook (100-300), Custom SMTP (varies)
-                                            </p>
-                                            {errors.max_emails_per_day && <p className="text-sm text-red-500">{errors.max_emails_per_day}</p>}
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="send_window_start">Send Window Start</Label>
-                                                <Input
-                                                    id="send_window_start"
-                                                    type="time"
-                                                    value={data.send_window_start}
-                                                    onChange={(e) => setData("send_window_start", e.target.value)}
-                                                    className={errors.send_window_start ? "border-red-500" : ""}
-                                                />
-                                                {errors.send_window_start && <p className="text-sm text-red-500">{errors.send_window_start}</p>}
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="send_window_end">Send Window End</Label>
-                                                <Input
-                                                    id="send_window_end"
-                                                    type="time"
-                                                    value={data.send_window_end}
-                                                    onChange={(e) => setData("send_window_end", e.target.value)}
-                                                    className={errors.send_window_end ? "border-red-500" : ""}
-                                                />
-                                                {errors.send_window_end && <p className="text-sm text-red-500">{errors.send_window_end}</p>}
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground">
-                                            Emails will only be sent during this time window (in your account timezone)
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* Step 5: Fallback Behavior */}
-                                {currentStep === 5 && (
-                                    <div className="space-y-6">
-                                        <div className="space-y-4">
-                                            <div className="flex items-center justify-between p-4 border rounded-lg">
-                                                <div>
-                                                    <h4 className="font-medium">Retry Failed Emails</h4>
-                                                    <p className="text-sm text-muted-foreground">Automatically retry sending failed emails</p>
-                                                </div>
-                                                <Switch
-                                                    checked={data.retry_failed_emails}
-                                                    onCheckedChange={(checked) => setData("retry_failed_emails", checked)}
-                                                />
-                                            </div>
-
-                                            {data.retry_failed_emails && (
-                                                <div className="space-y-2 ml-4">
-                                                    <Label htmlFor="max_retry_attempts">Maximum Retry Attempts</Label>
                                                     <Input
-                                                        id="max_retry_attempts"
+                                                        id="batch_size"
                                                         type="number"
-                                                        min="1"
-                                                        max="10"
-                                                        value={data.max_retry_attempts}
-                                                        onChange={(e) => setData("max_retry_attempts", Number.parseInt(e.target.value) || 3)}
-                                                        className={`max-w-32 ${errors.max_retry_attempts ? "border-red-500" : ""}`}
+                                                        min="10"
+                                                        max="100"
+                                                        value={data.batch_size}
+                                                        onChange={(e) => setData("batch_size", Number.parseInt(e.target.value) || 50)}
+                                                        className={errors.batch_size ? "border-destructive" : ""}
                                                     />
-                                                    {errors.max_retry_attempts && (
-                                                        <p className="text-sm text-red-500">{errors.max_retry_attempts}</p>
+                                                    {errors.batch_size && <p className="text-xs text-destructive">{errors.batch_size}</p>}
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-1">
+                                                        <Label htmlFor="batch_delay_minutes" className="text-sm">
+                                                            Delay (minutes) *
+                                                        </Label>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                <p>Minutes to wait between batches (recommended: 60)</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </div>
+                                                    <Input
+                                                        id="batch_delay_minutes"
+                                                        type="number"
+                                                        min="30"
+                                                        max="180"
+                                                        value={data.batch_delay_minutes}
+                                                        onChange={(e) => setData("batch_delay_minutes", Number.parseInt(e.target.value) || 60)}
+                                                        className={errors.batch_delay_minutes ? "border-destructive" : ""}
+                                                    />
+                                                    {errors.batch_delay_minutes && (
+                                                        <p className="text-xs text-destructive">{errors.batch_delay_minutes}</p>
                                                     )}
                                                 </div>
-                                            )}
+                                            </div>
 
-                                            <div className="flex items-center justify-between p-4 border rounded-lg">
-                                                <div>
-                                                    <h4 className="font-medium">Pause on Errors</h4>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Automatically pause campaigns when errors occur
-                                                    </p>
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-1">
+                                                    <Label htmlFor="max_emails_per_day" className="text-sm">
+                                                        Daily Limit *
+                                                    </Label>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Maximum emails per day (Gmail limit: 500, recommended: 400)</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
                                                 </div>
-                                                <Switch
-                                                    checked={data.pause_on_errors}
-                                                    onCheckedChange={(checked) => setData("pause_on_errors", checked)}
+                                                <Input
+                                                    id="max_emails_per_day"
+                                                    type="number"
+                                                    min="50"
+                                                    max="400"
+                                                    value={data.max_emails_per_day}
+                                                    onChange={(e) => setData("max_emails_per_day", Number.parseInt(e.target.value) || 400)}
+                                                    className={errors.max_emails_per_day ? "border-destructive" : ""}
+                                                />
+                                                <p className="text-xs text-muted-foreground">Gmail safe limit: 400 emails/day</p>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="space-y-1">
+                                                    <Label htmlFor="send_window_start" className="text-sm">
+                                                        Start Time *
+                                                    </Label>
+                                                    <Input
+                                                        id="send_window_start"
+                                                        type="time"
+                                                        value={data.send_window_start}
+                                                        onChange={(e) => setData("send_window_start", e.target.value)}
+                                                        className={errors.send_window_start ? "border-destructive" : ""}
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Label htmlFor="send_window_end" className="text-sm">
+                                                        End Time *
+                                                    </Label>
+                                                    <Input
+                                                        id="send_window_end"
+                                                        type="time"
+                                                        value={data.send_window_end}
+                                                        onChange={(e) => setData("send_window_end", e.target.value)}
+                                                        className={errors.send_window_end ? "border-destructive" : ""}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Campaign Time Calculator */}
+                                            <div className="p-3 bg-muted/50 rounded-lg">
+                                                <h4 className="text-sm font-medium mb-2">Campaign Time Estimates</h4>
+                                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                                    <div>150 emails: {calculateCampaignTime(150)}</div>
+                                                    <div>300 emails: {calculateCampaignTime(300)}</div>
+                                                    <div>400 emails: {calculateCampaignTime(400)}</div>
+                                                    <div>500 emails: {calculateCampaignTime(500)}</div>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+
+                                {/* Right Column */}
+                                <div className="space-y-4">
+                                    {/* Features */}
+                                    <Card>
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-lg">Email Features</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-1">
+                                                    <div>
+                                                        <p className="text-sm font-medium">Auto Unsubscribe</p>
+                                                        <p className="text-xs text-muted-foreground">Add unsubscribe links</p>
+                                                    </div>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Automatically add unsubscribe links to comply with email regulations</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </div>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={data.auto_unsubscribe}
+                                                    onChange={(e) => setData("auto_unsubscribe", e.target.checked)}
+                                                    className="rounded"
                                                 />
                                             </div>
 
-                                            <div className="flex items-center justify-between p-4 border rounded-lg">
-                                                <div>
-                                                    <h4 className="font-medium">Error Notifications</h4>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Receive notifications when sending errors occur
-                                                    </p>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-1">
+                                                    <div>
+                                                        <p className="text-sm font-medium">Email Tracking</p>
+                                                        <p className="text-xs text-muted-foreground">Track opens and clicks</p>
+                                                    </div>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Track when recipients open emails and click links for analytics</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
                                                 </div>
-                                                <Switch
-                                                    checked={data.notify_on_errors}
-                                                    onCheckedChange={(checked) => setData("notify_on_errors", checked)}
+                                                <input
+                                                    type="checkbox"
+                                                    checked={data.tracking_enabled}
+                                                    onChange={(e) => setData("tracking_enabled", e.target.checked)}
+                                                    className="rounded"
                                                 />
                                             </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                                        </CardContent>
+                                    </Card>
 
-                        {/* Navigation */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex gap-2">
-                                {currentStep > 1 && (
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => setCurrentStep(currentStep - 1)}
-                                        disabled={processing}
-                                    >
-                                        Previous
-                                    </Button>
-                                )}
+                                    {/* Best Practices */}
+                                    <Card>
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-lg">Best Practices</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            {Object.entries(bestPractices).map(([key, section]) => (
+                                                <div key={key} className="space-y-2">
+                                                    <h4 className="text-sm font-medium">{section.title}</h4>
+                                                    <ul className="text-xs text-muted-foreground space-y-1">
+                                                        {section.items.slice(0, 3).map((item, index) => (
+                                                            <li key={index} className="flex items-start gap-1">
+                                                                <span className="text-primary mt-1">•</span>
+                                                                <span>{item}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            ))}
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Advanced Settings */}
+                                    <Card>
+                                        <CardHeader className="pb-3">
+                                            <div className="flex items-center justify-between">
+                                                <CardTitle className="text-lg flex items-center gap-2">
+                                                    <Settings2 className="h-4 w-4" />
+                                                    Advanced
+                                                </CardTitle>
+                                                <Button type="button" variant="ghost" size="sm" onClick={() => setShowAdvanced(!showAdvanced)}>
+                                                    {showAdvanced ? "Hide" : "Show"}
+                                                </Button>
+                                            </div>
+                                        </CardHeader>
+                                        {showAdvanced && (
+                                            <CardContent className="space-y-4">
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-1">
+                                                            <p className="text-sm">Retry Failed</p>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>
+                                                                    <p>Automatically retry sending emails that failed due to temporary issues</p>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </div>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={data.retry_failed_emails}
+                                                            onChange={(e) => setData("retry_failed_emails", e.target.checked)}
+                                                            className="rounded"
+                                                        />
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-1">
+                                                            <p className="text-sm">Pause on Errors</p>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>
+                                                                    <p>Stop sending when errors occur to protect your sender reputation</p>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </div>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={data.pause_on_errors}
+                                                            onChange={(e) => setData("pause_on_errors", e.target.checked)}
+                                                            className="rounded"
+                                                        />
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-1">
+                                                            <p className="text-sm">Error Notifications</p>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>
+                                                                    <p>Get notified when sending errors happen so you can take action</p>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </div>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={data.notify_on_errors}
+                                                            onChange={(e) => setData("notify_on_errors", e.target.checked)}
+                                                            className="rounded"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {data.retry_failed_emails && (
+                                                    <div className="space-y-1">
+                                                        <div className="flex items-center gap-1">
+                                                            <Label htmlFor="max_retry_attempts" className="text-sm">
+                                                                Max Retries
+                                                            </Label>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>
+                                                                    <p>How many times to retry failed emails before giving up</p>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </div>
+                                                        <Input
+                                                            id="max_retry_attempts"
+                                                            type="number"
+                                                            min="1"
+                                                            max="5"
+                                                            value={data.max_retry_attempts}
+                                                            onChange={(e) => setData("max_retry_attempts", Number.parseInt(e.target.value) || 3)}
+                                                            className="w-20"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </CardContent>
+                                        )}
+                                    </Card>
+                                </div>
                             </div>
 
-                            <div className="flex gap-2">
-                                {currentStep < totalSteps ? (
-                                    <Button
-                                        type="button"
-                                        onClick={() => setCurrentStep(currentStep + 1)}
-                                        disabled={!canProceedToNext() || processing}
-                                    >
-                                        Next
-                                    </Button>
-                                ) : (
-                                    <Button type="submit" disabled={!allStepsComplete() || processing} className="min-w-32">
+                            {/* Full Width Sections */}
+                            <div className="space-y-4 mt-6">
+                                {/* Batching Guidelines */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Batching Guidelines</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <h4 className="font-medium mb-2">{batchingGuidelines.recommended_settings.title}</h4>
+                                                <p className="text-sm text-muted-foreground mb-3">
+                                                    {batchingGuidelines.recommended_settings.description}
+                                                </p>
+                                                <div className="space-y-1 text-sm">
+                                                    <div>Batch Size: {batchingGuidelines.recommended_settings.batch_size} emails</div>
+                                                    <div>Delay: {batchingGuidelines.recommended_settings.delay_minutes} minutes</div>
+                                                    <div>Daily Limit: {batchingGuidelines.recommended_settings.daily_limit} emails</div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-medium mb-2">Campaign Examples</h4>
+                                                <div className="space-y-2">
+                                                    {batchingGuidelines.campaign_examples.map((example, index) => (
+                                                        <div key={index} className="p-2 bg-muted/50 rounded text-sm">
+                                                            <div className="font-medium">{example.name}</div>
+                                                            <div className="text-muted-foreground">{example.description}</div>
+                                                            <div className="text-xs mt-1">
+                                                                {example.batches} batches • {example.total_time} total time
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Compliance */}
+                                <Alert>
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertDescription>
+                                        <div className="flex items-start space-x-2">
+                                            <Checkbox
+                                                id="compliance_confirmed"
+                                                checked={data.compliance_confirmed}
+                                                onCheckedChange={(checked) => setData("compliance_confirmed", !!checked)}
+                                                className={errors.compliance_confirmed ? "border-destructive" : ""}
+                                            />
+                                            <div className="flex items-start gap-1">
+                                                <Label htmlFor="compliance_confirmed" className="text-sm leading-relaxed">
+                                                    I confirm compliance with CAN-SPAM, GDPR, and email regulations. I will only send confirmation
+                                                    emails to users who explicitly requested them.
+                                                </Label>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help mt-0.5" />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>Required legal confirmation for sending confirmation emails</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </div>
+                                        </div>
+                                        {errors.compliance_confirmed && (
+                                            <p className="text-xs text-destructive mt-1">{errors.compliance_confirmed}</p>
+                                        )}
+                                    </AlertDescription>
+                                </Alert>
+
+                                {/* Submit */}
+                                <div className="flex justify-end">
+                                    <Button type="submit" disabled={!isFormValid() || processing}>
                                         {processing ? (
                                             <>
                                                 <Clock className="mr-2 h-4 w-4 animate-spin" />
@@ -550,11 +645,11 @@ export default function EmailAccountSetup({
                                             </>
                                         )}
                                     </Button>
-                                )}
+                                </div>
                             </div>
-                        </div>
-                    </form>
-                </div>
+                        </form>
+                    </div>
+                </TooltipProvider>
             </SettingsLayout>
         </AppLayout>
     )

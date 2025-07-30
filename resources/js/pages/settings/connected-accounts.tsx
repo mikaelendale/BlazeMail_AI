@@ -1,19 +1,17 @@
 "use client"
-
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/Components/ui/label"
 import AppLayout from "@/layouts/app-layout"
 import SettingsLayout from "@/layouts/settings/layout"
 import { router } from "@inertiajs/react"
 import {
     ArrowRight,
     CheckCircle,
-    Clock,
     Edit,
     Eye,
     Inbox,
@@ -23,6 +21,8 @@ import {
     Settings,
     Trash2,
     AlertTriangle,
+    Trash,
+    Clock,
 } from "lucide-react"
 import { useState } from "react"
 
@@ -64,20 +64,29 @@ export default function EmailAccountsSettings({ accounts, providers, breadcrumbs
     const [isAddAccountOpen, setIsAddAccountOpen] = useState(false)
     const [selectedProvider, setSelectedProvider] = useState<string>("")
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false)
 
     // Get provider icon based on provider type
     const getProviderIcon = (provider: string) => {
         switch (provider) {
             case "gmail":
-                return <img src="https://api.iconify.design/logos/google-icon.svg" className="h-4 w-4" alt="Google" />
+                return (
+                    <img src="https://api.iconify.design/logos/google-icon.svg" className="h-4 w-4 sm:h-5 sm:w-5" alt="Google" />
+                )
             case "outlook":
-                return <img src="https://api.iconify.design/logos/microsoft-icon.svg" className="h-4 w-4" alt="Outlook" />
+                return (
+                    <img
+                        src="https://api.iconify.design/logos/microsoft-icon.svg"
+                        className="h-4 w-4 sm:h-5 sm:w-5"
+                        alt="Outlook"
+                    />
+                )
             case "yahoo":
-                return <img src="https://api.iconify.design/logos/yahoo.svg" className="h-4 w-4" alt="Yahoo" />
+                return <img src="https://api.iconify.design/logos/yahoo.svg" className="h-4 w-4 sm:h-5 sm:w-5" alt="Yahoo" />
             case "imap":
-                return <Server className="h-4 w-4" />
+                return <Server className="h-4 w-4 sm:h-5 sm:w-5" />
             default:
-                return <Mail className="h-4 w-4" />
+                return <Mail className="h-4 w-4 sm:h-5 sm:w-5" />
         }
     }
 
@@ -86,7 +95,6 @@ export default function EmailAccountsSettings({ accounts, providers, breadcrumbs
         if (needsSetup) {
             return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
         }
-
         switch (status) {
             case "active":
                 return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
@@ -119,40 +127,15 @@ export default function EmailAccountsSettings({ accounts, providers, breadcrumbs
         })
     }
 
-    // Handle account toggle (enable/disable) - UPDATED WITH SETUP CHECK
-    const handleAccountToggle = (accountId: number, enabled: boolean) => {
-        const account = accounts.find((acc) => acc.id === accountId)
-        if (account?.needsSetup) {
-            // Redirect to setup instead of toggling
-            router.get(`/settings/email-accounts/${accountId}/setup`)
-            return
-        }
-
-        router.patch(
-            `/settings/email-accounts/${accountId}/toggle`,
-            {},
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    // Success message will be shown via Laravel flash message
-                },
-                onError: (errors) => {
-                    console.error("Toggle failed:", errors)
-                },
-            },
-        )
-    }
-
     // Handle account deletion
     const handleDeleteAccount = (accountId: number) => {
-        if (confirm("Are you sure you want to delete this email account? This action cannot be undone.")) {
-            router.delete(`/settings/email-accounts/${accountId}`, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    // Success message will be shown via Laravel flash message
-                },
-            })
-        }
+        router.delete(`/settings/email-accounts/${accountId}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                // Success message will be shown via Laravel flash message
+                setIsDeleteAccountOpen(false);
+            },
+        })
     }
 
     // Handle view inbox
@@ -172,7 +155,6 @@ export default function EmailAccountsSettings({ accounts, providers, breadcrumbs
         if (!selectedProvider) {
             return
         }
-
         // For Gmail OAuth - DIRECT REDIRECT!
         if (selectedProvider === "gmail") {
             setIsSubmitting(true)
@@ -182,19 +164,20 @@ export default function EmailAccountsSettings({ accounts, providers, breadcrumbs
             window.location.href = `/oauth/gmail/start?return_url=${currentUrl}`
             return
         }
-
         // Add other providers here if needed
     }
 
     return (
         <AppLayout>
             <SettingsLayout>
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                     {/* Header */}
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <h1 className="text-2xl font-bold text-foreground">Connected Accounts</h1>
-                            <p className="text-muted-foreground">Manage your email accounts for sending campaigns</p>
+                    <div className="flex flex-col gap-2 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="space-y-1">
+                            <h1 className="text-lg sm:text-2xl font-bold text-foreground">Email Accounts</h1>
+                            <p className="text-xs sm:text-base text-muted-foreground hidden sm:block">
+                                Manage your email accounts for sending campaigns
+                            </p>
                         </div>
                         <div className="flex items-center gap-2">
                             <Dialog open={isAddAccountOpen} onOpenChange={setIsAddAccountOpen}>
@@ -270,40 +253,37 @@ export default function EmailAccountsSettings({ accounts, providers, breadcrumbs
 
                     {/* NEW: Setup Required Alert */}
                     {accounts.some((account) => account.needsSetup) && (
-                        <Alert className="bg-primary-foreground">
-                            <AlertTriangle className="h-4 w-4 text-red-600" />
+                        <Alert className="bg-primary-foreground ">
+                            <AlertTriangle className="h-4 w-4 text-red-600 flex-shrink-0" />
                             <AlertDescription className="text-red-800 dark:text-red-200">
-                                <div className="flex items-center justify-between">
-                                    <span>
-                                        {accounts.filter((account) => account.needsSetup).length} account(s) require setup to start sending
-                                        emails.
-                                    </span>
-                                </div>
+                                <span className="text-xs sm:text-sm">
+                                    {accounts.filter((account) => account.needsSetup).length} account(s) need setup
+                                </span>
                             </AlertDescription>
                         </Alert>
                     )}
 
                     {/* Accounts List */}
-                    <div className="space-y-3">
+                    <div className="space-y-3 sm:space-y-4">
                         {accounts.map((account) => (
                             <Card
                                 key={account.id}
-                                className={`border ${account.needsSetup ? "border-accent shadow-none" : "border-border"}`}
+                                className={`border  sm:mx-0 ${account.needsSetup ? "border-accent shadow-none" : "border-border"}`}
                             >
-                                <CardContent className="p-4">
-                                    <div className="flex items-center justify-between">
+                                <CardContent className="p-3 sm:p-4">
+                                    {/* Desktop Layout */}
+                                    <div className="hidden sm:flex items-center justify-between">
                                         <div className="flex min-w-0 flex-1 items-center gap-3">
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-3">
                                                 {getProviderIcon(account.provider)}
                                                 <div className="min-w-0">
                                                     <div className="mb-1 flex items-center gap-2">
                                                         <p className="truncate font-medium text-foreground">{account.email}</p>
                                                         <Badge className={`text-xs ${getStatusColor(account.status, account.needsSetup)}`}>
-                                                            {account.needsSetup && <AlertTriangle className="mr-1 h-3 w-3" />}
-                                                            <span className="ml-1">{getStatusText(account)}</span>
+                                                            <span>{getStatusText(account)}</span>
                                                         </Badge>
                                                         {account.isSetupComplete && (
-                                                            <Badge variant="secondary" className="text-xs">
+                                                            <Badge variant="outline" className="text-xs">
                                                                 <CheckCircle className="mr-1 h-3 w-3" />
                                                                 Configured
                                                             </Badge>
@@ -311,67 +291,33 @@ export default function EmailAccountsSettings({ accounts, providers, breadcrumbs
                                                     </div>
                                                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                                         <span>Added {formatDate(account.createdAt)}</span>
-                                                        <span className="hidden sm:inline">•</span>
-                                                        <span className="hidden sm:inline">
+                                                        <span>•</span>
+                                                        <span>
                                                             {account.dailySent}/{account.dailyLimit} today
                                                         </span>
-                                                        {account.messageCount !== undefined && (
-                                                            <>
-                                                                <span className="hidden sm:inline">•</span>
-                                                                <span className="hidden sm:inline">
-                                                                    {account.messageCount} messages
-                                                                    {account.unreadCount && account.unreadCount > 0 && (
-                                                                        <span className="ml-1 font-medium text-blue-600">
-                                                                            ({account.unreadCount} unread)
-                                                                        </span>
-                                                                    )}
-                                                                </span>
-                                                            </>
-                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="ml-4 flex items-center gap-2">
-                                            {/* NEW: Setup Button - PRIORITY ACTION! */}
+                                            {/* Setup Button - PRIORITY ACTION! */}
                                             {account.needsSetup && (
-                                                <Button
-                                                    variant="destructive"
-                                                    size="sm"
-                                                    onClick={() => handleSetupAccount(account.id)}
-                                                    className="hidden sm:flex "
-                                                >
-                                                    <Settings className="mr-2 h-4 w-4" />
+                                                <Button variant={"outline"} size="sm" onClick={() => handleSetupAccount(account.id)}>
                                                     Complete Setup
                                                 </Button>
                                             )}
-
                                             {/* View Inbox Button - Only show if setup is complete */}
                                             {!account.needsSetup && (
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => handleViewInbox(account.id)}
-                                                    className="hidden sm:flex"
                                                     disabled={account.status === "error" || !account.isConnected}
                                                 >
                                                     <Inbox className="mr-2 h-4 w-4" />
                                                     Inbox
-                                                    {account.unreadCount && account.unreadCount > 0 && (
-                                                        <Badge variant="secondary" className="ml-2 text-xs">
-                                                            {account.unreadCount}
-                                                        </Badge>
-                                                    )}
                                                 </Button>
                                             )}
-
-                                            <div className="hidden sm:block">
-                                                <Switch
-                                                    checked={account.isConnected && account.status !== "error" && !account.needsSetup}
-                                                    onCheckedChange={(checked) => handleAccountToggle(account.id, checked)}
-                                                    disabled={account.status === "error"}
-                                                />
-                                            </div>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
@@ -379,70 +325,60 @@ export default function EmailAccountsSettings({ accounts, providers, breadcrumbs
                                             >
                                                 <Eye className="h-4 w-4" />
                                             </Button>
-                                            <Button variant="ghost" size="sm" onClick={() => handleSetupAccount(account.id)}>
-                                                <Edit className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="text-red-500 hover:text-red-700"
-                                                onClick={() => handleDeleteAccount(account.id)}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
+                                            {account.status !== "pending" && (
+                                                <Button variant="ghost" size="sm" onClick={() => handleSetupAccount(account.id)}>
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                            <Button variant="ghost" size="sm" onClick={() => setIsDeleteAccountOpen(true)}>
+                                                <Trash className="h-4 w-4" />
                                             </Button>
                                         </div>
                                     </div>
-                                    {/* Mobile Actions */}
-                                    <div className="mt-3 border-t border-border pt-3 sm:hidden">
-                                        <div className="mb-3 flex items-center justify-between">
-                                            <span className="text-sm text-muted-foreground">
-                                                {account.dailySent}/{account.dailyLimit} emails today
-                                                {account.messageCount !== undefined && (
-                                                    <span className="ml-2">• {account.messageCount} messages</span>
-                                                )}
-                                            </span>
-                                            <Switch
-                                                checked={account.isConnected && account.status !== "error" && !account.needsSetup}
-                                                onCheckedChange={(checked) => handleAccountToggle(account.id, checked)}
-                                                disabled={account.status === "error"}
-                                            />
+
+                                    {/* Mobile Layout - MINIMAL */}
+                                    <div className="sm:hidden space-y-2">
+                                        {/* Header Row - Compact */}
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                {getProviderIcon(account.provider)}
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="truncate font-medium text-foreground text-sm">{account.email}</p>
+                                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                                        <Badge className={`text-xs ${getStatusColor(account.status, account.needsSetup)}`}>
+                                                            {getStatusText(account)}
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {/* Single Action Button */}
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => router.get(`/settings/email-accounts/${account.id}`)}
+                                                className="h-8 w-8 p-0 flex-shrink-0"
+                                            >
+                                                <ArrowRight className="h-4 w-4" />
+                                            </Button>
                                         </div>
 
-                                        {/* NEW: Mobile Setup Button - PRIORITY! */}
-                                        {account.needsSetup ? (
+                                        {/* Primary Action - Only if setup needed */}
+                                        {account.needsSetup && (
                                             <Button
                                                 variant="default"
                                                 size="sm"
                                                 onClick={() => handleSetupAccount(account.id)}
-                                                className="w-full bg-orange-600 hover:bg-orange-700"
+                                                className="w-full"
                                             >
                                                 <Settings className="mr-2 h-4 w-4" />
-                                                Complete Setup Required
-                                                <ArrowRight className="ml-auto h-4 w-4" />
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => handleViewInbox(account.id)}
-                                                className="w-full"
-                                                disabled={account.status === "error" || !account.isConnected}
-                                            >
-                                                <Inbox className="mr-2 h-4 w-4" />
-                                                View Inbox
-                                                {account.unreadCount && account.unreadCount > 0 && (
-                                                    <>
-                                                        <span className="ml-2">•</span>
-                                                        <span className="ml-1 font-medium text-blue-600">{account.unreadCount} unread</span>
-                                                    </>
-                                                )}
-                                                <ArrowRight className="ml-auto h-4 w-4" />
+                                                Complete Setup
                                             </Button>
                                         )}
                                     </div>
-                                    {/* Warmup Progress */}
+
+                                    {/* Warmup Progress - Hidden on mobile */}
                                     {account.status === "warming" && !account.needsSetup && (
-                                        <div className="mt-3 border-t border-border pt-3">
+                                        <div className="mt-3 border-t border-border pt-3 hidden sm:block">
                                             <div className="mb-2 flex items-center justify-between text-xs">
                                                 <span className="text-muted-foreground">Warmup Progress</span>
                                                 <span className="font-medium">{account.warmupProgress}%</span>
@@ -462,30 +398,53 @@ export default function EmailAccountsSettings({ accounts, providers, breadcrumbs
 
                     {/* Empty State */}
                     {accounts.length === 0 && (
-                        <div className="rounded-lg border-0 p-8 text-center shadow-none">
+                        <div className="rounded-lg border-0 p-6 sm:p-8 text-center shadow-none mx-4 sm:mx-0">
                             <h3 className="mb-2 text-lg font-medium text-foreground">No accounts connected</h3>
-                            <p className="mb-4 text-muted-foreground">Connect your first email account to start sending campaigns</p>
+                            <p className="mb-4 text-sm sm:text-base text-muted-foreground">
+                                Connect your first email account to start sending campaigns
+                            </p>
                             <div className="flex flex-col justify-center gap-2 sm:flex-row">
-                                <Button onClick={() => setIsAddAccountOpen(true)}>
+                                <Button onClick={() => setIsAddAccountOpen(true)} className="w-full sm:w-auto">
                                     <Plus className="mr-2 h-4 w-4" />
                                     Connect Account
                                 </Button>
                             </div>
                         </div>
                     )}
+                </div>
 
-                    {/* Quick Actions Footer */}
-                    {accounts.length > 0 && (
-                        <div className="border-t border-border pt-6">
-                            <div className="flex flex-col justify-center gap-3 sm:flex-row">
-                                <Button variant="outline" onClick={() => setIsAddAccountOpen(true)} className="flex-1 sm:flex-none">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add Another Account
+                <Dialog open={isDeleteAccountOpen} onOpenChange={setIsDeleteAccountOpen}>
+                    <DialogContent className="mx-4 max-w-[calc(100vw-2rem)] sm:mx-auto sm:max-w-md rounded-lg">
+                        <DialogHeader className="space-y-2">
+                            <DialogTitle className="text-lg sm:text-xl">Delete Email Account</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                            <div className="text-sm sm:text-base">
+                                Are you sure you want to delete this account? This action cannot be undone.
+                            </div>
+                            <Input type="text" placeholder="Type 'DELETE' to confirm" className="text-sm sm:text-base" />
+                            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setIsDeleteAccountOpen(false)}
+                                    disabled={isSubmitting}
+                                    className="w-full sm:w-auto order-2 sm:order-1"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => handleDeleteAccount(accounts[0].id)}
+                                    disabled={isSubmitting}
+                                    className="w-full sm:w-auto order-1 sm:order-2 flex items-center justify-center"
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete Account
                                 </Button>
                             </div>
                         </div>
-                    )}
-                </div>
+                    </DialogContent>
+                </Dialog>
             </SettingsLayout>
         </AppLayout>
     )

@@ -40,7 +40,7 @@ export default function Register() {
         sessionStorage.setItem('platform', platform);
 
         // Pass as URL parameters
-        const redirectUrl = route('auth.redirect', provider) + `?ref=${encodeURIComponent(referralCode)}&platform=${encodeURIComponent(platform)}`;
+        const redirectUrl = route('auth.redirect', provider);
 
         window.location.href = redirectUrl;
     };

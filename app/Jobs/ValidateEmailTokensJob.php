@@ -15,7 +15,7 @@ use Carbon\Carbon;
 class ValidateEmailTokensJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
+ 
     public $timeout = 300; // 5 minutes
     public $tries = 3;
     public $backoff = [60, 300, 900]; // 1min, 5min, 15min

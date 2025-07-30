@@ -43,7 +43,7 @@ class HealErrorEmailAccounts extends Command
                 ]);
             }
 
-            $this->info('Healing jobs dispatched. Monitor your queue for progress.');
+            $this->info('Healing jobs dispatched. Monitor your queue for progress. run `php artisan queue:work` to process them.');
             Log::info('HealErrorEmailAccounts command completed.');
             return 0;
         } catch (\Exception $e) {

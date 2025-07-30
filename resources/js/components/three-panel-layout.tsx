@@ -78,7 +78,7 @@ export function ThreePanelLayout({
     return (
         <div ref={containerRef} className="relative flex h-full gap-4">
             {/* Sidebar */}
-            <div style={{ width: sidebarWidth }} className="flex-shrink-0 rounded-2xl border border-border bg-card shadow-lg">
+            <div style={{ width: sidebarWidth }} className="flex-shrink-0 rounded-2xl  bg-card ">
                 {sidebar}
             </div>
 
@@ -95,7 +95,7 @@ export function ThreePanelLayout({
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-hidden rounded-2xl border border-border bg-card shadow-lg">{main}</div>
+            <div className="flex-1 overflow-hidden rounded-2xl bg-primary-foreground">{main}</div>
 
             {/* Right Resizer */}
             <div

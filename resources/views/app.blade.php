@@ -76,10 +76,9 @@
         }
     </script>
     {{-- Inline script to detect system dark mode preference and apply it immediately --}}
-    <script>
+    <!-- <script>
         (function() {
-            const appearance = '{{ $appearance ?? '
-            system ' }}';
+            const appearance = '{{ $appearance ?? 'system' }}';
 
             if (appearance === 'system') {
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -89,9 +88,8 @@
                 }
             }
         })();
-    </script>
+    </script> -->
 
-    {{-- Inline style to set the HTML background color based on our theme in app.css --}}
     <style>
         html {
             background-color: oklch(1 0 0);
@@ -104,12 +102,24 @@
 
     <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-    {{-- <link rel="icon" href="/favicon.ico" sizes="any"> --}}
     <link rel="icon" href="/images/b_black.png" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+
+    <!-- 🔥 CSRF TOKEN FOR WEBSOCKET AUTH -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <!-- 🔥 USER ID FOR PRIVATE CHANNELS -->
+    @auth
+    <meta name="user-id" content="{{ auth()->id() }}">
+    @endauth
+
+    <!-- 🔥 FLASH MESSAGE META TAG -->
+    @if(session('success'))
+    <meta name="flash-success" content="{{ session('success') }}">
+    @endif
 
     @routes
     @viteReactRefresh
@@ -120,12 +130,28 @@
 <body class="font-sans antialiased">
     @inertia
 
-   @if(request()->has('ref'))
+    @if(request()->has('ref'))
     <?php
-        session(['referral_code' => request('ref')]); 
+    session(['referral_code' => request('ref')]);
     ?>
     @endif
-
+    <!-- 🔥 TRIGGER JOB TRACKER ON SUCCESS -->
+    @if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                const successData = @json(session('success'));
+                if (typeof successData === 'object' && successData.batch_id) {
+                    window.dispatchEvent(new CustomEvent('job-started', {
+                        detail: successData
+                    }));
+                }
+            } catch (e) {
+                console.log('Flash message processed');
+            }
+        });
+    </script>
+    @endif
 </body>
 
 </html>

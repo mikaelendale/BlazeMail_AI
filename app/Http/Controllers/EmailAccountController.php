@@ -342,7 +342,7 @@ class EmailAccountController extends Controller
                 'updatedAt' => $emailAccount->updated_at->toISOString(),
             ];
 
-            return Inertia::render('settings/connected-account-detail', [
+            return Inertia::render('settings/email-account-detail', [
                 'account' => $accountDetails,
                 'breadcrumbs' => [
                     ['title' => 'Settings', 'href' => '/settings'],

@@ -17,9 +17,7 @@ interface GenerationFeedbackProps {
 export const GenerationFeedback = memo(function GenerationFeedback({ error, success, strategy, generationTime, onRetry }: GenerationFeedbackProps) {
     if (error) {
         return (
-            <Alert variant="destructive" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Generation Failed</AlertTitle>
+            <Alert variant="destructive" className="border-none shadow-none">
                 <AlertDescription className="mt-2">
                     {error}
                     {onRetry && (
@@ -31,31 +29,20 @@ export const GenerationFeedback = memo(function GenerationFeedback({ error, succ
             </Alert>
         );
     }
-
     if (success) {
         return (
-            <Alert className="mb-4 border-green-200 bg-green-50">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertTitle className="text-green-800">Email Generated Successfully</AlertTitle>
-                <AlertDescription className="mt-2 flex items-center gap-2 text-green-700">
-                    <div className="flex items-center gap-2">
-                        {strategy && (
-                            <Badge variant="outline" className="text-xs">
-                                <Zap className="mr-1 h-3 w-3" />
-                                {strategy.toUpperCase()}
-                            </Badge>
-                        )}
-                        {generationTime && (
-                            <Badge variant="outline" className="text-xs">
-                                <Clock className="mr-1 h-3 w-3" />
-                                {generationTime}ms
-                            </Badge>
-                        )}
+            <div className='flex items-center justify-between border-b border-border/50 bg-card/95 p-4 backdrop-blur-sm'>
+                <span>{strategy && (
+                    <Badge className="">{strategy}</Badge>
+                )}</span>
+                {generationTime && (
+                    <div className="mt-2 flex items-center">
+                        <Clock className="h-4 w-4 mr-1" />
+                        <span>{generationTime} seconds</span>
                     </div>
-                </AlertDescription>
-            </Alert>
+                )}
+            </div>
         );
     }
-
     return null;
 });

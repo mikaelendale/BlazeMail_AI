@@ -18,22 +18,21 @@ class FewShotStrategy implements PromptStrategyInterface
     public function generateEmail(array $data, array $examples = []): array
     {
         $prompt = $this->buildFewShotPrompt($data, $examples);
-        
+
         return $this->callGroqAPI($prompt, $data['model'] ?? 'blazemail-lite');
     }
 
     public function refineEmail(array $data): array
     {
         $prompt = $this->buildRefinementPrompt($data);
-        
+
         return $this->callGroqAPI($prompt, 'blazemail-lite', 'refinement');
     }
 
     public function selectExamples(array $examples, array $criteria): array
     {
-        // Use the same logic as RGC for now
         $prompt = $this->buildExampleSelectionPrompt($examples, $criteria);
-        
+
         try {
             $groq = new Groq(config('services.groq.api_key'));
             $reply = $groq->chat()->completions()->create([
@@ -47,7 +46,7 @@ class FewShotStrategy implements PromptStrategyInterface
             ]);
 
             $indexesJson = $reply['choices'][0]['message']['content'] ?? '[]';
-            
+
             if (preg_match('/\[(.*?)\]/s', $indexesJson, $matches)) {
                 $indexesJson = '[' . $matches[1] . ']';
             }
@@ -65,7 +64,6 @@ class FewShotStrategy implements PromptStrategyInterface
             }
 
             return $selectedExamples;
-
         } catch (\Exception $e) {
             Log::warning('Example selection failed, using fallback', ['error' => $e->getMessage()]);
             return $this->getFallbackExamples($examples);
@@ -75,18 +73,19 @@ class FewShotStrategy implements PromptStrategyInterface
     protected function buildFewShotPrompt(array $data, array $examples): string
     {
         $templates = $this->config['email_templates'];
-        
+
         $isPersonalized = $data['personalization'] ?? false;
-        $personalizationContext = $isPersonalized 
+        $personalizationContext = $isPersonalized
             ? str_replace(
-                ['{recipient}', '{audience}'], 
-                [$data['personalized_data']['recipient'] ?? 'the recipient', $data['personalized_data']['audience'] ?? 'their industry'], 
+                ['{recipient}', '{audience}'],
+                [$data['personalized_data']['recipient'] ?? 'the recipient', $data['personalized_data']['audience'] ?? 'their industry'],
                 $templates['personalization_contexts']['enabled']
             )
             : $templates['personalization_contexts']['disabled'];
 
         $examplesText = $this->formatExamples($examples);
         $constraints = implode("\n- ", $templates['output_format']['constraints']);
+
         $recipient = $isPersonalized ? ($data['personalized_data']['recipient'] ?? 'N/A') : (isset($data['recipient']) ? $data['recipient'] : 'N/A');
         $audience = $isPersonalized ? ($data['personalized_data']['audience'] ?? 'N/A') : (isset($data['audience']) ? $data['audience'] : 'N/A');
         $purpose = isset($data['purpose']) ? $data['purpose'] : 'N/A';
@@ -117,9 +116,13 @@ EMAIL REQUIREMENTS:
 CONSTRAINTS:
 - {$constraints}
 
-OUTPUT FORMAT:
-{$templates['output_format']['instruction']}
-{$templates['output_format']['example']}
+CRITICAL: You MUST respond with ONLY a valid JSON object in this exact format:
+{
+    "subject": "Your email subject here",
+    "body": "Your email body here"
+}
+
+Do NOT include any other text, explanations, or markdown formatting. Only return the JSON object.
 
 Generate the email now:
 EOD;
@@ -128,10 +131,10 @@ EOD;
     protected function buildRefinementPrompt(array $data): string
     {
         $templates = $this->config['refinement_templates'];
-        
+
         $improvements = implode(', ', $data['feedback'] ?? []);
         $custom = trim($data['customFeedback'] ?? '');
-        
+
         $guidelines = implode("\n- ", $templates['refinement_guidelines']);
 
         return <<<EOD
@@ -148,9 +151,13 @@ REFINEMENT REQUIREMENTS:
 GUIDELINES:
 - {$guidelines}
 
-OUTPUT FORMAT:
-Return ONLY a valid JSON object:
-{"subject": "Refined subject line", "body": "Refined email body"}
+CRITICAL: You MUST respond with ONLY a valid JSON object in this exact format:
+{
+    "subject": "Refined subject line",
+    "body": "Refined email body"
+}
+
+Do NOT include any other text, explanations, or markdown formatting. Only return the JSON object.
 
 Refine the email now:
 EOD;
@@ -209,12 +216,15 @@ EX;
     {
         try {
             $modelConfig = $this->config['models'][$model] ?? $this->config['models']['blazemail-lite'];
-            
+
             $groq = new Groq(config('services.groq.api_key'));
             $reply = $groq->chat()->completions()->create([
                 'model' => $modelConfig['groq_model'],
                 'messages' => [
-                    ['role' => 'system', 'content' => $this->config['email_templates']['system_role']],
+                    [
+                        'role' => 'system',
+                        'content' => 'You are a professional email copywriter. Always respond with valid JSON only. Never include explanations or markdown formatting.'
+                    ],
                     ['role' => 'user', 'content' => mb_convert_encoding($prompt, 'UTF-8', 'UTF-8')],
                 ],
                 'temperature' => $modelConfig['temperature'],
@@ -222,11 +232,22 @@ EX;
             ]);
 
             $content = trim($reply['choices'][0]['message']['content'] ?? '');
-            
-            $content = preg_replace('/^\`\`\`json\s*/', '', $content);
-            $content = preg_replace('/\s*\`\`\`$/', '', $content);
-            
+
+            // Log the raw response for debugging
+            Log::info('Raw AI response', ['content' => $content]);
+
+            // More aggressive JSON extraction
+            $content = $this->extractJSON($content);
+
             $json = json_decode($content, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::error('JSON decode error', [
+                    'error' => json_last_error_msg(),
+                    'content' => $content
+                ]);
+                throw new \Exception('JSON decode error: ' . json_last_error_msg());
+            }
 
             if (is_array($json) && isset($json['subject'], $json['body'])) {
                 return [
@@ -235,13 +256,48 @@ EX;
                     'prompt' => $prompt,
                 ];
             } else {
-                throw new \Exception('Invalid JSON response from AI');
+                Log::error('Invalid JSON structure', ['json' => $json]);
+                throw new \Exception('Invalid JSON response structure from AI');
             }
-
         } catch (\Exception $e) {
-            Log::error("Groq API call failed for {$type}", ['error' => $e->getMessage()]);
+            Log::error("Groq API call failed for {$type}", [
+                'error' => $e->getMessage(),
+                'model' => $model,
+                'trace' => $e->getTraceAsString()
+            ]);
             throw $e;
         }
+    }
+
+    /**
+     * Extract JSON from AI response with multiple fallback strategies
+     */
+    protected function extractJSON(string $content): string
+    {
+        // Remove common markdown formatting
+        $content = preg_replace('/^```json\s*/i', '', $content);
+        $content = preg_replace('/\s*```$/', '', $content);
+        $content = preg_replace('/^```\s*/', '', $content);
+
+        // Try to find JSON object pattern
+        if (preg_match('/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/', $content, $matches)) {
+            return $matches[0];
+        }
+
+        // If no JSON found, try to construct it from the content
+        if (
+            preg_match('/subject["\']?\s*:\s*["\']([^"\']+)["\']/', $content, $subjectMatch) &&
+            preg_match('/body["\']?\s*:\s*["\']([^"\']+)["\']/', $content, $bodyMatch)
+        ) {
+
+            return json_encode([
+                'subject' => $subjectMatch[1],
+                'body' => $bodyMatch[1]
+            ]);
+        }
+
+        // Last resort: return the content as is
+        return $content;
     }
 
     protected function getFallbackExamples(array $examples): array

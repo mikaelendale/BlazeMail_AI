@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contact;
+use App\Services\ContactLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,13 @@ use Inertia\Inertia;
 
 class ContactController extends Controller
 {
+    protected ContactLimitService $contactLimitService;
+
+    public function __construct(ContactLimitService $contactLimitService)
+    {
+        $this->contactLimitService = $contactLimitService;
+    }
+
     /**
      * Display paginated contacts with search and filters
      */
@@ -44,11 +52,9 @@ class ContactController extends Controller
             if ($status && $status !== 'all') {
                 $query->where('status', $status);
             }
-
             if ($classification && $classification !== 'all') {
                 $query->where('classification', $classification);
             }
-
             if ($company && $company !== 'all') {
                 $query->where('company', 'like', "%{$company}%");
             }
@@ -70,15 +76,14 @@ class ContactController extends Controller
                     'classification' => $contact->classification ?? 'prospect',
                     'status' => $contact->status ?? 'active',
                     'tags' => $contact->tags ? json_decode($contact->tags, true) : [],
-                    'lastContacted' => $contact->last_contacted ? $contact->last_contacted->toISOString() : null,
+                    'lastContacted' => $contact->last_contacted ? $contact->last_contacted : null,
                     'created_at' => $contact->created_at->toISOString(),
                     'updated_at' => $contact->updated_at->toISOString(),
                 ];
             });
 
-            // Get usage stats
-            $totalContacts = Contact::where('user_id', $user->id)->count();
-            $contactLimit = 2000;
+            // Get usage stats using the service
+            $usageStats = $this->contactLimitService->getUsageStats($user);
 
             // Get classification stats
             $classificationStats = Contact::where('user_id', $user->id)
@@ -112,17 +117,15 @@ class ContactController extends Controller
                     'sort_by' => $sortBy,
                     'sort_order' => $sortOrder,
                 ],
-                'usage' => [
-                    'used' => $totalContacts,
-                    'limit' => $contactLimit,
-                ],
+                'usage' => $usageStats,
                 'stats' => [
-                    'total' => $totalContacts,
+                    'total' => $usageStats['used'],
                     'classifications' => $classificationStats,
                     'active' => Contact::where('user_id', $user->id)->where('status', 'active')->count(),
                     'recent' => Contact::where('user_id', $user->id)->where('created_at', '>=', now()->subDays(7))->count(),
                 ],
                 'companies' => $companies,
+                'upgrade_suggestions' => $this->contactLimitService->getUpgradeSuggestions($user),
             ]);
         } catch (\Exception $e) {
             Log::error('Contact index error: ' . $e->getMessage(), [
@@ -130,7 +133,6 @@ class ContactController extends Controller
                 'request' => $request->all(),
                 'trace' => $e->getTraceAsString()
             ]);
-
             return back()->with('error', 'Failed to load contacts. Please try again.');
         }
     }
@@ -141,6 +143,14 @@ class ContactController extends Controller
     public function store(Request $request)
     {
         try {
+            $user = Auth::user();
+
+            // Check if user can add more contacts
+            if (!$this->contactLimitService->canAddContacts($user)) {
+                $usageStats = $this->contactLimitService->getUsageStats($user);
+                return back()->with('error', "Contact limit reached. You have used {$usageStats['used']}/{$usageStats['limit']} contacts on your {$usageStats['plan']} plan. Please upgrade to add more contacts.");
+            }
+
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => [
@@ -181,7 +191,6 @@ class ContactController extends Controller
                 'data' => $request->all(),
                 'trace' => $e->getTraceAsString()
             ]);
-
             return back()->with('error', 'Failed to create contact. Please try again.');
         }
     }
@@ -219,7 +228,6 @@ class ContactController extends Controller
                 'user_id' => Auth::id(),
                 'trace' => $e->getTraceAsString()
             ]);
-
             return back()->with('error', 'Contact not found.');
         }
     }
@@ -274,7 +282,6 @@ class ContactController extends Controller
                 'data' => $request->all(),
                 'trace' => $e->getTraceAsString()
             ]);
-
             return back()->with('error', 'Failed to update contact. Please try again.');
         }
     }
@@ -300,7 +307,6 @@ class ContactController extends Controller
                 'user_id' => Auth::id(),
                 'trace' => $e->getTraceAsString()
             ]);
-
             return back()->with('error', 'Failed to delete contact. Please try again.');
         }
     }
@@ -339,7 +345,6 @@ class ContactController extends Controller
                 'contact_ids' => $request->get('contact_ids', []),
                 'trace' => $e->getTraceAsString()
             ]);
-
             return back()->with('error', 'Failed to delete contacts. Please try again.');
         }
     }
@@ -395,7 +400,6 @@ class ContactController extends Controller
                 'updates' => $request->get('updates', []),
                 'trace' => $e->getTraceAsString()
             ]);
-
             return back()->with('error', 'Failed to update contacts. Please try again.');
         }
     }
@@ -406,6 +410,8 @@ class ContactController extends Controller
     public function import(Request $request)
     {
         try {
+            $user = Auth::user();
+
             $validated = $request->validate([
                 'file' => 'required|file|mimes:csv,txt|max:10240', // 10MB max
             ]);
@@ -413,6 +419,13 @@ class ContactController extends Controller
             $file = $validated['file'];
             $csvData = array_map('str_getcsv', file($file->path()));
             $header = array_shift($csvData); // Remove header row
+
+            // Validate import size against user's limit
+            $importValidation = $this->contactLimitService->validateImportSize($user, count($csvData));
+            
+            if (!$importValidation['valid']) {
+                return back()->with('error', $importValidation['message']);
+            }
 
             // Map CSV headers to database fields
             $fieldMapping = [
@@ -447,6 +460,13 @@ class ContactController extends Controller
 
             foreach ($csvData as $rowIndex => $row) {
                 try {
+                    // Check if we've reached the user's limit during import
+                    if (!$this->contactLimitService->canAddContacts($user)) {
+                        $usageStats = $this->contactLimitService->getUsageStats($user);
+                        $errors[] = "Import stopped: Contact limit reached ({$usageStats['used']}/{$usageStats['limit']})";
+                        break;
+                    }
+
                     $contactData = ['user_id' => Auth::id()];
                     $customFields = [];
 
@@ -516,7 +536,6 @@ class ContactController extends Controller
                 'file_name' => $request->file('file')?->getClientOriginalName(),
                 'trace' => $e->getTraceAsString()
             ]);
-
             return back()->with('error', 'Failed to import contacts. Please try again.');
         }
     }
@@ -560,7 +579,6 @@ class ContactController extends Controller
             // Create CSV content
             $callback = function () use ($contacts) {
                 $file = fopen('php://output', 'w');
-
                 // Add BOM for UTF-8 (helps with Excel compatibility)
                 fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
@@ -616,7 +634,6 @@ class ContactController extends Controller
                 'filters' => $request->all(),
                 'trace' => $e->getTraceAsString()
             ]);
-
             return back()->with('error', 'Failed to export contacts. Please try again.');
         }
     }
@@ -628,7 +645,6 @@ class ContactController extends Controller
     {
         try {
             $filename = 'contacts_import_template.csv';
-
             $headers = [
                 'Content-Type' => 'text/csv; charset=utf-8',
                 'Content-Disposition' => "attachment; filename=\"{$filename}\"",
@@ -639,7 +655,6 @@ class ContactController extends Controller
 
             $callback = function () {
                 $file = fopen('php://output', 'w');
-
                 // Add BOM for UTF-8
                 fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
@@ -693,7 +708,6 @@ class ContactController extends Controller
                 'user_id' => Auth::id(),
                 'trace' => $e->getTraceAsString()
             ]);
-
             return back()->with('error', 'Failed to download template. Please try again.');
         }
     }

@@ -21,7 +21,6 @@ class GmailInboxService
         $this->client->setClientSecret(config('services.gmail.client_secret'));
         $this->client->setRedirectUri(config('services.gmail.redirect_uri'));
 
-        // 🔥 MATCH THE SCOPES FROM GmailService
         $this->client->addScope([
             Gmail::GMAIL_READONLY,
             Gmail::GMAIL_MODIFY,
@@ -31,12 +30,12 @@ class GmailInboxService
     }
 
     /**
-     * Fetch inbox messages - WITH SCOPE VALIDATION 🔥
+     * Fetch inbox messages with improved error handling
      */
     public function fetchInboxMessages(EmailAccount $account, int $maxResults = 50): array
     {
         try {
-            // 🔥 CHECK SCOPES FIRST
+            // Check scopes first
             if (!$this->hasRequiredScopes($account)) {
                 Log::error('Account missing required scopes for inbox access', [
                     'account_id' => $account->id,
@@ -50,15 +49,18 @@ class GmailInboxService
                 ];
             }
 
-            // Set up the client with account tokens
-            $this->setupClientForAccount($account);
+            // Set up the client with account tokens - this may throw an exception
+            $tokenSetupResult = $this->setupClientForAccount($account);
+            if (!$tokenSetupResult['success']) {
+                return $tokenSetupResult;
+            }
+
             $this->gmail = new Gmail($this->client);
 
-            Log::info('Starting inbox fetch with proper scopes', [
+            Log::info('Starting inbox fetch', [
                 'account_id' => $account->id,
                 'email' => $account->email,
                 'max_results' => $maxResults,
-                'scopes' => $account->oauth_scopes ?? [],
             ]);
 
             // Get list of messages from inbox
@@ -110,6 +112,8 @@ class GmailInboxService
             $account->update([
                 'last_sync' => now(),
                 'last_activity' => now(),
+                'consecutive_errors' => 0, // Reset error count on success
+                'last_error' => null,
             ]);
 
             Log::info('Inbox fetch completed successfully', [
@@ -126,35 +130,19 @@ class GmailInboxService
                 'error_count' => $errorCount,
             ];
         } catch (\Google\Service\Exception $e) {
-            // Handle Google API specific errors
-            $error = json_decode($e->getMessage(), true);
-            $errorMessage = $error['error']['message'] ?? $e->getMessage();
-
-            Log::error('Gmail API error during inbox fetch', [
-                'account_id' => $account->id,
-                'error_code' => $e->getCode(),
-                'error_message' => $errorMessage,
-                'granted_scopes' => $account->oauth_scopes ?? [],
-            ]);
-
-            // Check if it's a scope issue
-            if ($e->getCode() === 403 && str_contains($errorMessage, 'insufficient')) {
-                return [
-                    'success' => false,
-                    'error' => 'Gmail account needs re-authorization with inbox permissions. Please reconnect your account.',
-                    'needs_reauth' => true,
-                ];
-            }
-
-            return [
-                'success' => false,
-                'error' => $errorMessage,
-            ];
+            return $this->handleGoogleServiceException($e, $account);
         } catch (\Exception $e) {
             Log::error('Inbox fetch failed', [
                 'account_id' => $account->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Update account error status
+            $account->update([
+                'consecutive_errors' => ($account->consecutive_errors ?? 0) + 1,
+                'last_error' => $e->getMessage(),
+                'last_health_check' => now(),
             ]);
 
             return [
@@ -165,7 +153,199 @@ class GmailInboxService
     }
 
     /**
-     * 🔥 NEW: Check if account has required scopes
+     * Handle Google Service exceptions with specific error handling
+     */
+    private function handleGoogleServiceException(\Google\Service\Exception $e, EmailAccount $account): array
+    {
+        $error = json_decode($e->getMessage(), true);
+        $errorMessage = $error['error']['message'] ?? $e->getMessage();
+        $errorCode = $e->getCode();
+
+        Log::error('Gmail API error during inbox fetch', [
+            'account_id' => $account->id,
+            'error_code' => $errorCode,
+            'error_message' => $errorMessage,
+            'granted_scopes' => $account->oauth_scopes ?? [],
+        ]);
+
+        // Handle specific error cases
+        switch ($errorCode) {
+            case 401:
+                // Unauthorized - token issues
+                if (
+                    str_contains($errorMessage, 'invalid_grant') ||
+                    str_contains($errorMessage, 'Token has been expired or revoked')
+                ) {
+
+                    $this->markAccountForReauth($account, 'OAuth token expired or revoked');
+
+                    return [
+                        'success' => false,
+                        'error' => 'Gmail account authorization has expired. Please reconnect your account.',
+                        'needs_reauth' => true,
+                        'error_code' => 'token_expired',
+                    ];
+                }
+                break;
+
+            case 403:
+                // Forbidden - scope or permission issues
+                if (str_contains($errorMessage, 'insufficient')) {
+                    $this->markAccountForReauth($account, 'Insufficient permissions');
+
+                    return [
+                        'success' => false,
+                        'error' => 'Gmail account needs re-authorization with inbox permissions. Please reconnect your account.',
+                        'needs_reauth' => true,
+                        'error_code' => 'insufficient_permissions',
+                    ];
+                }
+                break;
+
+            case 429:
+                // Rate limit exceeded
+                return [
+                    'success' => false,
+                    'error' => 'Gmail API rate limit exceeded. Please try again later.',
+                    'error_code' => 'rate_limit',
+                    'retry_after' => 300, // 5 minutes
+                ];
+
+            case 500:
+            case 502:
+            case 503:
+                // Server errors - temporary issues
+                return [
+                    'success' => false,
+                    'error' => 'Gmail service temporarily unavailable. Please try again later.',
+                    'error_code' => 'service_unavailable',
+                    'retry_after' => 60, // 1 minute
+                ];
+        }
+
+        // Generic error handling
+        $account->update([
+            'consecutive_errors' => ($account->consecutive_errors ?? 0) + 1,
+            'last_error' => $errorMessage,
+            'last_health_check' => now(),
+        ]);
+
+        return [
+            'success' => false,
+            'error' => $errorMessage,
+            'error_code' => 'api_error',
+        ];
+    }
+
+    /**
+     * Mark account for re-authentication
+     */
+    private function markAccountForReauth(EmailAccount $account, string $reason): void
+    {
+        $account->update([
+            'status' => 'needs_reauth',
+            'is_connected' => false,
+            'consecutive_errors' => ($account->consecutive_errors ?? 0) + 1,
+            'last_error' => $reason,
+            'last_health_check' => now(),
+            'metadata' => array_merge($account->metadata ?? [], [
+                'reauth_required' => true,
+                'reauth_reason' => $reason,
+                'reauth_required_at' => now()->toISOString(),
+            ]),
+        ]);
+
+        Log::warning('Account marked for re-authentication', [
+            'account_id' => $account->id,
+            'email' => $account->email,
+            'reason' => $reason,
+        ]);
+    }
+
+    /**
+     * Setup Gmail client for specific account with improved error handling
+     */
+    private function setupClientForAccount(EmailAccount $account): array
+    {
+        try {
+            // Check if we have the required tokens
+            if (empty($account->encrypted_access_token)) {
+                throw new \Exception('No access token available for account');
+            }
+
+            $this->client->setAccessToken([
+                'access_token' => $account->encrypted_access_token,
+                'refresh_token' => $account->encrypted_refresh_token,
+                'expires_in' => $account->token_expires_at ?
+                    $account->token_expires_at->diffInSeconds(now()) : 3600,
+            ]);
+
+            // Check if token needs refresh
+            if ($this->client->isAccessTokenExpired()) {
+                if (empty($account->encrypted_refresh_token)) {
+                    throw new \Exception('Access token expired and no refresh token available');
+                }
+
+                Log::info('Refreshing expired access token', [
+                    'account_id' => $account->id,
+                    'email' => $account->email,
+                ]);
+
+                $newToken = $this->client->fetchAccessTokenWithRefreshToken($account->encrypted_refresh_token);
+
+                if (isset($newToken['error'])) {
+                    $errorMessage = $newToken['error'];
+
+                    // Handle specific refresh token errors
+                    if ($errorMessage === 'invalid_grant') {
+                        $this->markAccountForReauth($account, 'Refresh token invalid or expired');
+
+                        return [
+                            'success' => false,
+                            'error' => 'Gmail account authorization has expired. Please reconnect your account.',
+                            'needs_reauth' => true,
+                            'error_code' => 'invalid_refresh_token',
+                        ];
+                    }
+
+                    throw new \Exception('Token refresh failed: ' . $errorMessage);
+                }
+
+                // Update account with new token
+                $account->update([
+                    'encrypted_access_token' => $newToken['access_token'],
+                    'token_expires_at' => isset($newToken['expires_in']) ?
+                        now()->addSeconds($newToken['expires_in']) : null,
+                    'last_sync' => now(),
+                    'consecutive_errors' => 0, // Reset error count on successful refresh
+                    'last_error' => null,
+                ]);
+
+                Log::info('Access token refreshed successfully', [
+                    'account_id' => $account->id,
+                    'email' => $account->email,
+                ]);
+            }
+
+            return ['success' => true];
+        } catch (\Exception $e) {
+            Log::error('Failed to setup client for account', [
+                'account_id' => $account->id,
+                'email' => $account->email,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+                'needs_reauth' => str_contains($e->getMessage(), 'invalid_grant') ||
+                    str_contains($e->getMessage(), 'expired'),
+            ];
+        }
+    }
+
+    /**
+     * Check if account has required scopes
      */
     private function hasRequiredScopes(EmailAccount $account): bool
     {
@@ -197,8 +377,98 @@ class GmailInboxService
     }
 
     /**
-     * Parse Gmail message and store in database - SAFE VERSION
+     * Sync all accounts for a user with improved error handling
      */
+    public function syncAllAccountsForUser(int $userId): array
+    {
+        try {
+            $accounts = EmailAccount::where('user_id', $userId)
+                ->where('provider', 'gmail')
+                ->where('is_connected', true)
+                ->whereIn('status', ['active', 'needs_reauth'])
+                ->get();
+
+            $results = [
+                'total_accounts' => $accounts->count(),
+                'success_count' => 0,
+                'error_count' => 0,
+                'reauth_needed' => 0,
+                'accounts' => [],
+            ];
+
+            foreach ($accounts as $account) {
+                $result = $this->fetchInboxMessages($account, 50);
+
+                $accountResult = [
+                    'account_id' => $account->id,
+                    'email' => $account->email,
+                    'success' => $result['success'],
+                ];
+
+                if ($result['success']) {
+                    $results['success_count']++;
+                    $accountResult['fetched_count'] = $result['fetched_count'];
+                    $accountResult['new_count'] = $result['new_count'];
+                } else {
+                    $results['error_count']++;
+                    $accountResult['error'] = $result['error'];
+
+                    if ($result['needs_reauth'] ?? false) {
+                        $results['reauth_needed']++;
+                        $accountResult['needs_reauth'] = true;
+                    }
+                }
+
+                $results['accounts'][] = $accountResult;
+
+                // Small delay between accounts
+                usleep(500000); // 0.5 seconds
+            }
+
+            Log::info('Bulk account sync completed', [
+                'user_id' => $userId,
+                'results' => $results,
+            ]);
+
+            return $results;
+        } catch (\Exception $e) {
+            Log::error('Bulk account sync failed', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    // Keep all your existing helper methods (sanitizeText, extractEmailAddress, etc.)
+    private function sanitizeText(?string $text): ?string
+    {
+        if (empty($text)) {
+            return null;
+        }
+
+        try {
+            $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+            $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $text);
+
+            if (!mb_check_encoding($text, 'UTF-8')) {
+                return '(Invalid encoding)';
+            }
+
+            if (mb_strlen($text) > 50000) {
+                $text = mb_substr($text, 0, 50000) . '... (truncated)';
+            }
+
+            return $text;
+        } catch (\Exception $e) {
+            return '(Text encoding error)';
+        }
+    }
+
     private function parseAndStoreMessage(EmailAccount $account, $gmailMessage): ?EmailMessage
     {
         try {
@@ -276,60 +546,6 @@ class GmailInboxService
         }
     }
 
-    /**
-     * Setup Gmail client for specific account
-     */
-    private function setupClientForAccount(EmailAccount $account): void
-    {
-        $this->client->setAccessToken([
-            'access_token' => $account->encrypted_access_token,
-            'refresh_token' => $account->encrypted_refresh_token,
-            'expires_in' => $account->token_expires_at ?
-                $account->token_expires_at->diffInSeconds(now()) : 3600,
-        ]);
-
-        // Check if token needs refresh
-        if ($this->client->isAccessTokenExpired()) {
-            $newToken = $this->client->fetchAccessTokenWithRefreshToken($account->encrypted_refresh_token);
-            if (isset($newToken['error'])) {
-                throw new \Exception('Token refresh failed: ' . $newToken['error']);
-            }
-
-            // Update account with new token
-            $account->update([
-                'encrypted_access_token' => $newToken['access_token'],
-                'token_expires_at' => isset($newToken['expires_in']) ?
-                    now()->addSeconds($newToken['expires_in']) : null,
-                'last_sync' => now(),
-            ]);
-        }
-    }
-
-    // Keep all your existing helper methods (sanitizeText, extractEmailAddress, etc.)
-    private function sanitizeText(?string $text): ?string
-    {
-        if (empty($text)) {
-            return null;
-        }
-
-        try {
-            $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
-            $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $text);
-
-            if (!mb_check_encoding($text, 'UTF-8')) {
-                return '(Invalid encoding)';
-            }
-
-            if (mb_strlen($text) > 50000) {
-                $text = mb_substr($text, 0, 50000) . '... (truncated)';
-            }
-
-            return $text;
-        } catch (\Exception $e) {
-            return '(Text encoding error)';
-        }
-    }
-
     private function extractBodyContent($payload): array
     {
         $body = ['text' => '', 'html' => ''];
@@ -368,7 +584,6 @@ class GmailInboxService
         return $body;
     }
 
-    // Add all your other helper methods here...
     private function extractEmailAddress(string $emailString): string
     {
         try {

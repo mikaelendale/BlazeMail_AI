@@ -68,7 +68,6 @@ export const OptimizedAICard = memo(function OptimizedAICard({ onAISuggestion, o
 
     return (
         <Card className="flex h-full flex-col overflow-hidden">
-            <CreditStatus/>
             <CardHeader className="border-b border-border/50 pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg border bg-background">
@@ -109,14 +108,6 @@ export const OptimizedAICard = memo(function OptimizedAICard({ onAISuggestion, o
                                     <div className="absolute inset-0 h-4 w-4 animate-ping rounded-full border border-blue-400 opacity-20"></div>
                                 </div>
                                 <span className="flex-1 font-medium">AI is refining your email...</span>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={onCancel}
-                                    className="h-7 border-red-200 px-3 text-xs text-red-600 hover:bg-red-50"
-                                >
-                                    Cancel
-                                </Button>
                             </div>
                         )}
 

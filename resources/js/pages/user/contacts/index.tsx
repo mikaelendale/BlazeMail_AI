@@ -1,23 +1,31 @@
-'use client';
+"use client"
 
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import AppLayout from '@/layouts/app-layout';
-import { router, useForm } from '@inertiajs/react';
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import AppLayout from "@/layouts/app-layout"
+import { router, useForm } from "@inertiajs/react"
+import {
+    AlertTriangle,
     Building2,
     CheckCircle,
+    Crown,
     Download,
     Edit,
     Eye,
@@ -34,69 +42,89 @@ import {
     Upload,
     User,
     Users,
-} from 'lucide-react';
-import type React from 'react';
-import { useRef, useState } from 'react';
+} from "lucide-react"
+import type React from "react"
+import { useRef, useState } from "react"
 
 interface Contact {
-    id: number;
-    name: string;
-    email: string;
-    company: string;
-    jobTitle: string;
-    classification: 'lead' | 'prospect' | 'customer' | 'partner' | 'vendor' | 'other';
-    status: 'active' | 'inactive' | 'blocked';
-    tags: string[];
-    lastContacted: string | null;
-    created_at: string;
-    updated_at: string;
+    id: number
+    name: string
+    email: string
+    company: string
+    jobTitle: string
+    classification: "lead" | "prospect" | "customer" | "partner" | "vendor" | "other"
+    status: "active" | "inactive" | "blocked"
+    tags: string[]
+    lastContacted: string | null
+    created_at: string
+    updated_at: string
 }
 
 interface ContactsPageProps {
     contacts: {
-        data: Contact[];
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        total: number;
-        links?: any[];
-    };
+        data: Contact[]
+        current_page: number
+        last_page: number
+        per_page: number
+        total: number
+        links?: any[]
+    }
     filters: {
-        search?: string;
-        status?: string;
-        classification?: string;
-        company?: string;
-        sort_by?: string;
-        sort_order?: string;
-    };
+        search?: string
+        status?: string
+        classification?: string
+        company?: string
+        sort_by?: string
+        sort_order?: string
+    }
     usage: {
-        used: number;
-        limit: number;
-    };
+        used: number
+        limit: number
+        remaining: number
+        percentage: number
+        plan: string
+        can_add: boolean
+        is_near_limit: boolean
+        is_at_limit: boolean
+    }
     stats: {
-        total: number;
-        classifications: Record<string, number>;
-        active: number;
-        recent: number;
-    };
-    companies: string[];
+        total: number
+        classifications: Record<string, number>
+        active: number
+        recent: number
+    }
+    companies: string[]
+    upgrade_suggestions: Array<{
+        plan: string
+        limit: number
+        price: string
+        recommended: boolean
+    }>
     flash?: {
-        success?: string;
-        error?: string;
-        import_errors?: string[];
-    };
+        success?: string
+        error?: string
+        import_errors?: string[]
+    }
 }
 
-export default function ContactsIndex({ contacts, filters, usage, stats, companies, flash }: ContactsPageProps) {
-    const [searchTerm, setSearchTerm] = useState(filters.search || '');
-    const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
-    const [classificationFilter, setClassificationFilter] = useState(filters.classification || 'all');
-    const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    const [importFile, setImportFile] = useState<File | null>(null);
-    const [importPreview, setImportPreview] = useState<any[]>([]);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+export default function ContactsIndex({
+    contacts,
+    filters,
+    usage,
+    stats,
+    companies,
+    upgrade_suggestions,
+    flash,
+}: ContactsPageProps) {
+    const [searchTerm, setSearchTerm] = useState(filters.search || "")
+    const [statusFilter, setStatusFilter] = useState(filters.status || "all")
+    const [classificationFilter, setClassificationFilter] = useState(filters.classification || "all")
+    const [selectedContacts, setSelectedContacts] = useState<number[]>([])
+    const [showAddModal, setShowAddModal] = useState(false)
+    const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+    const [importFile, setImportFile] = useState<File | null>(null)
+    const [importPreview, setImportPreview] = useState<any[]>([])
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Form for adding new contact using Inertia's useForm
     const {
@@ -108,15 +136,15 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
         reset,
         clearErrors,
     } = useForm({
-        name: '',
-        email: '',
-        company: '',
-        job_title: '',
-        classification: 'prospect' as const,
-        status: 'active' as const,
+        name: "",
+        email: "",
+        company: "",
+        job_title: "",
+        classification: "prospect" as const,
+        status: "active" as const,
         tags: [] as string[],
         custom_fields: {},
-    });
+    })
 
     // Form for importing contacts
     const {
@@ -128,204 +156,258 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
         reset: resetImport,
     } = useForm({
         file: null as File | null,
-    });
+    })
 
     // Classification configurations - MINIMAL
     const classificationConfig = {
-        lead: { label: 'Lead', icon: TrendingUp },
-        prospect: { label: 'Prospect', icon: User },
-        customer: { label: 'Customer', icon: Star },
-        partner: { label: 'Partner', icon: Building2 },
-        vendor: { label: 'Vendor', icon: Building2 },
-        other: { label: 'Other', icon: User },
-    };
+        lead: { label: "Lead", icon: TrendingUp },
+        prospect: { label: "Prospect", icon: User },
+        customer: { label: "Customer", icon: Star },
+        partner: { label: "Partner", icon: Building2 },
+        vendor: { label: "Vendor", icon: Building2 },
+        other: { label: "Other", icon: User },
+    }
 
     // Handle search with debounce
     const handleSearch = (value: string) => {
-        setSearchTerm(value);
+        setSearchTerm(value)
         const timeoutId = setTimeout(() => {
             router.get(
-                '/contacts',
+                "/contacts",
                 {
                     search: value || undefined,
-                    status: statusFilter !== 'all' ? statusFilter : undefined,
-                    classification: classificationFilter !== 'all' ? classificationFilter : undefined,
+                    status: statusFilter !== "all" ? statusFilter : undefined,
+                    classification: classificationFilter !== "all" ? classificationFilter : undefined,
                     page: 1,
                 },
                 {
                     preserveState: true,
                     replace: true,
-                    only: ['contacts', 'filters'],
+                    only: ["contacts", "filters"],
                 },
-            );
-        }, 300);
-        return () => clearTimeout(timeoutId);
-    };
+            )
+        }, 300)
+        return () => clearTimeout(timeoutId)
+    }
 
     // Handle filters
     const handleFilter = (type: string, value: string) => {
-        if (type === 'status') setStatusFilter(value);
-        if (type === 'classification') setClassificationFilter(value);
+        if (type === "status") setStatusFilter(value)
+        if (type === "classification") setClassificationFilter(value)
         router.get(
-            '/contacts',
+            "/contacts",
             {
                 search: searchTerm || undefined,
-                status: type === 'status' ? (value !== 'all' ? value : undefined) : statusFilter !== 'all' ? statusFilter : undefined,
+                status:
+                    type === "status" ? (value !== "all" ? value : undefined) : statusFilter !== "all" ? statusFilter : undefined,
                 classification:
-                    type === 'classification'
-                        ? value !== 'all'
+                    type === "classification"
+                        ? value !== "all"
                             ? value
                             : undefined
-                        : classificationFilter !== 'all'
-                          ? classificationFilter
-                          : undefined,
+                        : classificationFilter !== "all"
+                            ? classificationFilter
+                            : undefined,
                 page: 1,
             },
             {
                 preserveState: true,
                 replace: true,
-                only: ['contacts', 'filters'],
+                only: ["contacts", "filters"],
             },
-        );
-    };
+        )
+    }
 
     // Handle add contact
     const handleAddContact = (e: React.FormEvent) => {
-        e.preventDefault();
-        post('/contacts', {
+        e.preventDefault()
+
+        // Check if user can add more contacts
+        if (!usage.can_add) {
+            alert(
+                `Contact limit reached! You have used ${usage.used}/${usage.limit} contacts on your ${usage.plan} plan. Please upgrade to add more contacts.`,
+            )
+            return
+        }
+
+        post("/contacts", {
             onSuccess: () => {
-                setShowAddModal(false);
-                reset();
-                clearErrors();
+                setShowAddModal(false)
+                reset()
+                clearErrors()
             },
-        });
-    };
+        })
+    }
 
     // Handle delete contact
     const handleDeleteContact = (id: number, name: string) => {
         if (window.confirm(`Are you sure you want to delete ${name}?`)) {
             router.delete(`/contacts/${id}`, {
                 onSuccess: () => {
-                    setSelectedContacts((prev) => prev.filter((cId) => cId !== id));
+                    setSelectedContacts((prev) => prev.filter((cId) => cId !== id))
                 },
-            });
+            })
         }
-    };
+    }
 
     // Handle bulk delete
     const handleBulkDelete = () => {
         if (selectedContacts.length > 0 && window.confirm(`Delete ${selectedContacts.length} selected contacts?`)) {
-            router.delete('/contacts/bulk/delete', {
+            router.delete("/contacts/bulk/delete", {
                 data: { contact_ids: selectedContacts },
                 onSuccess: () => setSelectedContacts([]),
-            });
+            })
         }
-    };
+    }
 
     // Handle contact selection
     const handleSelectContact = (id: number, checked: boolean) => {
         if (checked) {
-            setSelectedContacts([...selectedContacts, id]);
+            setSelectedContacts([...selectedContacts, id])
         } else {
-            setSelectedContacts(selectedContacts.filter((cId) => cId !== id));
+            setSelectedContacts(selectedContacts.filter((cId) => cId !== id))
         }
-    };
+    }
 
     // Handle select all
     const handleSelectAll = (checked: boolean) => {
         if (checked) {
-            setSelectedContacts(contacts.data.map((c) => c.id));
+            setSelectedContacts(contacts.data.map((c) => c.id))
         } else {
-            setSelectedContacts([]);
+            setSelectedContacts([])
         }
-    };
+    }
 
     // Handle file selection for import
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+        const file = e.target.files?.[0]
         if (file) {
-            setImportFile(file);
-            setImportData('file', file);
-            previewImportFile(file);
+            setImportFile(file)
+            setImportData("file", file)
+            previewImportFile(file)
         }
-    };
+    }
 
     // Preview import file
     const previewImportFile = (file: File) => {
-        const reader = new FileReader();
+        const reader = new FileReader()
         reader.onload = (e) => {
-            const text = e.target?.result as string;
-            const lines = text.split('\n').slice(0, 6); // Preview first 5 rows + header
-            const preview = lines.map((line) => line.split(','));
-            setImportPreview(preview);
-        };
-        reader.readAsText(file);
-    };
+            const text = e.target?.result as string
+            const lines = text.split("\n").slice(0, 6) // Preview first 5 rows + header
+            const preview = lines.map((line) => line.split(","))
+            setImportPreview(preview)
+        }
+        reader.readAsText(file)
+    }
 
     // Handle import
     const handleImport = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!importFile) return;
-        postImport('/contacts/import', {
+        e.preventDefault()
+        if (!importFile) return
+
+        // Check if import would exceed limit
+        if (importPreview.length > 1 && importPreview.length - 1 > usage.remaining) {
+            alert(
+                `Import contains ${importPreview.length - 1} contacts but you only have ${usage.remaining} slots remaining on your ${usage.plan} plan. Please upgrade your plan or reduce the import size.`,
+            )
+            return
+        }
+
+        postImport("/contacts/import", {
             onSuccess: () => {
-                setShowAddModal(false);
-                setImportFile(null);
-                setImportPreview([]);
-                resetImport();
+                setShowAddModal(false)
+                setImportFile(null)
+                setImportPreview([])
+                resetImport()
                 if (fileInputRef.current) {
-                    fileInputRef.current.value = '';
+                    fileInputRef.current.value = ""
                 }
             },
             onError: (errors) => {
-                console.error('Import errors:', errors);
+                console.error("Import errors:", errors)
             },
-        });
-    };
+        })
+    }
 
     // Handle export
     const handleExport = () => {
         window.location.href = `/contacts/export?${new URLSearchParams({
-            search: searchTerm || '',
-            status: statusFilter !== 'all' ? statusFilter : '',
-            classification: classificationFilter !== 'all' ? classificationFilter : '',
-        }).toString()}`;
-    };
+            search: searchTerm || "",
+            status: statusFilter !== "all" ? statusFilter : "",
+            classification: classificationFilter !== "all" ? classificationFilter : "",
+        }).toString()}`
+    }
 
     // Handle download template
     const handleDownloadTemplate = () => {
-        window.location.href = '/contacts/download-template';
-    };
+        window.location.href = "/contacts/download-template"
+    }
+
+    // Handle upgrade
+    const handleUpgrade = () => {
+        router.visit("/billing/plans")
+    }
 
     // Utility functions
     const getInitials = (name: string) => {
         return name
-            .split(' ')
+            .split(" ")
             .map((n) => n[0])
-            .join('')
+            .join("")
             .toUpperCase()
-            .slice(0, 2);
-    };
+            .slice(0, 2)
+    }
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'active':
-                return 'bg-green-500';
-            case 'inactive':
-                return 'bg-gray-400';
-            case 'blocked':
-                return 'bg-red-500';
+            case "active":
+                return "bg-green-500"
+            case "inactive":
+                return "bg-gray-400"
+            case "blocked":
+                return "bg-red-500"
             default:
-                return 'bg-gray-400';
+                return "bg-gray-400"
         }
-    };
+    }
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-        });
-    };
+        return new Date(dateString).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+        })
+    }
+
+    const getPlanDisplayName = (plan: string) => {
+        switch (plan) {
+            case "free":
+                return "Free"
+            case "growth-monthly":
+            case "growth-annual":
+                return "Growth"
+            case "scale-monthly":
+            case "scale-annual":
+                return "Scale"
+            default:
+                return "Free"
+        }
+    }
+
+    const getPlanColor = (plan: string) => {
+        switch (plan) {
+            case "free":
+                return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400"
+            case "growth-monthly":
+            case "growth-annual":
+                return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+            case "scale-monthly":
+            case "scale-annual":
+                return "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400"
+            default:
+                return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400"
+        }
+    }
 
     return (
         <AppLayout>
@@ -335,7 +417,10 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                     <div className="mb-6 sm:mb-8">
                         <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
                             <div className="space-y-1 sm:space-y-2">
-                                <h1 className="text-2xl font-bold text-foreground sm:text-3xl lg:text-4xl">Contacts</h1>
+                                <div className="flex items-center gap-3">
+                                    <h1 className="text-2xl font-bold text-foreground sm:text-3xl lg:text-4xl">Contacts</h1>
+                                    <Badge className={getPlanColor(usage.plan)}>{getPlanDisplayName(usage.plan)}</Badge>
+                                </div>
                                 <p className="text-sm text-muted-foreground sm:text-base">Manage your contact database</p>
                             </div>
                             <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
@@ -350,7 +435,7 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                 </Button>
                                 <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
                                     <DialogTrigger asChild>
-                                        <Button className="h-9 gap-2 text-sm sm:h-10 sm:text-base" size="sm">
+                                        <Button className="h-9 gap-2 text-sm sm:h-10 sm:text-base" size="sm" disabled={!usage.can_add}>
                                             <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                                             <span className="xs:inline hidden">Add Contact</span>
                                             <span className="xs:hidden">Add</span>
@@ -360,6 +445,35 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                         <DialogHeader className="pb-4">
                                             <DialogTitle className="text-lg sm:text-xl">Add New Contact</DialogTitle>
                                         </DialogHeader>
+
+                                        {/* Usage Warning */}
+                                        {usage.is_near_limit && (
+                                            <Alert
+                                                className={`mb-4 ${usage.is_at_limit ? "border-red-200 bg-red-50" : "border-yellow-200 bg-yellow-50"}`}
+                                            >
+                                                <AlertTriangle
+                                                    className={`h-4 w-4 ${usage.is_at_limit ? "text-red-600" : "text-yellow-600"}`}
+                                                />
+                                                <AlertDescription
+                                                    className={`text-sm ${usage.is_at_limit ? "text-red-800" : "text-yellow-800"}`}
+                                                >
+                                                    {usage.is_at_limit
+                                                        ? `Contact limit reached! You have used ${usage.used}/${usage.limit} contacts on your ${getPlanDisplayName(usage.plan)} plan.`
+                                                        : `You're approaching your contact limit: ${usage.used}/${usage.limit} used (${usage.remaining} remaining).`}
+                                                    {upgrade_suggestions.length > 0 && (
+                                                        <Button
+                                                            variant="link"
+                                                            size="sm"
+                                                            onClick={handleUpgrade}
+                                                            className="ml-2 h-auto p-0 text-sm underline"
+                                                        >
+                                                            Upgrade Plan
+                                                        </Button>
+                                                    )}
+                                                </AlertDescription>
+                                            </Alert>
+                                        )}
+
                                         <Tabs defaultValue="manual" className="w-full">
                                             <TabsList className="grid h-9 w-full grid-cols-2 sm:h-10">
                                                 <TabsTrigger value="manual" className="text-xs sm:text-sm">
@@ -379,9 +493,10 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                             <Input
                                                                 id="name"
                                                                 value={newContact.name}
-                                                                onChange={(e) => setData('name', e.target.value)}
+                                                                onChange={(e) => setData("name", e.target.value)}
                                                                 placeholder="John Doe"
-                                                                className={`h-9 text-sm sm:h-10 sm:text-base ${errors.name ? 'border-red-500' : ''}`}
+                                                                className={`h-9 text-sm sm:h-10 sm:text-base ${errors.name ? "border-red-500" : ""}`}
+                                                                disabled={!usage.can_add}
                                                             />
                                                             {errors.name && <p className="text-xs text-red-600 sm:text-sm">{errors.name}</p>}
                                                         </div>
@@ -393,9 +508,10 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                                 id="email"
                                                                 type="email"
                                                                 value={newContact.email}
-                                                                onChange={(e) => setData('email', e.target.value)}
+                                                                onChange={(e) => setData("email", e.target.value)}
                                                                 placeholder="john@company.com"
-                                                                className={`h-9 text-sm sm:h-10 sm:text-base ${errors.email ? 'border-red-500' : ''}`}
+                                                                className={`h-9 text-sm sm:h-10 sm:text-base ${errors.email ? "border-red-500" : ""}`}
+                                                                disabled={!usage.can_add}
                                                             />
                                                             {errors.email && <p className="text-xs text-red-600 sm:text-sm">{errors.email}</p>}
                                                         </div>
@@ -406,9 +522,10 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                             <Input
                                                                 id="company"
                                                                 value={newContact.company}
-                                                                onChange={(e) => setData('company', e.target.value)}
+                                                                onChange={(e) => setData("company", e.target.value)}
                                                                 placeholder="Company Inc."
                                                                 className="h-9 text-sm sm:h-10 sm:text-base"
+                                                                disabled={!usage.can_add}
                                                             />
                                                         </div>
                                                         <div className="space-y-1 sm:space-y-2">
@@ -418,9 +535,10 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                             <Input
                                                                 id="job_title"
                                                                 value={newContact.job_title}
-                                                                onChange={(e) => setData('job_title', e.target.value)}
+                                                                onChange={(e) => setData("job_title", e.target.value)}
                                                                 placeholder="Marketing Director"
                                                                 className="h-9 text-sm sm:h-10 sm:text-base"
+                                                                disabled={!usage.can_add}
                                                             />
                                                         </div>
                                                         <div className="space-y-1 sm:space-y-2">
@@ -429,7 +547,8 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                             </Label>
                                                             <Select
                                                                 value={newContact.classification}
-                                                                onValueChange={(value) => setData('classification', value as any)}
+                                                                onValueChange={(value) => setData("classification", value as any)}
+                                                                disabled={!usage.can_add}
                                                             >
                                                                 <SelectTrigger className="h-9 text-sm sm:h-10 sm:text-base">
                                                                     <SelectValue />
@@ -449,7 +568,8 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                             </Label>
                                                             <Select
                                                                 value={newContact.status}
-                                                                onValueChange={(value) => setData('status', value as any)}
+                                                                onValueChange={(value) => setData("status", value as any)}
+                                                                disabled={!usage.can_add}
                                                             >
                                                                 <SelectTrigger className="h-9 text-sm sm:h-10 sm:text-base">
                                                                     <SelectValue />
@@ -473,9 +593,9 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                             type="button"
                                                             variant="outline"
                                                             onClick={() => {
-                                                                setShowAddModal(false);
-                                                                reset();
-                                                                clearErrors();
+                                                                setShowAddModal(false)
+                                                                reset()
+                                                                clearErrors()
                                                             }}
                                                             className="h-9 flex-1 text-sm sm:h-10 sm:text-base"
                                                         >
@@ -483,10 +603,10 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                         </Button>
                                                         <Button
                                                             type="submit"
-                                                            disabled={processing}
+                                                            disabled={processing || !usage.can_add}
                                                             className="h-9 flex-1 text-sm sm:h-10 sm:text-base"
                                                         >
-                                                            {processing ? 'Adding...' : 'Add Contact'}
+                                                            {processing ? "Adding..." : "Add Contact"}
                                                         </Button>
                                                     </div>
                                                 </form>
@@ -511,9 +631,37 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                                 <li>
                                                                     • <strong>Max size:</strong> 10MB
                                                                 </li>
+                                                                <li>
+                                                                    • <strong>Available slots:</strong> {usage.remaining} contacts remaining
+                                                                </li>
                                                             </ul>
                                                         </AlertDescription>
                                                     </Alert>
+
+                                                    {/* Import Limit Warning */}
+                                                    {usage.remaining < 50 && (
+                                                        <Alert className="border-yellow-200 bg-yellow-50">
+                                                            <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                                                            <AlertDescription className="text-sm text-yellow-800">
+                                                                You only have {usage.remaining} contact slots remaining on your{" "}
+                                                                {getPlanDisplayName(usage.plan)} plan.
+                                                                {upgrade_suggestions.length > 0 && (
+                                                                    <>
+                                                                        {" "}
+                                                                        <Button
+                                                                            variant="link"
+                                                                            size="sm"
+                                                                            onClick={handleUpgrade}
+                                                                            className="h-auto p-0 text-sm underline"
+                                                                        >
+                                                                            Upgrade to add more contacts
+                                                                        </Button>
+                                                                    </>
+                                                                )}
+                                                            </AlertDescription>
+                                                        </Alert>
+                                                    )}
+
                                                     <form onSubmit={handleImport}>
                                                         <div className="rounded-lg border-2 border-dashed p-4 text-center sm:p-6">
                                                             <Upload className="mx-auto mb-3 h-10 w-10 text-muted-foreground sm:mb-4 sm:h-12 sm:w-12" />
@@ -527,6 +675,7 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                                 accept=".csv,.txt"
                                                                 onChange={handleFileSelect}
                                                                 className="hidden"
+                                                                disabled={usage.remaining === 0}
                                                             />
                                                             <div className="flex flex-col gap-2 sm:flex-row sm:justify-center sm:gap-3">
                                                                 <Button
@@ -534,6 +683,7 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                                     variant="outline"
                                                                     onClick={() => fileInputRef.current?.click()}
                                                                     className="h-9 text-sm sm:h-10"
+                                                                    disabled={usage.remaining === 0}
                                                                 >
                                                                     <Upload className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                                                                     Choose File
@@ -542,7 +692,7 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                                     type="button"
                                                                     variant="outline"
                                                                     onClick={handleDownloadTemplate}
-                                                                    className="h-9 text-sm sm:h-10"
+                                                                    className="h-9 text-sm sm:h-10 bg-transparent"
                                                                 >
                                                                     <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                                                                     Template
@@ -554,6 +704,16 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                                     <p className="text-xs text-muted-foreground">
                                                                         {(importFile.size / 1024).toFixed(1)} KB
                                                                     </p>
+                                                                    {importPreview.length > 1 && (
+                                                                        <p className="text-xs text-muted-foreground">
+                                                                            {importPreview.length - 1} contacts detected
+                                                                            {importPreview.length - 1 > usage.remaining && (
+                                                                                <span className="ml-1 text-red-600">
+                                                                                    (exceeds limit by {importPreview.length - 1 - usage.remaining})
+                                                                                </span>
+                                                                            )}
+                                                                        </p>
+                                                                    )}
                                                                 </div>
                                                             )}
                                                             {importErrors.file && (
@@ -569,7 +729,7 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                                         {importPreview.map((row, index) => (
                                                                             <div
                                                                                 key={index}
-                                                                                className={`flex border-b last:border-b-0 ${index === 0 ? 'bg-muted font-medium' : ''}`}
+                                                                                className={`flex border-b last:border-b-0 ${index === 0 ? "bg-muted font-medium" : ""}`}
                                                                             >
                                                                                 {row.slice(0, 3).map((cell: string, cellIndex: number) => (
                                                                                     <div
@@ -590,10 +750,10 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                                 type="button"
                                                                 variant="outline"
                                                                 onClick={() => {
-                                                                    setShowAddModal(false);
-                                                                    setImportFile(null);
-                                                                    setImportPreview([]);
-                                                                    resetImport();
+                                                                    setShowAddModal(false)
+                                                                    setImportFile(null)
+                                                                    setImportPreview([])
+                                                                    resetImport()
                                                                 }}
                                                                 className="h-9 flex-1 text-sm sm:h-10 sm:text-base"
                                                             >
@@ -601,10 +761,15 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                             </Button>
                                                             <Button
                                                                 type="submit"
-                                                                disabled={!importFile || importProcessing}
+                                                                disabled={
+                                                                    !importFile ||
+                                                                    importProcessing ||
+                                                                    usage.remaining === 0 ||
+                                                                    (importPreview.length > 1 && importPreview.length - 1 > usage.remaining)
+                                                                }
                                                                 className="h-9 flex-1 text-sm sm:h-10 sm:text-base"
                                                             >
-                                                                {importProcessing ? 'Importing...' : 'Import Contacts'}
+                                                                {importProcessing ? "Importing..." : "Import Contacts"}
                                                             </Button>
                                                         </div>
                                                     </form>
@@ -617,7 +782,7 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                         </div>
                     </div>
 
-                    {/* Stats - Ultra Responsive */}
+                    {/* Enhanced Usage Stats */}
                     <div className="mb-6 grid grid-cols-2 gap-3 sm:mb-8 sm:gap-4 lg:grid-cols-4">
                         <Card className="transition-all hover:shadow-md">
                             <CardContent className="p-3 sm:p-4 lg:p-6">
@@ -656,14 +821,62 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                             <CardContent className="p-3 sm:p-4 lg:p-6">
                                 <div className="flex items-center justify-between">
                                     <div className="min-w-0 flex-1">
-                                        <p className="truncate text-xs text-muted-foreground sm:text-sm">Usage</p>
-                                        <p className="text-base font-bold sm:text-lg">{((usage.used / usage.limit) * 100).toFixed(1)}%</p>
-                                        <Progress value={(usage.used / usage.limit) * 100} className="mt-2 h-1.5 sm:h-2" />
+                                        <div className="mb-1 flex items-center justify-between">
+                                            <p className="truncate text-xs text-muted-foreground sm:text-sm">Usage</p>
+                                            {usage.is_near_limit && (
+                                                <AlertTriangle
+                                                    className={`h-3 w-3 ${usage.is_at_limit ? "text-red-500" : "text-yellow-500"}`}
+                                                />
+                                            )}
+                                        </div>
+                                        <p className="text-base font-bold sm:text-lg">
+                                            {usage.used.toLocaleString()}/{usage.limit.toLocaleString()}
+                                        </p>
+                                        <Progress
+                                            value={usage.percentage}
+                                            className={`mt-2 h-1.5 sm:h-2 ${usage.is_at_limit
+                                                    ? "[&>div]:bg-red-500"
+                                                    : usage.is_near_limit
+                                                        ? "[&>div]:bg-yellow-500"
+                                                        : "[&>div]:bg-green-500"
+                                                }`}
+                                        />
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            {usage.remaining.toLocaleString()} remaining • {usage.percentage}%
+                                        </p>
                                     </div>
                                 </div>
                             </CardContent>
                         </Card>
                     </div>
+
+                    {/* Upgrade Suggestion Banner */}
+                    {usage.is_at_limit && upgrade_suggestions.length > 0 && (
+                        <Card className="mb-6 border-orange-200 bg-gradient-to-r from-orange-50 to-yellow-50 sm:mb-8">
+                            <CardContent className="p-4 sm:p-6">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="flex items-start gap-3">
+                                        <Crown className="h-6 w-6 flex-shrink-0 text-orange-600" />
+                                        <div>
+                                            <h3 className="font-semibold text-orange-900">Contact Limit Reached</h3>
+                                            <p className="text-sm text-orange-800">
+                                                You've reached your {usage.limit.toLocaleString()} contact limit on the{" "}
+                                                {getPlanDisplayName(usage.plan)} plan. Upgrade to add more contacts.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {upgrade_suggestions.slice(0, 1).map((suggestion, index) => (
+                                            <Button key={index} onClick={handleUpgrade} className="bg-orange-600 hover:bg-orange-700">
+                                                <Crown className="mr-2 h-4 w-4" />
+                                                Upgrade to {suggestion.plan.charAt(0).toUpperCase() + suggestion.plan.slice(1)}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
 
                     {/* Search and Filters - Ultra Responsive */}
                     <Card className="mb-4 sm:mb-6">
@@ -679,11 +892,13 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                         className="h-9 pl-10 text-sm sm:h-10 sm:text-base"
                                     />
                                 </div>
-
                                 {/* Filters and View Toggle */}
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-                                        <Select value={classificationFilter} onValueChange={(value) => handleFilter('classification', value)}>
+                                        <Select
+                                            value={classificationFilter}
+                                            onValueChange={(value) => handleFilter("classification", value)}
+                                        >
                                             <SelectTrigger className="h-9 w-full text-sm sm:h-10 sm:w-36 lg:w-40">
                                                 <SelectValue placeholder="Classification" />
                                             </SelectTrigger>
@@ -698,7 +913,7 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        <Select value={statusFilter} onValueChange={(value) => handleFilter('status', value)}>
+                                        <Select value={statusFilter} onValueChange={(value) => handleFilter("status", value)}>
                                             <SelectTrigger className="h-9 w-full text-sm sm:h-10 sm:w-28 lg:w-32">
                                                 <SelectValue placeholder="Status" />
                                             </SelectTrigger>
@@ -718,21 +933,20 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                             </SelectContent>
                                         </Select>
                                     </div>
-
                                     {/* View Mode Toggle */}
                                     <div className="flex items-center gap-1 sm:gap-2">
                                         <Button
-                                            variant={viewMode === 'grid' ? 'default' : 'outline'}
+                                            variant={viewMode === "grid" ? "default" : "outline"}
                                             size="sm"
-                                            onClick={() => setViewMode('grid')}
+                                            onClick={() => setViewMode("grid")}
                                             className="h-8 w-8 p-0 sm:h-9 sm:w-9"
                                         >
                                             <Grid3X3 className="h-3 w-3 sm:h-4 sm:w-4" />
                                         </Button>
                                         <Button
-                                            variant={viewMode === 'list' ? 'default' : 'outline'}
+                                            variant={viewMode === "list" ? "default" : "outline"}
                                             size="sm"
-                                            onClick={() => setViewMode('list')}
+                                            onClick={() => setViewMode("list")}
                                             className="h-8 w-8 p-0 sm:h-9 sm:w-9"
                                         >
                                             <List className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -749,7 +963,7 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                             <CardContent className="p-3 sm:p-4">
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <span className="text-sm font-medium">
-                                        {selectedContacts.length} contact{selectedContacts.length > 1 ? 's' : ''} selected
+                                        {selectedContacts.length} contact{selectedContacts.length > 1 ? "s" : ""} selected
                                     </span>
                                     <div className="flex gap-2">
                                         <Button
@@ -760,7 +974,12 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                         >
                                             Deselect All
                                         </Button>
-                                        <Button variant="destructive" size="sm" onClick={handleBulkDelete} className="h-8 text-xs sm:h-9 sm:text-sm">
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={handleBulkDelete}
+                                            className="h-8 text-xs sm:h-9 sm:text-sm"
+                                        >
                                             <Trash2 className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
                                             Delete
                                         </Button>
@@ -777,11 +996,11 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                 <Users className="mx-auto mb-3 h-12 w-12 text-muted-foreground sm:mb-4 sm:h-16 sm:w-16" />
                                 <h3 className="mb-2 text-base font-medium sm:text-lg">No contacts found</h3>
                                 <p className="mb-4 px-4 text-sm text-muted-foreground sm:mb-6 sm:text-base">
-                                    {searchTerm || statusFilter !== 'all' || classificationFilter !== 'all'
-                                        ? 'Try adjusting your search or filters'
-                                        : 'Add your first contact to get started'}
+                                    {searchTerm || statusFilter !== "all" || classificationFilter !== "all"
+                                        ? "Try adjusting your search or filters"
+                                        : "Add your first contact to get started"}
                                 </p>
-                                {!searchTerm && statusFilter === 'all' && classificationFilter === 'all' && (
+                                {!searchTerm && statusFilter === "all" && classificationFilter === "all" && usage.can_add && (
                                     <Button onClick={() => setShowAddModal(true)} className="h-9 gap-2 sm:h-10">
                                         <Plus className="h-4 w-4" />
                                         Add Contact
@@ -799,16 +1018,15 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                         className="h-4 w-4"
                                     />
                                     <span className="text-xs text-muted-foreground sm:text-sm">
-                                        {contacts.data.length} contact{contacts.data.length > 1 ? 's' : ''}
+                                        {contacts.data.length} contact{contacts.data.length > 1 ? "s" : ""}
                                     </span>
                                 </div>
                             </div>
-
-                            {viewMode === 'grid' ? (
+                            {viewMode === "grid" ? (
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                                     {contacts.data.map((contact) => {
-                                        const config = classificationConfig[contact.classification];
-                                        const IconComponent = config.icon;
+                                        const config = classificationConfig[contact.classification]
+                                        const IconComponent = config.icon
                                         return (
                                             <Card key={contact.id} className="group transition-all hover:shadow-md">
                                                 <CardContent className="p-3 sm:p-4 lg:p-6">
@@ -904,7 +1122,7 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                     </div>
                                                 </CardContent>
                                             </Card>
-                                        );
+                                        )
                                     })}
                                 </div>
                             ) : (
@@ -912,10 +1130,13 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                     <CardContent className="p-0">
                                         <div className="divide-y">
                                             {contacts.data.map((contact) => {
-                                                const config = classificationConfig[contact.classification];
-                                                const IconComponent = config.icon;
+                                                const config = classificationConfig[contact.classification]
+                                                const IconComponent = config.icon
                                                 return (
-                                                    <div key={contact.id} className="flex items-center gap-2 p-3 hover:bg-muted/50 sm:gap-4 sm:p-4">
+                                                    <div
+                                                        key={contact.id}
+                                                        className="flex items-center gap-2 p-3 hover:bg-muted/50 sm:gap-4 sm:p-4"
+                                                    >
                                                         <Checkbox
                                                             checked={selectedContacts.includes(contact.id)}
                                                             onCheckedChange={(checked) => handleSelectContact(contact.id, checked as boolean)}
@@ -959,7 +1180,7 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                                     )}
                                                                 </div>
                                                             )}
-                                                            <span className="hidden text-xs whitespace-nowrap text-muted-foreground md:inline">
+                                                            <span className="hidden whitespace-nowrap text-xs text-muted-foreground md:inline">
                                                                 {formatDate(contact.created_at)}
                                                             </span>
                                                             <DropdownMenu>
@@ -995,13 +1216,12 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                                             </DropdownMenu>
                                                         </div>
                                                     </div>
-                                                );
+                                                )
                                             })}
                                         </div>
                                     </CardContent>
                                 </Card>
                             )}
-
                             {/* Pagination - Ultra Responsive */}
                             {contacts.last_page > 1 && (
                                 <div className="mt-6 flex items-center justify-center gap-1 sm:mt-8 sm:gap-2">
@@ -1009,7 +1229,7 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                         variant="outline"
                                         size="sm"
                                         onClick={() =>
-                                            router.get('/contacts', {
+                                            router.get("/contacts", {
                                                 ...filters,
                                                 page: contacts.current_page - 1,
                                             })
@@ -1021,23 +1241,23 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                         <span className="sm:hidden">Prev</span>
                                     </Button>
                                     {Array.from({ length: Math.min(5, contacts.last_page) }, (_, i) => {
-                                        let pageNum = i + 1;
+                                        let pageNum = i + 1
                                         if (contacts.last_page > 5) {
                                             if (contacts.current_page <= 3) {
-                                                pageNum = i + 1;
+                                                pageNum = i + 1
                                             } else if (contacts.current_page >= contacts.last_page - 2) {
-                                                pageNum = contacts.last_page - 4 + i;
+                                                pageNum = contacts.last_page - 4 + i
                                             } else {
-                                                pageNum = contacts.current_page - 2 + i;
+                                                pageNum = contacts.current_page - 2 + i
                                             }
                                         }
                                         return (
                                             <Button
                                                 key={pageNum}
-                                                variant={pageNum === contacts.current_page ? 'default' : 'outline'}
+                                                variant={pageNum === contacts.current_page ? "default" : "outline"}
                                                 size="sm"
                                                 onClick={() =>
-                                                    router.get('/contacts', {
+                                                    router.get("/contacts", {
                                                         ...filters,
                                                         page: pageNum,
                                                     })
@@ -1046,13 +1266,13 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                                             >
                                                 {pageNum}
                                             </Button>
-                                        );
+                                        )
                                     })}
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={() =>
-                                            router.get('/contacts', {
+                                            router.get("/contacts", {
                                                 ...filters,
                                                 page: contacts.current_page + 1,
                                             })
@@ -1070,5 +1290,5 @@ export default function ContactsIndex({ contacts, filters, usage, stats, compani
                 </div>
             </div>
         </AppLayout>
-    );
+    )
 }

@@ -35,8 +35,8 @@ export function RecentEmails({ emails }) {
     if (!emails || emails.length === 0) {
         return (
             <div className="p-8 text-center">
-                <h3 className="mb-2 text-lg font-medium text-slate-900">No emails yet</h3>
-                <p className="mb-4 text-slate-600">Get started by generating your first email template</p>
+                <h3 className="mb-2 text-lg font-medium text-primary">No emails yet</h3>
+                <p className="mb-4 text-secondary">Get started by generating your first email template</p>
                 <Link href="/email/generate">
                     <Button>Generate Your First Email</Button>
                 </Link>

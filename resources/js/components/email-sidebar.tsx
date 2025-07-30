@@ -332,7 +332,7 @@ export const OptimizedSidebar = memo(function OptimizedSidebar({
             <TooltipProvider>
                 <div className={`${isMobile ? (mobileMenuOpen ? 'block' : 'hidden') : 'block'} flex h-full flex-col`}>
                     {/* Header */}
-                    <div className="border-b border-border/50 p-6">
+                    <div className=" p-6">
                         <div className="flex items-center gap-3">
                             <div>
                                 <h1 className="font-semibold text-foreground">Email Generator</h1>
@@ -568,12 +568,12 @@ export const OptimizedSidebar = memo(function OptimizedSidebar({
                                                     BlazeMail-70B (Fast + Smart)
                                                 </div>
                                             </SelectItem>
-                                            <SelectItem value="blazemail-lite">
+                                            {/* <SelectItem value="blazemail-lite">
                                                 <div className="flex items-center gap-2">
                                                     <div className="h-2 w-2 rounded-full bg-muted-foreground"></div>
                                                     BlazeMail Lite (Quick & Cost-effective)
                                                 </div>
-                                            </SelectItem>
+                                            </SelectItem> */}
                                         </SelectContent>
                                     </Select>
                                 </div>

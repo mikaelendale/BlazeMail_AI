@@ -31,6 +31,7 @@ import {
     XCircle,
 } from "lucide-react"
 import { useState } from "react"
+import { toast } from "sonner"
 
 // TypeScript interfaces
 interface EmailAccountDetail {
@@ -107,42 +108,7 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
         encryptionType: account.encryptionType || "tls",
     })
 
-    // Get provider icon with subtle styling
-    const getProviderIcon = (provider: string) => {
-        const iconClass = "h-5 w-5 text-muted-foreground"
-        switch (provider) {
-            case "gmail":
-                return (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 dark:bg-red-950/20">
-                        <Mail className={iconClass} />
-                    </div>
-                )
-            case "outlook":
-                return (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/20">
-                        <Mail className={iconClass} />
-                    </div>
-                )
-            case "yahoo":
-                return (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-950/20">
-                        <Mail className={iconClass} />
-                    </div>
-                )
-            case "imap":
-                return (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-950/20">
-                        <Server className={iconClass} />
-                    </div>
-                )
-            default:
-                return (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-950/20">
-                        <Mail className={iconClass} />
-                    </div>
-                )
-        }
-    }
+
 
     // Get status with subtle colors
     const getStatusBadge = (status: string) => {
@@ -214,27 +180,27 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
 
     // Handle connection test
     const handleTestConnection = async () => {
-        setIsTestingConnection(true)
         try {
-            const response = await fetch(`/settings/email-accounts/${account.id}/test-connection`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "",
-                },
-            })
-            const result = await response.json()
-            if (result.success) {
-                alert("Connection test successful! Both IMAP and SMTP are working.")
-            } else {
-                alert("Connection test failed: " + result.error)
-            }
+            setIsTestingConnection(true);
+            router.post(
+                `/email-accounts/${account.id}/test-connection`,
+                { email: account.email },
+                {
+                    onSuccess: () => {
+                        toast("Connection test successful!");
+                        setIsTestingConnection(false);
+                    },
+                    onError: () => {
+                        toast("Connection test failed");
+                        setIsTestingConnection(false);
+                    }
+                }
+            );
         } catch (error) {
-            alert("❌ Failed to test connection")
-        } finally {
-            setIsTestingConnection(false)
+            toast("An unexpected error occurred");
+            setIsTestingConnection(false);
         }
-    }
+    };
 
     // Handle save settings
     const handleSaveSettings = () => {
@@ -260,7 +226,6 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
                     {/* Clean Header */}
                     <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
                         <div className="flex items-start gap-4">
-                            {getProviderIcon(account.provider)}
                             <div className="space-y-2">
                                 <div className="flex items-center gap-3">
                                     <h1 className="text-2xl font-semibold tracking-tight">{account.email}</h1>
@@ -268,7 +233,7 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
                                 </div>
                                 <div className="flex items-center gap-3">
                                     {getStatusBadge(account.status)}
-                                    <Badge variant="secondary" className="text-xs font-medium">
+                                    <Badge variant="outline" className="text-xs font-medium">
                                         {account.provider.toUpperCase()}
                                     </Badge>
                                 </div>
@@ -634,24 +599,7 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
                                             <Badge variant={account.consecutiveErrors > 0 ? "destructive" : "secondary"}>
                                                 {account.consecutiveErrors}
                                             </Badge>
-                                        </div>
-
-                                        {account.lastError && (
-                                            <>
-                                                <Separator />
-                                                <div className="space-y-2">
-                                                    <span className="text-sm font-medium text-muted-foreground">Last Error</span>
-                                                    <div className="rounded-md bg-red-50 dark:bg-red-950/20 p-3">
-                                                        <div className="text-sm text-red-700 dark:text-red-400">{account.lastError}</div>
-                                                        {account.lastErrorAt && (
-                                                            <div className="text-xs text-red-600/70 dark:text-red-400/70 mt-1">
-                                                                {new Date(account.lastErrorAt).toLocaleString()}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </>
-                                        )}
+                                        </div> 
                                     </div>
                                 </CardContent>
                             </Card>

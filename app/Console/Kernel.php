@@ -81,6 +81,28 @@ class Kernel extends ConsoleKernel
                 ]);
             }
         })->hourly();
+        $schedule->command('inbox:fetch')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        // Reset daily email counters at midnight
+        $schedule->call(function () {
+            \App\Models\EmailAccount::where('daily_sent_date', '<', now()->toDateString())
+                ->update([
+                    'daily_sent' => 0,
+                    'daily_sent_date' => now()->toDateString(),
+                ]);
+        })->daily();
+
+        // Reset hourly email counters every hour
+        $schedule->call(function () {
+            \App\Models\EmailAccount::where('hourly_sent_reset', '<', now()->subHour())
+                ->update([
+                    'hourly_sent' => 0,
+                    'hourly_sent_reset' => now(),
+                ]);
+        })->hourly();
     }
     /**
      * Register the commands for the application.

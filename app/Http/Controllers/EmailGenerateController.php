@@ -21,15 +21,10 @@ class EmailGenerateController extends Controller
     {
         $this->creditService = $creditService;
         $this->promptService = $promptService;
-        $this->promptService = $promptService;
     }
 
     public function store(Request $request): Response
     {
-        // The rate limiting here is redundant as CreditService->attemptCreditUsage
-        // already calls checkRateLimit. Removing it for consistency.
-        // RateLimiter::hit($key, 300); // 5 minutes
-
         $data = $request->validate([
             'sender' => 'required|string|max:255',
             'subject' => 'required|string|max:255',
@@ -48,15 +43,23 @@ class EmailGenerateController extends Controller
             'prompt_strategy' => 'nullable|string|in:rgc,few_shot,chain_of_thought',
         ]);
 
-        // Determine the action type for credit deduction
-        $actionType = 'email_generation'; // Default for general email generation
+        // Determine the action type and strategy for credit deduction
+        $actionType = 'email_generation';
+        $strategy = $data['prompt_strategy'] ?? config('prompt-engineering.default_strategy', 'rgc');
+
+        // Get strategy-based credit cost
+        $creditCost = $this->creditService->getStrategyCreditCost($strategy);
 
         // Attempt to deduct credits before proceeding with AI generation
         $creditResult = $this->creditService->attemptCreditUsage(
             $request->user(),
             $actionType,
-            null, // Use default cost for this action
-            ['request_data' => $data]
+            $creditCost, // Use strategy-based cost
+            [
+                'request_data' => $data,
+                'strategy' => $strategy,
+                'credit_cost' => $creditCost
+            ]
         );
 
         if (!$creditResult['success']) {
@@ -64,6 +67,8 @@ class EmailGenerateController extends Controller
             return Inertia::render('user/email/generate', [
                 'error' => $creditResult['message'],
                 'submittedData' => $data,
+                'strategy_costs' => $this->creditService->getStrategyCosts(),
+                'user_balance' => $request->user()->credit_balance,
             ]);
         }
 
@@ -81,15 +86,17 @@ class EmailGenerateController extends Controller
                 'Email generation input validation failed - refund',
                 ['failed_transaction_id' => $creditResult['transaction_id']]
             );
+
             return Inertia::render('user/email/generate', [
                 'error' => implode('. ', $validationErrors),
                 'submittedData' => $data,
+                'strategy_costs' => $this->creditService->getStrategyCosts(),
+                'user_balance' => $request->user()->fresh()->credit_balance,
             ]);
         }
 
         try {
             // Set prompt strategy
-            $strategy = $data['prompt_strategy'] ?? config('prompt-engineering.default_strategy');
             $this->promptService->setStrategy($strategy);
 
             // Get training examples
@@ -114,8 +121,11 @@ class EmailGenerateController extends Controller
                 'submittedData' => $data,
                 'success' => isset($result['emailSubject']) && isset($result['emailBody']),
                 'strategy_used' => $strategy,
-                'credits_used' => $creditResult['credits_used'], // Pass credits used to frontend
-                'remaining_balance' => $request->user()->fresh()->credit_balance, // Pass updated balance
+                'credits_used' => $creditResult['credits_used'],
+                'remaining_balance' => $request->user()->fresh()->credit_balance,
+                'strategy_costs' => $this->creditService->getStrategyCosts(),
+                'current_strategy_cost' => $creditCost,
+                'user_balance' => $request->user()->fresh()->credit_balance,
             ]));
         } catch (\Exception $e) {
             // Refund credits if AI generation fails
@@ -130,15 +140,19 @@ class EmailGenerateController extends Controller
             Log::error('Email generation failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'user_id' => Auth::id(), // Using Auth::id() as per your original code
+                'user_id' => Auth::id(),
                 'data' => $data,
-                'strategy' => $strategy ?? 'unknown',
+                'strategy' => $strategy,
+                'credit_cost' => $creditCost,
                 'line' => $e->getLine(),
                 'file' => $e->getFile(),
             ]);
+
             return Inertia::render('user/email/generate', [
                 'error' => 'Failed to generate email: ' . $e->getMessage(),
                 'submittedData' => $data,
+                'strategy_costs' => $this->creditService->getStrategyCosts(),
+                'user_balance' => $request->user()->fresh()->credit_balance,
             ]);
         }
     }
@@ -155,15 +169,23 @@ class EmailGenerateController extends Controller
             'prompt_strategy' => 'nullable|string|in:rgc,few_shot,chain_of_thought',
         ]);
 
-        // Determine the action type for credit deduction
-        $actionType = 'email_generation'; // Using 'ai_rewrite' for refinement, as it's "much less"
+        // Determine the action type and strategy for credit deduction
+        $actionType = 'email_generation'; // Different action type for refinement
+        $strategy = $data['prompt_strategy'] ?? 'few_shot'; // Default strategy for refinement
+
+        // Get strategy-based credit cost
+        $creditCost = $this->creditService->getStrategyCreditCost($strategy);
 
         // Attempt to deduct credits before proceeding with AI refinement
         $creditResult = $this->creditService->attemptCreditUsage(
             $request->user(),
             $actionType,
-            null, // Use default cost for this action
-            ['request_data' => $data]
+            $creditCost, // Use strategy-based cost
+            [
+                'request_data' => $data,
+                'strategy' => $strategy,
+                'credit_cost' => $creditCost
+            ]
         );
 
         if (!$creditResult['success']) {
@@ -173,12 +195,13 @@ class EmailGenerateController extends Controller
                 'emailSubject' => $data['currentSubject'],
                 'emailBody' => $data['currentBody'],
                 'prompt' => $data['prompt'],
+                'strategy_costs' => $this->creditService->getStrategyCosts(),
+                'user_balance' => $request->user()->credit_balance,
             ]);
         }
 
         try {
             // Set prompt strategy
-            $strategy = $data['prompt_strategy'] ?? 'few_shot'; // Default strategy for refinement
             $this->promptService->setStrategy($strategy);
 
             // Refine email
@@ -186,8 +209,11 @@ class EmailGenerateController extends Controller
 
             return Inertia::render('user/email/generate', array_merge($result, [
                 'strategy_used' => $strategy,
-                'credits_used' => $creditResult['credits_used'], // Pass credits used to frontend
-                'remaining_balance' => $request->user()->fresh()->credit_balance, // Pass updated balance
+                'credits_used' => $creditResult['credits_used'],
+                'remaining_balance' => $request->user()->fresh()->credit_balance,
+                'strategy_costs' => $this->creditService->getStrategyCosts(),
+                'current_strategy_cost' => $creditCost,
+                'user_balance' => $request->user()->fresh()->credit_balance,
             ]));
         } catch (\Exception $e) {
             // Refund credits if AI refinement fails
@@ -201,14 +227,19 @@ class EmailGenerateController extends Controller
 
             Log::error('Email refinement failed', [
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id(), // Using Auth::id()
+                'user_id' => Auth::id(),
                 'data' => $data,
+                'strategy' => $strategy,
+                'credit_cost' => $creditCost,
             ]);
+
             return Inertia::render('user/email/generate', [
                 'emailSubject' => $data['currentSubject'],
                 'emailBody' => $data['currentBody'],
                 'prompt' => $data['prompt'],
                 'error' => 'Failed to refine email. Credits have been refunded. Please try again.',
+                'strategy_costs' => $this->creditService->getStrategyCosts(),
+                'user_balance' => $request->user()->fresh()->credit_balance,
             ]);
         }
     }
@@ -254,6 +285,36 @@ class EmailGenerateController extends Controller
         ]);
 
         return redirect()->route('user.email.generate.send', ['email_id' => $userEmail->id]);
+    }
+
+    /**
+     * Get strategy costs for frontend (API endpoint)
+     */
+    public function getStrategyCosts(Request $request)
+    {
+        return response()->json([
+            'strategy_costs' => $this->creditService->getStrategyCosts(),
+            'user_balance' => $request->user()->credit_balance,
+            'credit_info' => $this->creditService->getUserCreditInfo($request->user()),
+        ]);
+    }
+
+    /**
+     * Check if user can afford a specific strategy
+     */
+    public function checkStrategyAffordability(Request $request)
+    {
+        $strategy = $request->input('strategy', 'rgc');
+        $cost = $this->creditService->getStrategyCreditCost($strategy);
+        $user = $request->user();
+
+        return response()->json([
+            'can_afford' => $user->credit_balance >= $cost,
+            'cost' => $cost,
+            'balance' => $user->credit_balance,
+            'shortfall' => max(0, $cost - $user->credit_balance),
+            'strategy' => $strategy,
+        ]);
     }
 
     public function testGroq()

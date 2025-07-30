@@ -58,10 +58,10 @@ export default function FloatingActionButtons() {
                     stiffness: 400,
                     damping: 30,
                 }}
-                className="flex items-center overflow-hidden rounded-full border border-accent bg-primary-foreground opacity-90  backdrop-blur-lg"
+                className="flex items-center overflow-hidden rounded-full border border-accent bg-card opacity-90  backdrop-blur-lg"
             >
                 {/* Main Toggle Button */}
-                <motion.div className="flex-shrink-0" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <motion.div className="flex-shrink-0" whileTap={{ scale: 0.95 }}>
                     <Button
                         variant="ghost"
                         size="icon"
@@ -113,7 +113,7 @@ export default function FloatingActionButtons() {
                                 initial={{ opacity: 0, scale: 0.8, x: -10 }}
                                 animate={{ opacity: 1, scale: 1, x: 0 }}
                                 transition={{ delay: 0.1 }}
-                                whileHover={{ scale: 1.05 }}
+
                                 whileTap={{ scale: 0.95 }}
                             >
                                 <Popover open={creditsOpen} onOpenChange={setCreditsOpen}>
@@ -121,11 +121,10 @@ export default function FloatingActionButtons() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className={`h-8 w-8 rounded-full transition-all duration-200 ${
-                                                isLowCredits
-                                                    ? "bg-red-200 text-white hover:bg-red-600 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-700"
-                                                    : "bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900 dark:text-orange-100 dark:hover:bg-orange-700 dark:opacity-70"
-                                            }`}
+                                            className={`h-10 w-10 rounded-full transition-all duration-200 ${isLowCredits
+                                                ? "bg-red-200 text-white hover:bg-red-600 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-700"
+                                                : "bg-accent text-primary  dark:opacity-70"
+                                                }`}
                                         >
                                             <span className={`font-bold text-sm ${isLowCredits ? "text-white dark:text-red-100" : "dark:text-orange-100"}`}>
                                                 {customer.credits > 999
@@ -159,7 +158,7 @@ export default function FloatingActionButtons() {
                                 initial={{ opacity: 0, scale: 0.8, x: -10 }}
                                 animate={{ opacity: 1, scale: 1, x: 0 }}
                                 transition={{ delay: 0.2 }}
-                                whileHover={{ scale: 1.05 }}
+
                                 whileTap={{ scale: 0.95 }}
                             >
                                 <Popover open={supportOpen} onOpenChange={setSupportOpen}>
@@ -167,7 +166,7 @@ export default function FloatingActionButtons() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8 rounded-full bg-blue-50 text-blue-600   hover:bg-blue-100 hover:text-blue-700 dark:bg-blue-900/70 dark:opacity-35 dark:text-blue-200 dark:hover:bg-blue-800/70 dark:hover:text-blue-100"
+                                            className="h-10 w-10 rounded-full bg-blue-50 text-primary   hover:bg-blue-100  dark:bg-blue-900/70 dark:opacity-35 dark:hover:bg-blue-800/70"
                                         >
                                             <HelpCircle className="h-4 w-4" />
                                             <span className="sr-only">Support</span>
@@ -201,7 +200,7 @@ export default function FloatingActionButtons() {
                                 initial={{ opacity: 0, scale: 0.8, x: -10 }}
                                 animate={{ opacity: 1, scale: 1, x: 0 }}
                                 transition={{ delay: 0.3 }}
-                                whileHover={{ scale: 1.05 }}
+
                                 whileTap={{ scale: 0.95 }}
                             >
                                 <Popover open={logoutOpen} onOpenChange={setLogoutOpen}>
@@ -209,7 +208,7 @@ export default function FloatingActionButtons() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8 rounded-full bg-red-50 text-red-600 transition-all duration-200 hover:bg-red-100 hover:text-red-700"
+                                            className="h-10 w-10 rounded-full bg-accent  text-red-600 transition-all duration-200 hover:text-red-700"
                                         >
                                             <LogOut className="h-4 w-4" />
                                             <span className="sr-only">Logout</span>

@@ -18,21 +18,21 @@ class ChainOfThoughtStrategy implements PromptStrategyInterface
     public function generateEmail(array $data, array $examples = []): array
     {
         $prompt = $this->buildChainOfThoughtPrompt($data, $examples);
-        
+
         return $this->callGroqAPI($prompt, $data['model'] ?? 'blazemail-lite');
     }
 
     public function refineEmail(array $data): array
     {
         $prompt = $this->buildRefinementPrompt($data);
-        
+
         return $this->callGroqAPI($prompt, 'blazemail-lite', 'refinement');
     }
 
     public function selectExamples(array $examples, array $criteria): array
     {
         $prompt = $this->buildExampleSelectionPrompt($examples, $criteria);
-        
+
         try {
             $groq = new Groq(config('services.groq.api_key'));
             $reply = $groq->chat()->completions()->create([
@@ -46,7 +46,7 @@ class ChainOfThoughtStrategy implements PromptStrategyInterface
             ]);
 
             $indexesJson = $reply['choices'][0]['message']['content'] ?? '[]';
-            
+
             if (preg_match('/\[(.*?)\]/s', $indexesJson, $matches)) {
                 $indexesJson = '[' . $matches[1] . ']';
             }
@@ -64,7 +64,6 @@ class ChainOfThoughtStrategy implements PromptStrategyInterface
             }
 
             return $selectedExamples;
-
         } catch (\Exception $e) {
             Log::warning('Example selection failed, using fallback', ['error' => $e->getMessage()]);
             return $this->getFallbackExamples($examples);
@@ -74,18 +73,19 @@ class ChainOfThoughtStrategy implements PromptStrategyInterface
     protected function buildChainOfThoughtPrompt(array $data, array $examples): string
     {
         $templates = $this->config['email_templates'];
-        
+
         $isPersonalized = $data['personalization'] ?? false;
-        $personalizationContext = $isPersonalized 
+        $personalizationContext = $isPersonalized
             ? str_replace(
-                ['{recipient}', '{audience}'], 
-                [$data['personalized_data']['recipient'] ?? 'the recipient', $data['personalized_data']['audience'] ?? 'their industry'], 
+                ['{recipient}', '{audience}'],
+                [$data['personalized_data']['recipient'] ?? 'the recipient', $data['personalized_data']['audience'] ?? 'their industry'],
                 $templates['personalization_contexts']['enabled']
             )
             : $templates['personalization_contexts']['disabled'];
 
         $examplesText = $this->formatExamples($examples);
         $constraints = implode("\n- ", $templates['output_format']['constraints']);
+
         $recipient = $isPersonalized ? ($data['personalized_data']['recipient'] ?? 'N/A') : (isset($data['recipient']) ? $data['recipient'] : 'N/A');
         $audience = $isPersonalized ? ($data['personalized_data']['audience'] ?? 'N/A') : (isset($data['audience']) ? $data['audience'] : 'N/A');
         $purpose = isset($data['purpose']) ? $data['purpose'] : 'N/A';
@@ -93,11 +93,11 @@ class ChainOfThoughtStrategy implements PromptStrategyInterface
         $cta = isset($data['cta']) ? $data['cta'] : 'N/A';
 
         return <<<EOD
-You are a world-class SaaS cold email copywriter. Let's think step by step to create the perfect email.
+You are a world-class SaaS cold email copywriter. Think step by step, but respond with ONLY valid JSON.
 
 CONTEXT: {$personalizationContext}
 
-STEP 1: ANALYZE THE REQUIREMENTS
+REQUIREMENTS:
 - Subject: {$data['subject']}
 - Sender: {$data['sender']}
 - Recipient: {$recipient}
@@ -107,75 +107,59 @@ STEP 1: ANALYZE THE REQUIREMENTS
 - Audience: {$audience}
 - Call To Action: {$cta}
 
-STEP 2: REVIEW EXAMPLES
+EXAMPLES:
 {$examplesText}
-
-STEP 3: REASONING PROCESS
-Let's think through this step by step:
-
-1. What is the main goal of this email?
-2. What tone and approach will resonate with {$audience}?
-3. How can we make this relevant to {$recipient}?
-4. What's the best way to structure this message?
-5. How can we create a compelling call-to-action?
-
-STEP 4: EMAIL GENERATION
-Based on my analysis, I will now create an email that:
-- Addresses the specific context and purpose
-- Uses the appropriate tone for the audience
-- Includes personalization elements
-- Has a clear and compelling call-to-action
 
 CONSTRAINTS:
 - {$constraints}
 
-OUTPUT FORMAT:
-{$templates['output_format']['instruction']}
-{$templates['output_format']['example']}
+Think through this step by step:
+1. Analyze the requirements and context
+2. Consider the examples and best practices
+3. Craft an email that meets all requirements
+4. Ensure proper tone and personalization
 
-Now, let me generate the email step by step:
+IMPORTANT: Respond with ONLY this JSON format, no other text:
+{
+    "subject": "email subject here",
+    "body": "complete email body here"
+}
 EOD;
     }
 
     protected function buildRefinementPrompt(array $data): string
     {
         $templates = $this->config['refinement_templates'];
-        
+
         $improvements = implode(', ', $data['feedback'] ?? []);
         $custom = trim($data['customFeedback'] ?? '');
-        
+
         $guidelines = implode("\n- ", $templates['refinement_guidelines']);
 
         return <<<EOD
-{$templates['system_role']}
-
-Let's think step by step about how to improve this email.
+You are refining an email. Think step by step, but respond with ONLY valid JSON.
 
 ORIGINAL EMAIL:
 Subject: {$data['currentSubject']}
 Body: {$data['currentBody']}
 
-STEP 1: ANALYZE CURRENT EMAIL
-- What are the strengths of the current email?
-- What areas need improvement?
+FEEDBACK TO ADDRESS:
+- Improvements needed: {$improvements}
+- Custom feedback: {$custom}
 
-STEP 2: REVIEW FEEDBACK
-- Requested improvements: {$improvements}
-- Additional instructions: {$custom}
-
-STEP 3: PLAN IMPROVEMENTS
-- How can we address each piece of feedback?
-- What changes will have the most impact?
-
-STEP 4: APPLY REFINEMENTS
-Following these guidelines:
+GUIDELINES:
 - {$guidelines}
 
-OUTPUT FORMAT:
-Return ONLY a valid JSON object:
-{"subject": "Refined subject line", "body": "Refined email body"}
+Think through the refinement process:
+1. Identify what needs improvement
+2. Apply the feedback systematically
+3. Ensure the refined version is better
 
-Let me refine this email step by step:
+IMPORTANT: Respond with ONLY this JSON format, no other text:
+{
+    "subject": "refined subject line",
+    "body": "refined email body"
+}
 EOD;
     }
 
@@ -199,23 +183,17 @@ EOD;
         $audience = isset($criteria['audience']) ? $criteria['audience'] : 'N/A';
 
         return <<<EOD
-Let's think step by step about selecting the best examples.
+Select the {$count} most relevant examples. Respond with ONLY a JSON array.
 
 AVAILABLE EXAMPLES:
 {$metadataJson}
 
-USER REQUEST:
+CRITERIA:
 Tone: {$tone}
 Purpose: {$purpose}
 Audience: {$audience}
 
-STEP 1: Analyze the user's requirements
-STEP 2: Match examples based on tone similarity
-STEP 3: Consider purpose alignment
-STEP 4: Factor in audience relevance
-STEP 5: Select the {$count} most relevant examples
-
-Return ONLY a JSON array of indexes, e.g. [2, 5, 7, 12].
+Respond with ONLY a JSON array of indexes: [1, 3, 5]
 EOD;
     }
 
@@ -230,7 +208,6 @@ Body: {$ex['FullEmailText']}
 Purpose: {$ex['Purpose']}
 Tone: {$ex['Tone']}
 ---
-
 EX;
         }
         return $examplesText;
@@ -240,12 +217,15 @@ EX;
     {
         try {
             $modelConfig = $this->config['models'][$model] ?? $this->config['models']['blazemail-lite'];
-            
+
             $groq = new Groq(config('services.groq.api_key'));
             $reply = $groq->chat()->completions()->create([
                 'model' => $modelConfig['groq_model'],
                 'messages' => [
-                    ['role' => 'system', 'content' => $this->config['email_templates']['system_role']],
+                    [
+                        'role' => 'system',
+                        'content' => 'You are a professional email copywriter. You MUST respond with ONLY valid JSON in the exact format requested. Do not include any explanatory text, reasoning, or additional content outside the JSON.'
+                    ],
                     ['role' => 'user', 'content' => mb_convert_encoding($prompt, 'UTF-8', 'UTF-8')],
                 ],
                 'temperature' => $modelConfig['temperature'],
@@ -253,11 +233,31 @@ EX;
             ]);
 
             $content = trim($reply['choices'][0]['message']['content'] ?? '');
-            
-            $content = preg_replace('/^\`\`\`json\s*/', '', $content);
-            $content = preg_replace('/\s*\`\`\`$/', '', $content);
-            
-            $json = json_decode($content, true);
+
+            // More aggressive JSON extraction
+            // First, try to find the last complete JSON object
+            if (preg_match_all('/\{[^{}]*"subject"[^{}]*"body"[^{}]*\}/s', $content, $matches)) {
+                $jsonContent = end($matches[0]); // Get the last match
+            } else {
+                // Try to extract any JSON-like structure at the end
+                if (preg_match('/.*(\{.*\})\s*$/s', $content, $matches)) {
+                    $jsonContent = $matches[1];
+                } else {
+                    $jsonContent = $content;
+                }
+            }
+
+            // Clean up the JSON
+            $jsonContent = preg_replace('/^\`\`\`json\s*/', '', $jsonContent);
+            $jsonContent = preg_replace('/\s*\`\`\`$/', '', $jsonContent);
+            $jsonContent = trim($jsonContent);
+
+            // Remove any text before the opening brace
+            if (preg_match('/\{.*\}/s', $jsonContent, $matches)) {
+                $jsonContent = $matches[0];
+            }
+
+            $json = json_decode($jsonContent, true);
 
             if (is_array($json) && isset($json['subject'], $json['body'])) {
                 return [
@@ -266,11 +266,34 @@ EX;
                     'prompt' => $prompt,
                 ];
             } else {
-                throw new \Exception('Invalid JSON response from AI');
-            }
+                // Log for debugging
+                Log::error("Failed to parse JSON response", [
+                    'raw_content' => $content,
+                    'extracted_json' => $jsonContent,
+                    'json_error' => json_last_error_msg(),
+                    'type' => $type
+                ]);
 
+                // Try one more fallback - manual extraction
+                if (
+                    preg_match('/"subject"\s*:\s*"([^"]*)"/', $content, $subjectMatch) &&
+                    preg_match('/"body"\s*:\s*"([^"]*(?:\\.[^"]*)*)"/', $content, $bodyMatch)
+                ) {
+
+                    return [
+                        'emailSubject' => $subjectMatch[1],
+                        'emailBody' => str_replace('\n', "\n", $bodyMatch[1]),
+                        'prompt' => $prompt,
+                    ];
+                }
+
+                throw new \Exception('Could not extract valid JSON from AI response');
+            }
         } catch (\Exception $e) {
-            Log::error("Groq API call failed for {$type}", ['error' => $e->getMessage()]);
+            Log::error("Groq API call failed for {$type}", [
+                'error' => $e->getMessage(),
+                'model' => $model
+            ]);
             throw $e;
         }
     }

@@ -119,9 +119,9 @@ export default function MyEmailsComponent({ myEmails, filters = {} }) {
 
     const EmptyState = () => (
         <div className="flex flex-col items-center justify-center py-20">
-            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+            {/* <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
                 <Mail className="h-10 w-10 text-primary" />
-            </div>
+            </div> */}
             <h3 className="mb-2 text-2xl font-bold text-foreground">
                 {filters.search
                     ? `No emails found for "${filters.search}"`
@@ -143,12 +143,12 @@ export default function MyEmailsComponent({ myEmails, filters = {} }) {
                         Clear Filters
                     </Button>
                 )}
-                <Link href="/email/generate">
+                {/* <Link href="/email/generate">
                     <Button className="gap-2">
                         <Plus className="h-4 w-4" />
                         Generate New Email
                     </Button>
-                </Link>
+                </Link> */}
             </div>
         </div>
     );

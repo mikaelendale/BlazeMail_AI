@@ -681,15 +681,6 @@ export const OptimizedEmailCanvas = memo(function OptimizedEmailCanvas({
                     )}
                 </div>
             </div>
-
-            {isProcessingEdit && (
-                <div className="fixed right-4 bottom-4 z-50 rounded-xl border border-border bg-card p-3 shadow-2xl md:p-4">
-                    <div className="flex items-center gap-2 text-xs md:gap-3 md:text-sm">
-                        <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent md:h-4 md:w-4"></div>
-                        <span className="font-medium text-foreground">AI enhancing...</span>
-                    </div>
-                </div>
-            )}
         </div>
     );
 });

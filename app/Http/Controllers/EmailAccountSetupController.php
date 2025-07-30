@@ -25,9 +25,8 @@ class EmailAccountSetupController extends Controller
 
         // Get current settings or defaults
         $settings = $account->settings ?? [];
-        $metadata = $account->metadata ?? [];
 
-        // Prepare setup data with defaults
+        // Prepare setup data with defaults for confirmation emails
         $setupData = [
             // Sender Profile
             'sender_name' => $settings['sender_name'] ?? Auth::user()->name ?? '',
@@ -35,23 +34,19 @@ class EmailAccountSetupController extends Controller
             'reply_to_email' => $settings['reply_to_email'] ?? $account->email,
             'signature' => $settings['signature'] ?? '',
 
-            // Warm-up Settings
-            'warmup_enabled' => $settings['warmup_enabled'] ?? true,
-            'warmup_daily_volume' => $settings['warmup_daily_volume'] ?? 30,
-            'warmup_timezone' => $settings['warmup_timezone'] ?? 'UTC',
-            'warmup_template_style' => $settings['warmup_template_style'] ?? 'professional',
+            // Batch Configuration for Confirmation Emails
+            'batch_size' => $settings['batch_size'] ?? 50, // 50 emails per batch
+            'batch_delay_minutes' => $settings['batch_delay_minutes'] ?? 60, // 60 minutes between batches
+            'max_emails_per_day' => $account->daily_limit ?? 400, // Safe Gmail limit
+            'send_window_start' => $settings['send_window_start'] ?? '08:00',
+            'send_window_end' => $settings['send_window_end'] ?? '18:00',
 
-            // Compliance & Safety
+            // Confirmation Email Features
             'auto_unsubscribe' => $settings['auto_unsubscribe'] ?? true,
             'tracking_enabled' => $settings['tracking_enabled'] ?? true,
             'compliance_confirmed' => $settings['compliance_confirmed'] ?? false,
 
-            // Sending Limits
-            'max_emails_per_day' => $account->daily_limit,
-            'send_window_start' => $settings['send_window_start'] ?? '08:00',
-            'send_window_end' => $settings['send_window_end'] ?? '17:00',
-
-            // Fallback Behavior
+            // Error Handling
             'retry_failed_emails' => $settings['retry_failed_emails'] ?? true,
             'max_retry_attempts' => $settings['max_retry_attempts'] ?? 3,
             'pause_on_errors' => $settings['pause_on_errors'] ?? true,
@@ -65,8 +60,8 @@ class EmailAccountSetupController extends Controller
             'account' => $account->load('user'),
             'setupData' => $setupData,
             'isSetupComplete' => $isSetupComplete,
-            'timezones' => $this->getTimezones(),
-            'templateStyles' => $this->getTemplateStyles(),
+            'bestPractices' => $this->getBestPractices(),
+            'batchingGuidelines' => $this->getBatchingGuidelines(),
             'breadcrumbs' => [
                 ['title' => 'Settings', 'href' => '/settings'],
                 ['title' => 'Email Accounts', 'href' => '/settings/email-accounts'],
@@ -92,25 +87,21 @@ class EmailAccountSetupController extends Controller
             'reply_to_email' => 'required|email|max:255',
             'signature' => 'nullable|string|max:2000',
 
-            // Warm-up Settings
-            'warmup_enabled' => 'boolean',
-            'warmup_daily_volume' => 'required|integer|min:5|max:200',
-            'warmup_timezone' => 'required|string|max:50',
-            'warmup_template_style' => 'required|in:professional,casual,friendly',
+            // Batch Configuration
+            'batch_size' => 'required|integer|min:10|max:100', // 10-100 emails per batch
+            'batch_delay_minutes' => 'required|integer|min:30|max:180', // 30-180 minutes delay
+            'max_emails_per_day' => 'required|integer|min:50|max:400', // Gmail safe limits
+            'send_window_start' => 'required|date_format:H:i',
+            'send_window_end' => 'required|date_format:H:i|after:send_window_start',
 
-            // Compliance & Safety
+            // Features
             'auto_unsubscribe' => 'boolean',
             'tracking_enabled' => 'boolean',
             'compliance_confirmed' => 'required|accepted',
 
-            // Sending Limits
-            'max_emails_per_day' => 'required|integer|min:10|max:1000',
-            'send_window_start' => 'required|date_format:H:i',
-            'send_window_end' => 'required|date_format:H:i|after:send_window_start',
-
-            // Fallback Behavior
+            // Error Handling
             'retry_failed_emails' => 'boolean',
-            'max_retry_attempts' => 'required|integer|min:1|max:10',
+            'max_retry_attempts' => 'required|integer|min:1|max:5',
             'pause_on_errors' => 'boolean',
             'notify_on_errors' => 'boolean',
         ]);
@@ -131,22 +122,18 @@ class EmailAccountSetupController extends Controller
                 'reply_to_email' => $validated['reply_to_email'],
                 'signature' => $validated['signature'] ?? '',
 
-                // Warm-up Settings
-                'warmup_enabled' => $validated['warmup_enabled'] ?? false,
-                'warmup_daily_volume' => $validated['warmup_daily_volume'],
-                'warmup_timezone' => $validated['warmup_timezone'],
-                'warmup_template_style' => $validated['warmup_template_style'],
+                // Batch Configuration
+                'batch_size' => $validated['batch_size'],
+                'batch_delay_minutes' => $validated['batch_delay_minutes'],
+                'send_window_start' => $validated['send_window_start'],
+                'send_window_end' => $validated['send_window_end'],
 
-                // Compliance & Safety
+                // Features
                 'auto_unsubscribe' => $validated['auto_unsubscribe'] ?? false,
                 'tracking_enabled' => $validated['tracking_enabled'] ?? false,
                 'compliance_confirmed' => $validated['compliance_confirmed'],
 
-                // Sending Limits
-                'send_window_start' => $validated['send_window_start'],
-                'send_window_end' => $validated['send_window_end'],
-
-                // Fallback Behavior
+                // Error Handling
                 'retry_failed_emails' => $validated['retry_failed_emails'] ?? false,
                 'max_retry_attempts' => $validated['max_retry_attempts'],
                 'pause_on_errors' => $validated['pause_on_errors'] ?? false,
@@ -154,7 +141,8 @@ class EmailAccountSetupController extends Controller
 
                 // Setup completion
                 'setup_completed_at' => now()->toISOString(),
-                'setup_version' => '1.0',
+                'setup_version' => '2.0',
+                'account_type' => 'confirmation_emails',
             ];
 
             // Update account with new settings
@@ -166,32 +154,28 @@ class EmailAccountSetupController extends Controller
                     'setup_completed' => true,
                     'setup_completed_at' => now()->toISOString(),
                     'last_settings_update' => now()->toISOString(),
+                    'account_purpose' => 'confirmation_emails',
+                    'batch_configuration' => [
+                        'batch_size' => $validated['batch_size'],
+                        'delay_minutes' => $validated['batch_delay_minutes'],
+                        'daily_limit' => $validated['max_emails_per_day'],
+                    ],
                 ]),
             ];
 
-            // If warmup is enabled, set status to warming
-            if ($validated['warmup_enabled']) {
-                $updateData['status'] = 'warming';
-                $updateData['warmup_progress'] = 0;
-                $updateData['warmup_day'] = 1;
-                $updateData['warmup_schedule'] = $this->generateWarmupSchedule(
-                    $validated['warmup_daily_volume'],
-                    $validated['warmup_timezone']
-                );
-            }
-
             $account->update($updateData);
 
-            Log::info('Email account setup completed', [
+            Log::info('Gmail confirmation email account setup completed', [
                 'account_id' => $account->id,
                 'user_id' => Auth::id(),
                 'email' => $account->email,
-                'warmup_enabled' => $validated['warmup_enabled'],
+                'batch_size' => $validated['batch_size'],
                 'daily_limit' => $validated['max_emails_per_day'],
+                'delay_minutes' => $validated['batch_delay_minutes'],
             ]);
 
             return redirect()->route('settings.email-accounts')
-                ->with('success', '🎉 Email account setup completed successfully! Your account is now ready to send emails.');
+                ->with('success', '🎉 Gmail account configured for confirmation emails! Ready to send batched campaigns.');
         } catch (\Exception $e) {
             Log::error('Email account setup failed', [
                 'account_id' => $account->id,
@@ -216,6 +200,8 @@ class EmailAccountSetupController extends Controller
         $requiredFields = [
             'sender_name',
             'reply_to_email',
+            'batch_size',
+            'batch_delay_minutes',
             'compliance_confirmed',
             'setup_completed_at',
         ];
@@ -230,68 +216,79 @@ class EmailAccountSetupController extends Controller
     }
 
     /**
-     * Get available timezones
+     * Get best practices for confirmation emails
      */
-    private function getTimezones(): array
+    private function getBestPractices(): array
     {
         return [
-            'UTC' => 'UTC (Coordinated Universal Time)',
-            'America/New_York' => 'Eastern Time (US & Canada)',
-            'America/Chicago' => 'Central Time (US & Canada)',
-            'America/Denver' => 'Mountain Time (US & Canada)',
-            'America/Los_Angeles' => 'Pacific Time (US & Canada)',
-            'Europe/London' => 'London (GMT/BST)',
-            'Europe/Paris' => 'Paris (CET/CEST)',
-            'Europe/Berlin' => 'Berlin (CET/CEST)',
-            'Asia/Tokyo' => 'Tokyo (JST)',
-            'Asia/Shanghai' => 'Shanghai (CST)',
-            'Australia/Sydney' => 'Sydney (AEST/AEDT)',
+            'content' => [
+                'title' => 'Content Best Practices',
+                'items' => [
+                    'Use clear, descriptive subject lines (e.g., "Confirm your account")',
+                    'Keep emails short and focused on the confirmation action',
+                    'Include your company name and branding for trust',
+                    'Use a clear call-to-action button',
+                    'Avoid promotional content in confirmation emails',
+                ]
+            ],
+            'sending' => [
+                'title' => 'Sending Best Practices',
+                'items' => [
+                    'Send confirmation emails immediately after signup',
+                    'Use consistent "From" name and email address',
+                    'Stick to business hours (8 AM - 6 PM) when possible',
+                    'Monitor bounce rates and remove invalid emails',
+                    'Keep daily volume under 400 emails per Gmail account',
+                ]
+            ],
+            'compliance' => [
+                'title' => 'Compliance Guidelines',
+                'items' => [
+                    'Only send to users who explicitly requested confirmation',
+                    'Include unsubscribe links (automatically added)',
+                    'Add your physical business address',
+                    'Respect user preferences and opt-outs',
+                    'Follow CAN-SPAM and GDPR regulations',
+                ]
+            ],
         ];
     }
 
     /**
-     * Get available template styles
+     * Get batching guidelines
      */
-    private function getTemplateStyles(): array
+    private function getBatchingGuidelines(): array
     {
         return [
-            'professional' => [
-                'name' => 'Professional',
-                'description' => 'Formal business communication style',
+            'recommended_settings' => [
+                'title' => 'Recommended Batch Settings',
+                'batch_size' => 50,
+                'delay_minutes' => 60,
+                'daily_limit' => 400,
+                'description' => 'These settings work well for most confirmation email campaigns while staying within Gmail limits.',
             ],
-            'casual' => [
-                'name' => 'Casual',
-                'description' => 'Relaxed and friendly tone',
+            'campaign_examples' => [
+                [
+                    'name' => 'Small Campaign (≤200 emails)',
+                    'batch_size' => 50,
+                    'batches' => 4,
+                    'total_time' => '3 hours',
+                    'description' => 'Perfect for daily signups or small product launches',
+                ],
+                [
+                    'name' => 'Medium Campaign (≤400 emails)',
+                    'batch_size' => 50,
+                    'batches' => 8,
+                    'total_time' => '7 hours',
+                    'description' => 'Good for weekly campaigns or moderate traffic sites',
+                ],
             ],
-            'friendly' => [
-                'name' => 'Friendly',
-                'description' => 'Warm and approachable style',
+            'timing_tips' => [
+                'Start campaigns early in the day to complete within business hours',
+                'Avoid sending during weekends unless necessary',
+                'Monitor for bounces and errors between batches',
+                'Pause campaigns if error rate exceeds 5%',
             ],
         ];
-    }
-
-    /**
-     * Generate warmup schedule based on daily volume
-     */
-    private function generateWarmupSchedule(int $dailyVolume, string $timezone): array
-    {
-        // Generate a 30-day warmup schedule
-        $schedule = [];
-        $currentVolume = 5; // Start with 5 emails per day
-
-        for ($day = 1; $day <= 30; $day++) {
-            $schedule["day_{$day}"] = [
-                'day' => $day,
-                'volume' => min($currentVolume, $dailyVolume),
-                'timezone' => $timezone,
-            ];
-
-            // Gradually increase volume
-            if ($day % 3 === 0 && $currentVolume < $dailyVolume) {
-                $currentVolume += 5;
-            }
-        }
-
-        return $schedule;
     }
 }

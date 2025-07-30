@@ -1,174 +1,254 @@
-'use client';
+"use client"
 
-import { OptimizedAICard } from '@/components/ai-assistant-card';
-import AppLogo from '@/components/app-logo';
-import { OptimizedEmailCanvas } from '@/components/editorjs-email-canvas';
-import { OptimizedSidebar } from '@/components/email-sidebar';
-import { GenerationFeedback } from '@/components/generation-feedback';
-import { SaveEmailModal } from '@/components/save-email-modal';
-import { SidebarModal } from '@/components/sidebar-modal';
-import { ThreePanelLayout } from '@/components/three-panel-layout';
-import { Button } from '@/components/ui/button';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import AppLayout from '@/layouts/app-layout';
-import { SharedData } from '@/types';
-import { router, usePage } from '@inertiajs/react'; 
-import { Check, Copy, Save, Wand2 } from 'lucide-react';
-import type React from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { OptimizedAICard } from "@/components/ai-assistant-card"
+import AppLogo from "@/components/app-logo"
+import { OptimizedEmailCanvas } from "@/components/editorjs-email-canvas"
+import { OptimizedSidebar } from "@/components/email-sidebar"
+import { GenerationFeedback } from "@/components/generation-feedback"
+import { SaveEmailModal } from "@/components/save-email-modal"
+import { SidebarModal } from "@/components/sidebar-modal"
+import { ThreePanelLayout } from "@/components/three-panel-layout"
+import { Button } from "@/components/ui/button"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import AppLayout from "@/layouts/app-layout"
+import type { SharedData } from "@/types"
+import { router, usePage } from "@inertiajs/react"
+import { Check, Copy, Save, Wand2, Crown, Lock, Zap, Clock, CrownIcon } from "lucide-react"
+import type React from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 interface EmailFormData {
-    sender: string;
-    subject: string;
-    context: string;
-    tone: string;
-    recipient: string;
-    purpose: string;
-    model: string;
-    cta: string;
-    audience: string;
-    personalization: boolean;
+    sender: string
+    subject: string
+    context: string
+    tone: string
+    recipient: string
+    purpose: string
+    model: string
+    cta: string
+    audience: string
+    personalization: boolean
     personalized_data?: {
-        recipient: string;
-        audience: string;
-        personalization: boolean;
-    };
-    prompt_strategy?: string;
-    [key: string]: string | boolean | object | undefined;
+        recipient: string
+        audience: string
+        personalization: boolean
+    }
+    prompt_strategy?: string
+    [key: string]: string | boolean | object | undefined
 }
 
 interface PersonalizedData {
-    recipient: string;
-    audience: string;
-    personalization: boolean;
+    recipient: string
+    audience: string
+    personalization: boolean
 }
 
 interface GeneratedEmailData {
-    subject: string;
-    body: string;
+    subject: string
+    body: string
 }
 
-export default function EmailGenerator({ submittedData, generatedEmail, emailSubject, emailBody, error, success, prompt }) {
-    const {auth} = usePage<SharedData>().props;
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [copied, setCopied] = useState(false);
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [isProcessingEdit, setIsProcessingEdit] = useState(false);
-    const [showSaveModal, setShowSaveModal] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
+// Simplified AI access check - ONLY paying subscribers and trial users
+const hasAIAccess = (customer: any, trialStatus: boolean) => {
+    // Trial users get access (7 days from registration)
+    if (trialStatus) {
+        return true
+    }
 
+    // Paying subscribers get access (growth or scale plans)
+    if (customer?.plan && !customer.plan.includes("free")) {
+        return true
+    }
+
+    // Everyone else (free users) gets NO access
+    return false
+}
+
+// Helper function to get AI access status message
+const getAIAccessMessage = (customer: any, trialStatus: boolean) => {
+    // Premium plan users
+    if (customer?.plan?.includes("growth") || customer?.plan?.includes("scale")) {
+        const planName = customer.plan.replace("-", " ").replace("monthly", "(Monthly)").replace("annual", "(Annual)")
+        return {
+            type: "success",
+            message: `AI Assistant included with ${planName.toUpperCase()} plan`,
+            badge: customer.plan.includes("scale") ? "Scale" : "Growth",
+        }
+    }
+
+    // Trial users
+    if (trialStatus) {
+        return {
+            type: "warning",
+            message: "Free trial active - AI features available",
+            badge: "Trial",
+        }
+    }
+
+    // Free users - NO ACCESS
+    return {
+        type: "error",
+        message: "AI Assistant is only available for paying subscribers",
+        badge: "Free",
+    }
+}
+
+// Helper to get plan display info
+const getPlanDisplayInfo = (customer: any, trialStatus: boolean) => {
+    if (trialStatus) {
+        return { name: "Free Trial", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400" }
+    }
+
+    if (customer?.plan?.includes("scale")) {
+        return { name: "Scale", color: "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400" }
+    }
+
+    if (customer?.plan?.includes("growth")) {
+        return { name: "Growth", color: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400" }
+    }
+
+    return { name: "Free", color: "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400" }
+}
+
+export default function EmailGenerator({
+    submittedData,
+    generatedEmail,
+    emailSubject,
+    emailBody,
+    error,
+    success,
+    prompt,
+}) {
+    const { auth, customer, trialStatus, credits } = usePage<SharedData>().props
+    const [isGenerating, setIsGenerating] = useState(false)
+    const [copied, setCopied] = useState(false)
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+    const [isProcessingEdit, setIsProcessingEdit] = useState(false)
+    const [showSaveModal, setShowSaveModal] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
+    const [isMobile, setIsMobile] = useState(false)
     const [formData, setFormData] = useState<EmailFormData>({
-        sender: '',
-        subject: '',
-        context: '',
-        tone: '',
-        recipient: '',
-        purpose: '',
-        model: 'blazemail-70b',
-        cta: '',
-        audience: '',
+        sender: "",
+        subject: "",
+        context: "",
+        tone: "",
+        recipient: "",
+        purpose: "",
+        model: "blazemail-70b",
+        cta: "",
+        audience: "",
         personalization: false,
-    });
-
+        personalized_data: {
+            recipient: "",
+            audience: "",
+            personalization: false,
+        },
+        prompt_strategy: "", // Default strategy
+    })
     const [currentEmailData, setCurrentEmailData] = useState<GeneratedEmailData>({
-        subject: emailSubject || '',
-        body: emailBody || '',
-    });
+        subject: emailSubject || "",
+        body: emailBody || "",
+    })
+
+    // Simplified AI access check - ONLY trial and paying users
+    const userHasAIAccess = useMemo(() => hasAIAccess(customer, trialStatus), [customer, trialStatus])
+    const aiAccessMessage = useMemo(() => getAIAccessMessage(customer, trialStatus), [customer, trialStatus])
+    const planInfo = useMemo(() => getPlanDisplayInfo(customer, trialStatus), [customer, trialStatus])
 
     // Memoized computed values with personalization logic
     const hasGeneratedEmail = useMemo(
         () => Boolean((emailSubject && emailBody) || emailSubject || emailBody || generatedEmail),
         [emailSubject, emailBody, generatedEmail],
-    );
+    )
 
     const isFormValid = useMemo(() => {
-        const basicValid = Boolean(formData.subject && formData.context);
+        const basicValid = Boolean(formData.subject && formData.context)
         if (formData.personalization) {
-            return basicValid && Boolean(formData.recipient && formData.audience);
+            return basicValid && Boolean(formData.recipient && formData.audience)
         }
-        return basicValid;
-    }, [formData.subject, formData.context, formData.personalization, formData.recipient, formData.audience]);
+        return basicValid
+    }, [formData.subject, formData.context, formData.personalization, formData.recipient, formData.audience])
 
     // Mobile detection with debouncing
     useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 768);
-        checkMobile();
-        let timeoutId: NodeJS.Timeout;
+        const checkMobile = () => setIsMobile(window.innerWidth < 768)
+        checkMobile()
+        let timeoutId: NodeJS.Timeout
         const debouncedResize = () => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(checkMobile, 150);
-        };
-        window.addEventListener('resize', debouncedResize);
+            clearTimeout(timeoutId)
+            timeoutId = setTimeout(checkMobile, 150)
+        }
+        window.addEventListener("resize", debouncedResize)
         return () => {
-            window.removeEventListener('resize', debouncedResize);
-            clearTimeout(timeoutId);
-        };
-    }, []);
+            window.removeEventListener("resize", debouncedResize)
+            clearTimeout(timeoutId)
+        }
+    }, [])
 
     // Auto-close mobile sidebar when generation starts
     useEffect(() => {
         if (isGenerating && mobileMenuOpen) {
-            setMobileMenuOpen(false);
+            setMobileMenuOpen(false)
         }
-    }, [isGenerating, mobileMenuOpen]);
+    }, [isGenerating, mobileMenuOpen])
 
     // Update email data when props change
     useEffect(() => {
         if (emailSubject || emailBody) {
             setCurrentEmailData({
-                subject: emailSubject || '',
-                body: emailBody || '',
-            });
+                subject: emailSubject || "",
+                body: emailBody || "",
+            })
         } else if (generatedEmail) {
             try {
-                const parsed = JSON.parse(generatedEmail);
+                const parsed = JSON.parse(generatedEmail)
                 if (parsed.subject && parsed.body) {
                     setCurrentEmailData({
                         subject: parsed.subject,
                         body: parsed.body,
-                    });
+                    })
                 } else {
-                    throw new Error('Not valid JSON structure');
+                    throw new Error("Not valid JSON structure")
                 }
             } catch {
                 setCurrentEmailData({
-                    subject: formData.subject || 'Generated Email Subject',
+                    subject: formData.subject || "Generated Email Subject",
                     body: generatedEmail,
-                });
+                })
             }
         }
-    }, [emailSubject, emailBody, generatedEmail, formData.subject]);
+    }, [emailSubject, emailBody, generatedEmail, formData.subject])
 
     // Optimized handlers
     const handleCopy = useCallback(async () => {
-        const emailToCopy = `Subject: ${currentEmailData.subject}\n\n${currentEmailData.body}`;
+        const emailToCopy = `Subject: ${currentEmailData.subject}\n\n${currentEmailData.body}`
         try {
-            await navigator.clipboard.writeText(emailToCopy);
-            setCopied(true);
+            await navigator.clipboard.writeText(emailToCopy)
+            setCopied(true)
             // Haptic feedback
-            if ('vibrate' in navigator) {
-                navigator.vibrate(50);
+            if ("vibrate" in navigator) {
+                navigator.vibrate(50)
             }
-            setTimeout(() => setCopied(false), 2000);
+            setTimeout(() => setCopied(false), 2000)
         } catch (err) {
-            console.error('Failed to copy:', err);
+            console.error("Failed to copy:", err)
         }
-    }, [currentEmailData]);
+    }, [currentEmailData])
 
     const handleInputChange = useCallback((field: keyof EmailFormData, value: string | boolean) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
-    }, []);
+        setFormData((prev) => ({ ...prev, [field]: value }))
+    }, [])
 
-    const handleEmailChange = useCallback((field: 'subject' | 'body', value: string) => {
-        setCurrentEmailData((prev) => ({ ...prev, [field]: value }));
-    }, []);
+    const handleEmailChange = useCallback((field: "subject" | "body", value: string) => {
+        setCurrentEmailData((prev) => ({ ...prev, [field]: value }))
+    }, [])
 
     const handleSubmit = useCallback(
         (e: React.FormEvent) => {
-            e.preventDefault();
-            setIsGenerating(true);
-
+            e.preventDefault()
+            setIsGenerating(true)
             // Prepare data with personalization info
             const submitData = {
                 ...formData,
@@ -181,24 +261,32 @@ export default function EmailGenerator({ submittedData, generatedEmail, emailSub
                     },
                 }),
                 // Add prompt strategy selection
-                prompt_strategy: 'rgc', // or make this configurable
-            };
+                prompt_strategy: formData.prompt_strategy || "rgc", // or make this configurable
+            }
 
-            router.post(route('user.email.generate.post'), submitData, {
+            router.post(route("user.email.generate.post"), submitData, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => setIsGenerating(false),
                 onError: () => setIsGenerating(false),
                 onFinish: () => setIsGenerating(false),
-            });
+            })
         },
         [formData],
-    );
+    )
 
     const handleAISuggestion = useCallback(
-        (suggestion: string, selectedText = '') => {
-            setIsProcessingEdit(true);
-            setIsGenerating(true);
+        (suggestion: string, selectedText = "") => {
+            // Strict access control - ONLY trial and paying users
+            if (!userHasAIAccess) {
+                const message =
+                    "AI Assistant is only available for paying subscribers. Upgrade your plan to access AI features."
+                alert(message)
+                return
+            }
+
+            setIsProcessingEdit(true)
+            setIsGenerating(true)
             const refinementData = {
                 currentSubject: currentEmailData.subject,
                 currentBody: currentEmailData.body,
@@ -214,32 +302,32 @@ export default function EmailGenerator({ submittedData, generatedEmail, emailSub
                         personalization: formData.personalization,
                     },
                 }),
-                prompt_strategy: 'rgc', // or make this configurable
-            };
+                prompt_strategy: "rgc", // or make this configurable
+            }
 
-            router.post(route('user.email.generate.refine'), refinementData, {
+            router.post(route("user.email.generate.refine"), refinementData, {
                 preserveState: true,
                 onSuccess: () => {
-                    setIsProcessingEdit(false);
-                    setIsGenerating(false);
+                    setIsProcessingEdit(false)
+                    setIsGenerating(false)
                 },
                 onError: () => {
-                    setIsProcessingEdit(false);
-                    setIsGenerating(false);
+                    setIsProcessingEdit(false)
+                    setIsGenerating(false)
                 },
                 onFinish: () => setIsGenerating(false),
-            });
+            })
         },
-        [currentEmailData, formData, prompt],
-    );
+        [currentEmailData, formData, prompt, userHasAIAccess],
+    )
 
     const handleUseEmail = useCallback(() => {
-        setShowSaveModal(true);
-    }, []);
+        setShowSaveModal(true)
+    }, [])
 
     const handleSaveEmail = useCallback(
         (data: { title: string; description: string }) => {
-            setIsSaving(true);
+            setIsSaving(true)
             const saveData = {
                 email_subject: currentEmailData.subject,
                 email_content: currentEmailData.body,
@@ -262,25 +350,31 @@ export default function EmailGenerator({ submittedData, generatedEmail, emailSub
                         personalization: formData.personalization,
                     },
                 }),
-                strategy_used: 'rgc', // Track which strategy was used
+                strategy_used: formData.prompt_strategy, // Track which strategy was used
                 meta: {
                     title: data.title,
                     description: data.description,
                 },
-            };
+            }
 
-            router.post(route('user.email.generate.save'), saveData, {
+            router.post(route("user.email.generate.save"), saveData, {
                 preserveState: true,
                 onSuccess: () => {
-                    setIsSaving(false);
-                    setShowSaveModal(false);
+                    setIsSaving(false)
+                    setShowSaveModal(false)
+                    localStorage.removeItem("email_generator_form") // Clear form data after saving
                 },
                 onError: () => setIsSaving(false),
-            });
-            console.log('Saving email with data:', saveData);
+            })
+            console.log("Saving email with data:", saveData)
         },
         [currentEmailData, formData, prompt],
-    );
+    )
+
+    const handleUpgrade = useCallback(() => {
+        // Redirect to your billing/plans page
+        router.visit(route("billing.plans")) // Adjust route name as needed
+    }, [])
 
     // Memoized components
     const sidebarContent = useMemo(
@@ -297,22 +391,107 @@ export default function EmailGenerator({ submittedData, generatedEmail, emailSub
             />
         ),
         [formData, handleInputChange, handleSubmit, isGenerating, isFormValid, mobileMenuOpen, isMobile],
-    );
+    )
 
-    const aiPanelContent = useMemo(
-        () => <OptimizedAICard onAISuggestion={handleAISuggestion} isProcessing={isProcessingEdit} hasContent={hasGeneratedEmail} />,
-        [handleAISuggestion, isProcessingEdit, hasGeneratedEmail],
-    );
+    // AI Panel - ONLY for trial and paying users
+    const aiPanelContent = useMemo(() => {
+        // Free users see upgrade prompt
+        if (!userHasAIAccess) {
+            return (
+                <div className="flex h-full flex-col items-center justify-center p-6 text-center">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-red-500">
+                        <AppLogo />
+                    </div>
+                    <h3 className="mb-2 text-lg font-semibold">AI Assistant</h3>
+                    <p className="mb-4 text-sm text-muted-foreground">
+                        Unlock powerful AI suggestions and email refinements with a paid plan
+                    </p>
+
+                    {/* Show current plan status */}
+                    <div className="mb-4 flex items-center gap-2">
+                        <Badge className="bg-gray-100 text-primary dark:bg-gray-900/20">Free Plan</Badge>
+                    </div>
+
+                    <Alert className="mb-4 border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/20">
+                        <CrownIcon className="h-4 w-4 text-orange-600" />
+                        <AlertDescription className="text-xs text-orange-800 dark:text-orange-400">
+                            AI Assistant is exclusive to Growth and Scale subscribers
+                        </AlertDescription>
+                    </Alert>
+
+                    <div className="mb-4 space-y-2 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                            <Zap className="h-3 w-3 text-yellow-500" />
+                            <span>Smart email suggestions</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Wand2 className="h-3 w-3 text-purple-500" />
+                            <span>AI-powered refinements</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Crown className="h-3 w-3 text-orange-500" />
+                            <span>Advanced personalization</span>
+                        </div>
+                    </div>
+
+                    <Button
+                        onClick={handleUpgrade}
+                        size="sm"
+                        className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                    >
+                        <Crown className="mr-2 h-4 w-4" />
+                        Upgrade to Access AI
+                    </Button>
+                </div>
+            )
+        }
+
+        // Trial and paying users get full access
+        return (
+            <OptimizedAICard
+                onAISuggestion={handleAISuggestion}
+                isProcessing={isProcessingEdit}
+                hasContent={hasGeneratedEmail}
+            />
+        )
+    }, [userHasAIAccess, handleAISuggestion, isProcessingEdit, hasGeneratedEmail, handleUpgrade])
 
     const mainContent = useMemo(
         () => (
             <div className="flex h-full flex-col">
                 {/* Top Action Bar */}
+                {/* Generation Feedback */}
+                <GenerationFeedback
+                    error={error}
+                    success={success}
+                    strategy={submittedData?.prompt_strategy}
+                    onRetry={() => handleSubmit({ preventDefault: () => { } } as React.FormEvent)}
+                />
                 {hasGeneratedEmail && (
                     <div className="flex items-center justify-between border-b border-border/50 bg-card/95 p-4 backdrop-blur-sm">
                         <div className="flex items-center gap-2">
-                            <span className="font-medium text-foreground">{isGenerating ? '' : 'Email Editor'}</span>
+                            <span className="font-medium text-foreground">{isGenerating ? "" : "Email Editor"}</span>
+
+                            {/* Show plan status */}
+                            <div className="flex items-center gap-2">
+                                <Badge className={planInfo.color}>{planInfo.name}</Badge>
+
+                                {/* Show trial status */}
+                                {trialStatus && (
+                                    <div className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                                        <span>Trial Active</span>
+                                    </div>
+                                )}
+
+                                {/* Show AI access status */}
+                                {userHasAIAccess && (
+                                    <div className="flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                                        <span>AI Enabled</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
+
                         <div className="flex items-center gap-2">
                             <Button
                                 variant="outline"
@@ -340,17 +519,9 @@ export default function EmailGenerator({ submittedData, generatedEmail, emailSub
                     </div>
                 )}
 
-                {/* Generation Feedback */}
-                <GenerationFeedback
-                    error={error}
-                    success={success}
-                    strategy={submittedData?.prompt_strategy}
-                    onRetry={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
-                />
-                
 
                 {/* Email Canvas */}
-                <div className="custom-scrollbar flex-1 overflow-y-auto bg-gradient-to-br from-background to-accent/10">
+                <div className="custom-scrollbar flex-1 overflow-y-auto">
                     {isGenerating ? (
                         <div className="mx-auto max-w-4xl p-8">
                             <div className="space-y-6">
@@ -379,9 +550,9 @@ export default function EmailGenerator({ submittedData, generatedEmail, emailSub
                         <OptimizedEmailCanvas
                             subject={currentEmailData.subject}
                             body={currentEmailData.body}
-                            onSubjectChange={(value) => handleEmailChange('subject', value)}
-                            onBodyChange={(value) => handleEmailChange('body', value)}
-                            onAISuggestion={handleAISuggestion}
+                            onSubjectChange={(value) => handleEmailChange("subject", value)}
+                            onBodyChange={(value) => handleEmailChange("body", value)}
+                            onAISuggestion={userHasAIAccess ? handleAISuggestion : undefined}
                             isProcessingEdit={isProcessingEdit}
                         />
                     ) : (
@@ -414,8 +585,11 @@ export default function EmailGenerator({ submittedData, generatedEmail, emailSub
             success,
             submittedData,
             handleSubmit,
+            userHasAIAccess,
+            planInfo,
+            trialStatus,
         ],
-    );
+    )
 
     return (
         <AppLayout>
@@ -429,7 +603,7 @@ export default function EmailGenerator({ submittedData, generatedEmail, emailSub
                             </SidebarModal>
                             {/* Main Content */}
                             <div className="flex-1 overflow-hidden rounded-2xl bg-card/95 backdrop-blur-sm">{mainContent}</div>
-                            {/* AI Panel - Mobile */}
+                            {/* AI Panel - Mobile - Only show if user has access and there's generated email */}
                             {hasGeneratedEmail && (
                                 <div className="h-100 rounded-2xl border border-border/50 bg-card/95 shadow-2xl backdrop-blur-sm">
                                     {aiPanelContent}
@@ -437,7 +611,11 @@ export default function EmailGenerator({ submittedData, generatedEmail, emailSub
                             )}
                         </div>
                     ) : (
-                        <ThreePanelLayout sidebar={sidebarContent} main={mainContent} aiPanel={aiPanelContent} />
+                        <ThreePanelLayout
+                            sidebar={sidebarContent}
+                            main={mainContent}
+                            aiPanel={hasGeneratedEmail ? aiPanelContent : null}
+                        />
                     )}
                 </div>
                 {/* Save Email Modal */}
@@ -451,5 +629,5 @@ export default function EmailGenerator({ submittedData, generatedEmail, emailSub
                 />
             </TooltipProvider>
         </AppLayout>
-    );
+    )
 }

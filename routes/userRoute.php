@@ -71,7 +71,37 @@ Route::middleware(['auth', 'verified', 'role:user', 'onboarding'])->group(functi
     Route::post('email/generate/send', [EmailSenderController::class, 'sendBulk'])
         ->name('user.email.generate.send.bulk');
     //scam checker 
-    // Route::get('email/scam-checker', [ScamCheckController::class, 'index'])->name('email.scam.page');
+    // 🔥 JOB MANAGEMENT ROUTES
+    Route::get('/jobs', [App\Http\Controllers\JobTrackerController::class, 'index'])
+        ->name('jobs.index');
+
+    // 🔥 JOB TRACKER API ROUTES
+    Route::get('/api/jobs/recent', [App\Http\Controllers\JobTrackerController::class, 'getRecentJobs'])
+        ->name('jobs.recent');
+
+    Route::get('/api/jobs/{batchId}/progress', [App\Http\Controllers\JobTrackerController::class, 'getJobProgress'])
+        ->name('jobs.progress.api');
+
+    // 🔥 EMAIL REVIEW ROUTES
+    Route::get('/emails/review/{batch}', [App\Http\Controllers\EmailReviewController::class, 'review'])
+        ->name('emails.review');
+
+    Route::post('/emails/review/{batch}/send', [App\Http\Controllers\EmailReviewController::class, 'sendApproved'])
+        ->name('emails.send-approved');
+
+    Route::post('/emails/review/{batch}/send-all', [App\Http\Controllers\EmailReviewController::class, 'sendAll'])
+        ->name('emails.send-all');
+
+    Route::patch('/emails/review/{batch}/status', [App\Http\Controllers\EmailReviewController::class, 'updateStatus'])
+        ->name('emails.update-status');
+
+    // 🔥 EMAIL SENDER ROUTES
+    Route::get('/email/send', [App\Http\Controllers\User\EmailSenderController::class, 'send'])
+        ->name('email.send');
+
+    Route::post('/email/send-bulk', [App\Http\Controllers\User\EmailSenderController::class, 'sendBulk'])
+        ->name('email.send-bulk');
+        
     // Campaign
 
     Route::prefix('email/campaign')->name('user.email.')->group(function () {
@@ -118,7 +148,7 @@ Route::middleware(['auth', 'verified', 'role:user', 'onboarding'])->group(functi
         ->name('email-accounts.destroy');
 
     // Connection test with health check
-    Route::post('/api/email-accounts/{emailAccount}/test-connection', [EmailAccountController::class, 'testConnection'])
+    Route::post('/email-accounts/{emailAccount}/test-connection', [EmailAccountController::class, 'testConnection'])
         ->name('email-accounts.test-connection')
         ->middleware(ValidateEmailAccountHealth::class);
 

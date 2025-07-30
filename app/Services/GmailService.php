@@ -246,6 +246,124 @@ class GmailService
     }
 
     /**
+     * 🔥 NEW: Test Gmail connection for email account
+     */
+    public function testConnection(EmailAccount $account): array
+    {
+        try {
+            Log::info('Testing Gmail connection', [
+                'account_id' => $account->id,
+                'email' => $account->email,
+                'has_access_token' => !empty($account->encrypted_access_token),
+                'has_refresh_token' => !empty($account->encrypted_refresh_token)
+            ]);
+
+            // Check if account has required tokens
+            if (empty($account->encrypted_access_token)) {
+                throw new \Exception('No access token found for account');
+            }
+
+            // Set up the client with the account's tokens
+            $this->client->setAccessToken([
+                'access_token' => $account->encrypted_access_token,
+                'refresh_token' => $account->encrypted_refresh_token,
+                'expires_in' => $account->token_expires_at ?
+                    $account->token_expires_at->diffInSeconds(now()) : 3600,
+            ]);
+
+            // Check if token needs refresh
+            if ($this->client->isAccessTokenExpired()) {
+                if (empty($account->encrypted_refresh_token)) {
+                    throw new \Exception('Access token expired and no refresh token available');
+                }
+
+                Log::info('Refreshing expired access token', ['account_id' => $account->id]);
+
+                $newToken = $this->client->fetchAccessTokenWithRefreshToken($account->encrypted_refresh_token);
+
+                if (isset($newToken['error'])) {
+                    throw new \Exception('Token refresh failed: ' . $newToken['error']);
+                }
+
+                // Update the account with new token
+                $account->update([
+                    'encrypted_access_token' => $newToken['access_token'],
+                    'token_expires_at' => isset($newToken['expires_in']) ?
+                        now()->addSeconds($newToken['expires_in']) : null,
+                    'last_sync' => now(),
+                ]);
+
+                Log::info('Access token refreshed successfully', ['account_id' => $account->id]);
+            }
+
+            // Test the connection by getting user profile
+            $gmail = new Gmail($this->client);
+            $profile = $gmail->users->getProfile('me');
+
+            // Update account status
+            $account->update([
+                'status' => 'active',
+                'is_connected' => true,
+                'last_health_check' => now(),
+                'consecutive_errors' => 0,
+                'last_error' => null,
+                'metadata' => array_merge($account->metadata ?? [], [
+                    'last_connection_test' => now()->toISOString(),
+                    'gmail_messages_total' => $profile->getMessagesTotal(),
+                    'gmail_threads_total' => $profile->getThreadsTotal(),
+                    'connection_test_result' => 'success'
+                ])
+            ]);
+
+            Log::info('Gmail connection test successful', [
+                'account_id' => $account->id,
+                'email' => $account->email,
+                'messages_total' => $profile->getMessagesTotal(),
+                'threads_total' => $profile->getThreadsTotal(),
+                'connection_status' => 'active'
+            ]);
+
+            return [
+                'success' => true,
+                'account_id' => $account->id,
+                'email' => $account->email,
+                'messages_total' => $profile->getMessagesTotal(),
+                'threads_total' => $profile->getThreadsTotal(),
+                'connection_status' => 'active'
+            ];
+        } catch (\Exception $e) {
+            // Update account with error status
+            $account->update([
+                'status' => 'error',
+                'is_connected' => false,
+                'last_health_check' => now(),
+                'consecutive_errors' => ($account->consecutive_errors ?? 0) + 1,
+                'last_error' => $e->getMessage(),
+                'metadata' => array_merge($account->metadata ?? [], [
+                    'last_connection_test' => now()->toISOString(),
+                    'connection_test_result' => 'failed',
+                    'connection_error' => $e->getMessage()
+                ])
+            ]);
+
+            Log::error('Gmail connection test failed', [
+                'account_id' => $account->id,
+                'email' => $account->email,
+                'error' => $e->getMessage(),
+                'consecutive_errors' => $account->consecutive_errors
+            ]);
+
+            return [
+                'success' => false,
+                'account_id' => $account->id,
+                'email' => $account->email,
+                'error' => $e->getMessage(),
+                'connection_status' => 'error'
+            ];
+        }
+    }
+    
+    /**
      * 🔥 NEW: Check if account has required scopes for inbox access
      */
     public function hasInboxScopes(EmailAccount $account): bool
