@@ -16,7 +16,7 @@ class ChangelogController extends Controller
         //     $changelogContent = "# Changelog\n\nChangelog content could not be loaded.";
         // }
         // dd($changelogContent);
-        $changelogContent = file_get_contents(storage_path('/app/CHANGELOG.md'));
+        $changelogContent = file_get_contents(resource_path('/markdown/CHANGELOG.md'));
         // dd($changelogContent);
         return Inertia::render('changelog', [
             'changelogContent' => $changelogContent,

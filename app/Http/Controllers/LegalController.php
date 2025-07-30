@@ -12,7 +12,7 @@ class LegalController extends Controller
     {
         try {
             $privacyContent = file_get_contents(
-                storage_path('app/PRIVACY_POLICY.md')
+                resource_path('markdown/PRIVACY_POLICY.md')
             );
         } catch (\Exception $e) {
             $privacyContent = "# Privacy Policy\n\nPrivacy policy content could not be loaded.";
@@ -31,7 +31,7 @@ class LegalController extends Controller
     {
         try {
             $termsContent = file_get_contents(
-                storage_path('app/TERMS_OF_SERVICE.md')
+                resource_path('markdown/TERMS_OF_SERVICE.md')
             );
         } catch (\Exception $e) {
             $termsContent = "# Terms of Service\n\nTerms of service content could not be loaded.";
