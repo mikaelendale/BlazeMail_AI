@@ -2,7 +2,7 @@ import { Head, Link, router } from "@inertiajs/react"
 import ReactMarkdown from "react-markdown"
 import { ArrowLeft, Scale, Clock, FileText, Mail, Phone, MapPin } from "lucide-react"
 import LandingLayout from "../landing/landing-layout"
-import { Button } from "@/Components/ui/button"
+import { Button } from "@/components/ui/button"
 
 interface TermsProps {
     content: string

@@ -2,7 +2,7 @@ import { usePage } from "@inertiajs/react"
 import { AlertTriangle, CoinsIcon, Zap } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/Components/ui/button"
+import { Button } from "@/components/ui/button"
 import { SharedData } from "@/types"
  
 
