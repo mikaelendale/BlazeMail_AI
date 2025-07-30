@@ -1,8 +1,8 @@
 import { Head } from "@inertiajs/react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card"
-import { Badge } from "@/Components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import AppLayout from "@/layouts/app-layout"
-import UsageChart from "@/Components/UsageChart" // Import the new chart component
+import UsageChart from "@/components/UsageChart" // Import the new chart component
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface CreditStats {

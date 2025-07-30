@@ -13,7 +13,6 @@ use Exception;
 class CreditService
 {
     // ==================== CONFIGURABLE VARIABLES ====================
-
     /**
      * Referral bonus amount
      */
@@ -62,7 +61,8 @@ class CreditService
      * Fraud detection thresholds
      */
     const FRAUD_THRESHOLDS = [
-        'rapid_credit_usage_hour' => 5000,        // Credits added in 1 hour
+        'rapid_credit_usage_hour' => 5000,
+        // Credits added in 1 hour
         'daily_transaction_limit' => 100,         // Transactions per day
         'suspicious_referral_limit' => 10,        // Referrals per day
         'max_failed_attempts' => 5,               // Failed credit attempts
@@ -101,14 +101,13 @@ class CreditService
         User $user,
         int $amount,
         string $type,
-        string $description = null,
+        ?string $description = null,  // Fixed: explicit nullable type
         array $metadata = [],
         $expiresAt = null,
-        string $referenceId = null
+        ?string $referenceId = null   // Fixed: explicit nullable type
     ): CreditTransaction {
         return DB::transaction(function () use ($user, $amount, $type, $description, $metadata, $expiresAt, $referenceId) {
             $user = User::where('id', $user->id)->lockForUpdate()->first();
-
             if (!$user) {
                 throw new Exception('User not found for credit addition.');
             }
@@ -147,13 +146,12 @@ class CreditService
         User $user,
         int $amount,
         string $type,
-        string $description = null,
+        ?string $description = null,  // Fixed: explicit nullable type
         array $metadata = [],
-        string $referenceId = null
+        ?string $referenceId = null   // Fixed: explicit nullable type
     ): CreditTransaction {
         return DB::transaction(function () use ($user, $amount, $type, $description, $metadata, $referenceId) {
             $user = User::where('id', $user->id)->lockForUpdate()->first();
-
             if (!$user) {
                 throw new Exception('User not found for credit deduction.');
             }
@@ -306,7 +304,6 @@ class CreditService
         foreach ($priceIds as $planType => $priceId) {
             if ($priceId && $user->subscribedToPrice($priceId, 'default')) {
                 $userPriceId = $priceId;
-
                 // Determine plan name and credits
                 if (str_contains($planType, 'growth')) {
                     $planName = 'growth';
@@ -461,7 +458,6 @@ class CreditService
             try {
                 DB::transaction(function () use ($transaction) {
                     $user = User::where('id', $transaction->user_id)->lockForUpdate()->first();
-
                     if (!$user) {
                         Log::warning("User not found for expiring transaction: {$transaction->id}");
                         return;
@@ -470,7 +466,6 @@ class CreditService
                     // Only deduct if the user is still on a free plan or has no active subscription
                     if (!$user->subscribed('default')) {
                         $amountToDeduct = min($transaction->amount, $user->credit_balance);
-
                         if ($amountToDeduct > 0) {
                             $user->decrement('credit_balance', $amountToDeduct);
                             $user->update(['last_credit_activity' => now()]);
@@ -723,7 +718,7 @@ class CreditService
         ];
     }
 
-    public function hasCredits(User $user, string $action = null, int $customAmount = null): bool
+    public function hasCredits(User $user, ?string $action = null, ?int $customAmount = null): bool  // Fixed: explicit nullable types
     {
         if ($user->account_status !== 'active') {
             return false;
@@ -786,7 +781,7 @@ class CreditService
     public function attemptCreditUsage(
         User $user,
         string $action,
-        int $customAmount = null,
+        ?int $customAmount = null,  // Fixed: explicit nullable type
         array $metadata = []
     ): array {
         $cost = $customAmount ?? $this->getCreditCost($action);
