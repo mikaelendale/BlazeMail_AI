@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap"
         rel="stylesheet">
-    @paddleJS
     {{-- @laravelPWA --}}
     <!-- Web Application Manifest -->
     <link rel="manifest" href="/manifest.json">
@@ -120,6 +119,7 @@
     @if(session('success'))
     <meta name="flash-success" content="{{ session('success') }}">
     @endif
+    @paddleJS
 
     @routes
     @viteReactRefresh

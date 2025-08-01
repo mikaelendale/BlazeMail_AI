@@ -22,7 +22,7 @@ export default function Feature( props: React.HTMLAttributes<HTMLDivElement>) {
                     animate={{ opacity: 1, y: 0, rotate: -1 }}
                     transition={{ duration: 0.4, delay: 0.3 }}
                 >
-                    <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 dark:text-red-400" />
+                    {/* <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 dark:text-red-400" /> */}
                     <span className="text-sm sm:text-base text-primary">
                         Slow Response Times
                     </span>
@@ -34,7 +34,7 @@ export default function Feature( props: React.HTMLAttributes<HTMLDivElement>) {
                     animate={{ opacity: 1, y: 0, rotate: 1 }}
                     transition={{ duration: 0.4, delay: 0.4 }}
                 >
-                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 dark:text-green-400" />
+                    {/* <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 dark:text-green-400" /> */}
                     <span className="text-sm sm:text-base text-primary">
                         Endless Back & Forth Booking Meetings
                     </span>
@@ -46,7 +46,7 @@ export default function Feature( props: React.HTMLAttributes<HTMLDivElement>) {
                     animate={{ opacity: 1, y: 0, rotate: -0.5 }}
                     transition={{ duration: 0.4, delay: 0.5 }}
                 >
-                    <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 dark:text-blue-400" />
+                    {/* <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 dark:text-blue-400" /> */}
                     <span className="text-sm sm:text-base text-primary">
                         Hours Wasted Managing Email
                     </span>
@@ -60,7 +60,7 @@ export default function Feature( props: React.HTMLAttributes<HTMLDivElement>) {
                     animate={{ opacity: 1, y: 0, rotate: 1.5 }}
                     transition={{ duration: 0.4, delay: 0.6 }}
                 >
-                    <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 dark:text-purple-400" />
+                    {/* <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 dark:text-purple-400" /> */}
                     <span className="text-sm sm:text-base text-primary">
                         Slow Replies Leading to Ghosted Leads
                     </span>
@@ -72,7 +72,7 @@ export default function Feature( props: React.HTMLAttributes<HTMLDivElement>) {
                     animate={{ opacity: 1, y: 0, rotate: -1.2 }}
                     transition={{ duration: 0.4, delay: 0.7 }}
                 >
-                    <Inbox className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 dark:text-orange-400" />
+                    {/* <Inbox className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 dark:text-orange-400" /> */}
                     <span className="text-sm sm:text-base text-primary">
                         Leads Lost in the Noise
                     </span>

@@ -8,19 +8,23 @@ import Pricing from './landing/Pricing';
 import Feature from './landing/Feature';
 import Hero from './landing/hero';
 import LandingLayout from './landing/landing-layout';
+import ThreeCards from './landing/3-cards';
+import Testimonial from './landing/testimonials';
+import CTA from './landing/cta';
 
 export default function Welcome() {
     return (
         <>
             <LandingLayout>
                 <Hero />
+
                 <Feature id="features" />
-                <ProblemSolutionSection />
+                <ThreeCards/>
+                {/* <ProblemSolutionSection /> */}
                 <HowItWorks />
-                <FeaturesSection />
-                <Integrations />
-                <FeaturesMulti />
+                {/* <Testimonial /> */}
                 <Pricing />
+                {/* <CTA/> */}
             </LandingLayout>
         </>
     );

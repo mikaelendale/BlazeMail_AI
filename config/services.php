@@ -57,6 +57,7 @@ return [
         'warmup_max_days' => env('WARMUP_MAX_DAYS', 30),
     ],
     'paddle' => [
+        'client_side_token' => env('PADDLE_CLIENT_SIDE_TOKEN'),
         // Price IDs    
         'growth_monthly_price_id' => env('PADDLE_GROWTH_MONTHLY_PRICE_ID'),
         'scale_monthly_price_id' => env('PADDLE_SCALE_MONTHLY_PRICE_ID'),

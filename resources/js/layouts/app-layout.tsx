@@ -23,7 +23,7 @@ export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => {
     return (
         <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
             <AppNavbar />
-            {/* <ModeToggle /> */}
+            <ModeToggle />
             <div style={{ paddingLeft: 24, paddingRight: 24, marginTop: 80 }}>{children}</div>
             <FloatingActionButtons />
             <JobTracker />
