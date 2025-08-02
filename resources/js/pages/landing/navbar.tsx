@@ -5,18 +5,20 @@ import { ShinyButton } from '@/components/magicui/shiny-button';
 import { Button } from '@/components/ui/button';
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { DollarSignIcon, FeatherIcon, Home, List } from 'lucide-react';
+import { DollarSignIcon, FeatherIcon, Gem, Home, Library, List, LogIn } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export default function Navbar() {
+    const { auth } = usePage<SharedData>().props;
     //logout
     const { url } = usePage();
     const [activeTab, setActiveTab] = useState('home');
     const navItems = [
         { id: 'home', icon: Home, label: 'Home', href: '/' },
-        { id: 'features', icon: List, label: 'Features', href: '/features' },
-        { id: 'pricing', icon: DollarSignIcon, label: 'Pricing', href: '/pricing' },
+        { id: 'pricing', icon: Gem, label: 'Pricing', href: '/pricing' },
+        { id: 'support', icon: Library, label: 'Support', href: '/support' },
     ];
 
     const getActiveIndex = () => {
@@ -79,11 +81,10 @@ export default function Navbar() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className={`h-10 w-10 rounded-full transition-colors duration-300 ease-in-out hover:bg-transparent ${
-                                                        isActive
-                                                            ? 'text-gray-900 dark:text-gray-100'
-                                                            : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
-                                                    } `}
+                                                    className={`h-10 w-10 rounded-full transition-colors duration-300 ease-in-out hover:bg-transparent ${isActive
+                                                        ? 'text-gray-900 dark:text-gray-100'
+                                                        : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                                                        } `}
                                                     onClick={() => handleTabClick(item.id)}
                                                 >
                                                     <Icon className="h-5 w-5" />
@@ -100,28 +101,54 @@ export default function Navbar() {
                         </div>
                     </div>
                     {/* Separator */}
-                    <div className="h-6 w-px bg-gray-200 dark:bg-gray-700"></div>
+                    {/* <div className="h-6 w-px bg-gray-200 dark:bg-gray-700"></div> */}
 
                     {/* Theme Toggle */}
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <ModeToggle />
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="rounded-lg border px-3 py-1.5 text-sm text-background">
-                            Theme
-                        </TooltipContent>
-                    </Tooltip>
                     {/* Logout Button */}
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Link href="/register">
-                                <ShinyButton className="h-10 w-22 rounded-2xl transition-colors duration-300">Try</ShinyButton>
-                            </Link>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="rounded-lg border px-3 py-1.5 text-sm text-background">
-                            Try it now
-                        </TooltipContent>
-                    </Tooltip>
+                    {auth.user ? (
+                        <>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <ModeToggle />
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="rounded-lg border px-3 py-1.5 text-sm text-background">
+                                    Theme
+                                </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Link href="/dashboard" method="post" className="h-10 w-10 rounded-full  bg-accent">
+                                        <LogIn className="h-5 w-5 mx-auto text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" />
+                                    </Link>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="rounded-lg border px-3 py-1.5 text-sm text-background">
+                                    Dashboard
+                                </TooltipContent>
+                            </Tooltip>
+                        </>
+                    ) : (
+                        <>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Link href="/register">
+                                        <ShinyButton className="h-10 w-22 rounded-2xl transition-colors duration-300">Try</ShinyButton>
+                                    </Link>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="rounded-lg border px-3 py-1.5 text-sm text-background">
+                                    Try it now
+                                </TooltipContent>
+                                </Tooltip>
+
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <ModeToggle />
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom" className="rounded-lg border px-3 py-1.5 text-sm text-background">
+                                        Theme
+                                    </TooltipContent>
+                                </Tooltip>
+                        </>
+                    )}
                 </nav>
             </TooltipProvider>
         </div>

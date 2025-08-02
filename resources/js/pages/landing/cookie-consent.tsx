@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Link } from '@inertiajs/react';
 import { Cookie, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -71,9 +72,9 @@ export default function CookieConsent() {
             {/* Text with link */}
             <div className="flex-1 text-xs text-foreground/80">
                 By continuing to this site you agree to our cookies and{' '}
-                <a href={CONFIG.consentUrl} className="text-primary underline underline-offset-2 hover:text-primary/80">
+                <Link href={CONFIG.consentUrl} className="text-primary underline underline-offset-2 hover:text-primary/80">
                 consent
-                </a>
+                </Link>
             </div>
 
             {/* Buttons */}

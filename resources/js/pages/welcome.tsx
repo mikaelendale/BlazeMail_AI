@@ -9,8 +9,9 @@ import Feature from './landing/Feature';
 import Hero from './landing/hero';
 import LandingLayout from './landing/landing-layout';
 import ThreeCards from './landing/3-cards';
-import Testimonial from './landing/testimonials';
+import TestimonialCard from './landing/testimonials';
 import CTA from './landing/cta';
+import About from './landing/about';
 
 export default function Welcome() {
     return (
@@ -19,12 +20,13 @@ export default function Welcome() {
                 <Hero />
 
                 <Feature id="features" />
-                <ThreeCards/>
+                <About/>
+                <ThreeCards />
                 {/* <ProblemSolutionSection /> */}
                 <HowItWorks />
-                {/* <Testimonial /> */}
+                <TestimonialCard />
                 <Pricing />
-                {/* <CTA/> */}
+                <CTA/>
             </LandingLayout>
         </>
     );

@@ -36,21 +36,20 @@ export default function Hero() {
                     </div> */}
 
                     {/* Video Demo Section */}
-                    <div className="px-2 lg:px-16">
+                    {/* <div className="px-2 lg:px-16">
                         <div className="flex items-center justify-center mx-auto max-w-6xl border-7 dark:border border-accent bg-accent rounded-4xl">
                             <div className="relative w-full border dark:border-7 bg-accent border-accentdark:rounded-4xl rounded-3xl overflow-hidden">
                                 <p className="text-sm sm:text-md flex justify-center items-center bg-accent lg:text-md py-2">Discover the future of <strong className="px-1">Cold email </strong>  in action.</p>
                                 <video autoPlay muted loop playsInline className="w-full border-b bg-primary-foreground rounded-3xl h-auto">
                                     <source src="/demo-video.mp4" type="video/mp4" />
                                 </video>
-                                {/* Video Overlay Text */}
                                 <div className="absolute inset-0 flex items-end justify-center ">
                                     <div className="text-center text-primary">
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </div>

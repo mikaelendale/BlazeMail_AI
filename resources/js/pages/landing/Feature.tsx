@@ -1,7 +1,8 @@
 "use client";
 
+import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
-import { Clock, Calendar, MessageSquare, Inbox } from "lucide-react";
+import { Clock, Calendar, MessageSquare, Inbox, CircleCheck, X } from "lucide-react";
 
 export default function Feature( props: React.HTMLAttributes<HTMLDivElement>) {
     return (
@@ -22,7 +23,7 @@ export default function Feature( props: React.HTMLAttributes<HTMLDivElement>) {
                     animate={{ opacity: 1, y: 0, rotate: -1 }}
                     transition={{ duration: 0.4, delay: 0.3 }}
                 >
-                    {/* <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 dark:text-red-400" /> */}
+                    <X className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 dark:text-red-400" />
                     <span className="text-sm sm:text-base text-primary">
                         Slow Response Times
                     </span>
@@ -34,7 +35,7 @@ export default function Feature( props: React.HTMLAttributes<HTMLDivElement>) {
                     animate={{ opacity: 1, y: 0, rotate: 1 }}
                     transition={{ duration: 0.4, delay: 0.4 }}
                 >
-                    {/* <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 dark:text-green-400" /> */}
+                    <X className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 dark:text-red-400" />
                     <span className="text-sm sm:text-base text-primary">
                         Endless Back & Forth Booking Meetings
                     </span>
@@ -46,7 +47,7 @@ export default function Feature( props: React.HTMLAttributes<HTMLDivElement>) {
                     animate={{ opacity: 1, y: 0, rotate: -0.5 }}
                     transition={{ duration: 0.4, delay: 0.5 }}
                 >
-                    {/* <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 dark:text-blue-400" /> */}
+                    <X className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 dark:text-red-400" />
                     <span className="text-sm sm:text-base text-primary">
                         Hours Wasted Managing Email
                     </span>
@@ -60,7 +61,7 @@ export default function Feature( props: React.HTMLAttributes<HTMLDivElement>) {
                     animate={{ opacity: 1, y: 0, rotate: 1.5 }}
                     transition={{ duration: 0.4, delay: 0.6 }}
                 >
-                    {/* <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 dark:text-purple-400" /> */}
+                    <X className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 dark:text-red-400" />
                     <span className="text-sm sm:text-base text-primary">
                         Slow Replies Leading to Ghosted Leads
                     </span>
@@ -72,12 +73,23 @@ export default function Feature( props: React.HTMLAttributes<HTMLDivElement>) {
                     animate={{ opacity: 1, y: 0, rotate: -1.2 }}
                     transition={{ duration: 0.4, delay: 0.7 }}
                 >
-                    {/* <Inbox className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 dark:text-orange-400" /> */}
+                    <X className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 dark:text-red-400" />
                     <span className="text-sm sm:text-base text-primary">
                         Leads Lost in the Noise
                     </span>
                 </motion.div>
-            </div>
+                <motion.div
+                    className="flex items-center gap-1.5 sm:gap-2 bg-accent rounded-full px-3 sm:px-4 py-1.5 sm:py-2 shadow-sm border border-primary-foreground "
+                    initial={{ opacity: 0, y: 20, rotate: -1.2 }}
+                    animate={{ opacity: 1, y: 0, rotate: -1.2 }}
+                    transition={{ duration: 0.4, delay: 0.7 }}
+                >
+                    <X className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 dark:text-red-400" />
+                    <span className="text-sm sm:text-base text-primary">
+                        Leads Lost in the Noise
+                    </span>
+                </motion.div>
+            </div> 
         </div>
     );
 }

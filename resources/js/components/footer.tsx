@@ -52,7 +52,7 @@ export default function Footer() {
         <footer className="rounded-3xl">
             <div className="mx-auto max-w-6xl px-5 pb-10">
 
-                <div className="bg-primary-foreground rounded-3xl py-10 px-6 mb-6 border border-accent ">
+                <div className="bg-gradient-to-br from-primary-foreground via-orange-100 to-primary-foreground dark:from-primary-foreground dark:via-orange-500/20 dark:to-primary-foreground rounded-3xl py-10 px-6 mb-6 border-7 border-muted ">
                     <div className="px-4">
                         <div className="mb-16">
                             {/* Links Grid */}
@@ -105,7 +105,7 @@ export default function Footer() {
                     </div>
                 </div>
                 <div
-                    className="rounded-3xl py-8 border-8 border-primary-foreground px-6 bg-[url('/images/pattern.png')] dark:bg-[url('/images/pattern-dark.png')]"
+                    className="rounded-3xl py-8 border-8 border-muted px-6 bg-[url('/images/pattern.png')] dark:bg-[url('/images/pattern-dark.png')]"
                     style={{
                         backgroundSize: "cover",
                         backgroundPosition: "center",

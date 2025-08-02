@@ -80,13 +80,12 @@ export default function Pricing() {
     }
 
     return (
-        <div className="max-w-6xl overflow-hidden container mx-auto w-full  px-4">
-
+        <div className="max-w-6xl overflow-hidden container mx-auto w-full px-4">
             <main className="">
                 {/* Pricing Header */}
                 <div className="text-center mb-12">
-                    <h1 className="text-5xl font-bold text-primary mb-4">Flexible pricing plans for every need</h1>
-                    <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                    <h1 className="text-3xl sm:text-5xl font-bold text-primary mb-4">Flexible pricing plans for every need</h1>
+                    <p className="text-muted-foreground text-sm sm:text-lg max-w-2xl mx-auto">
                         Find the perfect plan—whether you're starting out or scaling up with advanced tools and premium support.
                     </p>
                 </div>
@@ -152,16 +151,9 @@ export default function Pricing() {
                     </div>
 
                     {/* Growth Plan Card */}
-                    <div className="relative w-full max-w-sm">
-                        {/* Most Popular Badge - positioned absolutely above the card */}
-                        {/* <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                            <span className="font-semibold text-primary bg-accent px-3 py-1 rounded-lg text-mg shadow-sm">
-                                Most Popular
-                            </span>
-                        </div> */}
-
+                    <div className="relative w-full max-w-sm"> 
                         {/* Main Card Content with Gradient Background */}
-                        <div className="bg-gradient-to-br from-primary-foreground via-orange-100 to-primary-foreground dark:from-primary-foreground dark:via-orange-500/20 dark:to-primary-foreground rounded-3xl p-8 border border-accent flex flex-col h-full pt-12">
+                        <div className="bg-gradient-to-br from-primary-foreground via-orange-100 to-primary-foreground dark:from-primary-foreground dark:via-orange-500/20 dark:to-primary-foreground rounded-3xl p-8 border border-accent flex flex-col h-full ">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
                                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M3.46447 3.46447C2 4.92893 2 7.28595 2 12C2 16.714 2 19.0711 3.46447 20.5355C4.92893 22 7.28595 22 12 22C16.714 22 19.0711 22 20.5355 20.5355C22 19.0711 22 16.714 22 12C22 7.28595 22 4.92893 20.5355 3.46447C19.0711 2 16.714 2 12 2C7.28595 2 4.92893 2 3.46447 3.46447ZM13.75 10C13.75 10.4142 14.0858 10.75 14.5 10.75H15.1893L13.1768 12.7626C13.0791 12.8602 12.9209 12.8602 12.8232 12.7626L11.2374 11.1768C10.554 10.4934 9.44598 10.4934 8.76256 11.1768L6.46967 13.4697C6.17678 13.7626 6.17678 14.2374 6.46967 14.5303C6.76256 14.8232 7.23744 14.8232 7.53033 14.5303L9.82322 12.2374C9.92085 12.1398 10.0791 12.1398 10.1768 12.2374L11.7626 13.8232C12.446 14.5066 13.554 14.5066 14.2374 13.8232L16.25 11.8107V12.5C16.25 12.9142 16.5858 13.25 17 13.25C17.4142 13.25 17.75 12.9142 17.75 12.5V10C17.75 9.58579 17.4142 9.25 17 9.25H14.5C14.0858 9.25 13.75 9.58579 13.75 10Z" fill="#fe810b"></path> </g></svg>
