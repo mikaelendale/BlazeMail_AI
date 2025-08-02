@@ -35,7 +35,7 @@ const LandingLayout: React.FC<LandingLayoutProps> = ({ children }) => {
                 <main className="relative">{children}</main>
                 <Footer />
                 <CookieConsent />
-                <FloatingLandiing />
+                {/* <FloatingLandiing /> */}
             </div>
         </>
     );
