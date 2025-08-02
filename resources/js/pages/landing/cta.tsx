@@ -83,7 +83,7 @@ export default function CTA() {
                         <div className="relative z-10 select-none pointer-events-none">
                             <div className="w-16 h-16 md:w-20 md:h-20 bg-accent rounded-full p-1 shadow-lg">
                                 <img
-                                    src="/mike.png"
+                                    src="Mike.png"
                                     alt="User 3"
                                     className="w-full h-full rounded-full object-cover border-2 border-primary-foreground select-none pointer-events-none"
                                     draggable={false}
