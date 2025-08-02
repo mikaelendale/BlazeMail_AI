@@ -1,5 +1,4 @@
 # Changelog
-
 All notable changes to BlazeMail will be documented in this file.
 
 ## [v0.3.2] - 2024-01-15
@@ -10,11 +9,15 @@ All notable changes to BlazeMail will be documented in this file.
 - **Team Collaboration**: Invite team members and manage permissions
 - **API Webhooks**: Real-time notifications for email events
 
+![New Dashboard Screenshot](images/draw.png "New Dashboard Interface")
+
 ### Improved
 - **Performance**: 40% faster email delivery times
 - **Dashboard**: Redesigned analytics dashboard with better data visualization
 - **Mobile App**: Enhanced mobile experience with offline support
 - **Search**: Improved search functionality across all email campaigns
+
+> **Note**: The new dashboard provides real-time insights into your email campaigns with interactive charts and detailed metrics.
 
 ### Fixed
 - Fixed issue with email scheduling in different timezones
@@ -29,6 +32,8 @@ All notable changes to BlazeMail will be documented in this file.
 - **Email Automation**: Create automated email sequences and drip campaigns
 - **Custom Domains**: Connect your own domain for branded email sending
 - **A/B Testing**: Split test your email campaigns for better performance
+
+![Dark Mode Preview](dark-mode-preview.png "Dark Mode Interface")
 
 ### Improved
 - **Editor**: Enhanced email editor with better formatting options
@@ -61,52 +66,3 @@ All notable changes to BlazeMail will be documented in this file.
 - Resolved image upload issues in email templates
 - Fixed contact list synchronization problems
 - Corrected email preview inconsistencies
-
-## [v0.2.5] - 2023-12-01
-
-### Added
-- **Campaign Scheduling**: Schedule emails to send at optimal times
-- **Subscriber Management**: Advanced tools for managing your email lists
-- **Email Validation**: Real-time email address validation
-- **Custom Fields**: Add custom fields to collect more subscriber data
-
-### Improved
-- **Bounce Handling**: Better handling of bounced emails and invalid addresses
-- **Template Library**: Expanded template library with 30+ new designs
-- **API Performance**: 50% improvement in API response times
-- **Mobile Responsiveness**: Better mobile experience across all devices
-
-### Fixed
-- Fixed email delivery tracking accuracy
-- Resolved issues with contact import from external sources
-- Fixed campaign duplication problems
-- Corrected email formatting issues in certain email clients
-
-## [v0.2.0] - 2023-11-15
-
-### Added
-- **Visual Email Builder**: Intuitive drag-and-drop email creation
-- **Campaign Analytics**: Comprehensive email campaign performance tracking
-- **Contact Lists**: Organize and manage your email subscribers
-- **Email Templates**: Professional email templates for various industries
-
-### Improved
-- **Sending Infrastructure**: Upgraded email sending infrastructure for better reliability
-- **User Onboarding**: Streamlined onboarding process for new users
-- **Dashboard**: Redesigned dashboard with key metrics and insights
-- **Documentation**: Comprehensive help documentation and tutorials
-
-### Fixed
-- Initial bug fixes and stability improvements
-- Resolved email formatting issues
-- Fixed user authentication problems
-- Corrected data synchronization issues
-
-## [v0.1.0] - 2023-11-01
-
-### Added
-- **Initial Release**: BlazeMail beta launch
-- **Basic Email Sending**: Send emails to your subscribers
-- **Simple Analytics**: Basic email performance metrics
-- **User Accounts**: User registration and account management
-- **Email Lists**: Create and manage basic email lists
