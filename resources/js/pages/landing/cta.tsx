@@ -43,6 +43,7 @@
 
 
 import { Button } from "@/components/ui/button"
+import { router } from "@inertiajs/react"
 import { ChevronRight } from "lucide-react"
 
 export default function CTA() {
@@ -116,12 +117,14 @@ export default function CTA() {
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 pt-4">
                     <Button
+                    onClick={() => router.get('/register')}
                         size="lg"
                         className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-medium rounded-2xl md:rounded-3xl shadow-lg hover:shadow-xl transition-all duration-200"
                     >
                         Start for Free
                     </Button>
                     <Button
+                        onClick={() => router.get('/how-it-works')}
                         variant="outline"
                         size="lg"
                         className="w-full sm:w-auto group px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-medium rounded-2xl md:rounded-3xl hover:bg-accent transition-all duration-200 bg-transparent"

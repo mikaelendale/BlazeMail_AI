@@ -11,12 +11,20 @@ class ChangelogController extends Controller
     public function index()
     {
         try {
-            $changelogContent = file_get_contents(resource_path('markdown/CHANGELOG.md'));
+            $changelogPath = resource_path('markdown/CHANGELOG.md');
+            $changelogContent = file_get_contents($changelogPath);
 
             // Process images in markdown - convert relative paths to absolute URLs
             $changelogContent = $this->processImages($changelogContent);
+
+            // Extract last updated date (first YYYY-MM-DD found after a version header)
+            $lastUpdated = null;
+            if (preg_match('/^##\s*\[[^\]]+\]\s*-\s*(\d{4}-\d{2}-\d{2})/m', $changelogContent, $matches)) {
+                $lastUpdated = $matches[1];
+            }
         } catch (\Exception $e) {
             $changelogContent = "# Changelog\n\nChangelog content could not be loaded.";
+            $lastUpdated = null;
         }
 
         return Inertia::render('changelog', [
@@ -24,7 +32,7 @@ class ChangelogController extends Controller
             'pageTitle' => 'Changelog – BlazeMail',
             'pageDescription' => 'Stay up to date with the latest updates to BlazeMail',
             'currentVersion' => 'v0.3.2',
-            'lastUpdated' => 'January 15, 2024'
+            'lastUpdated' => $lastUpdated,
         ]);
     }
 

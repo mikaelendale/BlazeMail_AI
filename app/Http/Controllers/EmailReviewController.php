@@ -84,18 +84,21 @@ class EmailReviewController extends Controller
         foreach ($approvedEmails as $email) {
             try {
                 // For now, simulate sending (you can uncomment for real sending)
-                $result = [
-                    'success' => true,
-                    'message_id' => uniqid('sent_', true)
-                ];
+                // $result = [
+                //     'success' => true,
+                //     'message_id' => uniqid('sent_', true)
+                // ];
 
                 // Real sending (uncomment when ready):
-                // $result = $gmailService->sendEmail([
-                //     'to' => $email->contact_email,
-                //     'from' => $email->emailAccount->email,
-                //     'subject' => $email->subject,
-                //     'body' => $email->body
-                // ]);
+                $result = $gmailService->sendEmail(
+                    $email->emailAccount,
+                    [
+                        'to' => $email->contact_email,
+                        'from' => $email->emailAccount->email,
+                        'subject' => $email->subject,
+                        'body' => $email->body
+                    ]
+                );
 
                 if ($result['success']) {
                     $email->update([
@@ -129,12 +132,9 @@ class EmailReviewController extends Controller
             }
         }
 
-        return response()->json([
-            'success' => true,
-            'sent' => $sent,
-            'failed' => $failed,
-            'message' => "Successfully sent {$sent} emails" . ($failed > 0 ? ", {$failed} failed" : "")
-        ]);
+        return back()->with(
+            'success', "Successfully sent {$sent} emails" . ($failed > 0 ? ", {$failed} failed" : "")
+        );
     }
 
     public function updateStatus(Request $request, string $batch)
@@ -151,11 +151,9 @@ class EmailReviewController extends Controller
             ->whereIn('id', $request->email_ids)
             ->update(['status' => $request->status]);
 
-        return response()->json([
-            'success' => true,
-            'updated' => $updated,
-            'message' => "Updated {$updated} emails to {$request->status}"
-        ]);
+        return back()->with(
+            'success', "Updated {$updated} emails to {$request->status}"
+        );
     }
 
     /**

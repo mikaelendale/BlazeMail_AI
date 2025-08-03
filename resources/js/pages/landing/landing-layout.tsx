@@ -2,7 +2,6 @@ import React, { ReactNode } from 'react';
 import CookieConsent from './cookie-consent';
 import Navbar from './navbar';
 import Footer from '@/components/footer';
-import FloatingLandiing from '@/components/floating-landing';
 
 interface LandingLayoutProps {
     children: ReactNode;
