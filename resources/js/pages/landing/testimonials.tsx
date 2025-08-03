@@ -126,7 +126,7 @@ export default function TestimonialCard() {
               <img src="sami.png" alt="Sami B. Hailemariam" className="w-full h-full object-cover" />
             </div>
             <div className="flex flex-col pl-4 ">
-              <h3 className="text-xl font-semibold text-primary mb-1">Sami B. Hailemariam</h3>
+              <h3 className="text-xl font-semibold text-primary mb-1">Samuel B. Hailemariam</h3>
               <p className="text-muted-foreground text-xs">Investor @ BlazeMail | SS-Softwares</p>
             </div>
           </div>

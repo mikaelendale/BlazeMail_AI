@@ -345,7 +345,7 @@ export default function ContactsIndex({
 
     // Handle upgrade
     const handleUpgrade = () => {
-        router.visit("/billing/plans")
+        router.visit("/billing")
     }
 
     // Utility functions

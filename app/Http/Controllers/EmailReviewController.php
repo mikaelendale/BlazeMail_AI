@@ -25,6 +25,9 @@ class EmailReviewController extends Controller
         if ($preparedEmails->isEmpty()) {
             return redirect()->route('dashboard')->with('error', 'Email batch not found.');
         }
+        $emailAccounts = EmailAccount::whereIn('id', $preparedEmails->pluck('email_account_id'))->get();
+
+        // dd($emailAccounts);
 
         $stats = [
             'total' => $preparedEmails->count(),
@@ -59,7 +62,16 @@ class EmailReviewController extends Controller
                 'id' => $preparedEmails->first()->emailTemplate->id,
                 'subject' => $preparedEmails->first()->emailTemplate->subject,
                 'purpose' => $preparedEmails->first()->emailTemplate->purpose
-            ]
+            ],
+            'emailAccounts' => $emailAccounts->map(function ($account) {
+                return [
+                    'id' => $account->id,
+                    'name' => $account->name,
+                    'email' => $account->email,
+                    'provider' => $account->provider,
+                    'status' => $account->status
+                ];
+            })
         ]);
     }
 
@@ -133,7 +145,8 @@ class EmailReviewController extends Controller
         }
 
         return back()->with(
-            'success', "Successfully sent {$sent} emails" . ($failed > 0 ? ", {$failed} failed" : "")
+            'success',
+            "Successfully sent {$sent} emails" . ($failed > 0 ? ", {$failed} failed" : "")
         );
     }
 
@@ -152,7 +165,8 @@ class EmailReviewController extends Controller
             ->update(['status' => $request->status]);
 
         return back()->with(
-            'success', "Updated {$updated} emails to {$request->status}"
+            'success',
+            "Updated {$updated} emails to {$request->status}"
         );
     }
 

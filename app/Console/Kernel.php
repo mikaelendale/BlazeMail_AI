@@ -8,8 +8,50 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
-    protected function schedule(Schedule $schedule)
+    protected $commands = [
+        Commands\StartEmailHealingSystem::class,
+        Commands\EmailSystemStatus::class,
+        Commands\HealErrorEmailAccounts::class,
+        Commands\ScheduleEmailHealthChecks::class,
+        Commands\RunEmailSecurityCheck::class,
+        Commands\EmailSecurityDashboard::class,
+    ];
+
+    protected function schedule(Schedule $schedule): void
     {
+        // Email healing system - runs every 2 hours
+        $schedule->command('email:heal-errors')
+            ->everyTwoHours()
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        // Health checks - runs every hour
+        $schedule->command('email:schedule-health-checks')
+            ->hourly()
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        // Security checks - runs daily
+        $schedule->command('email:security-check')
+            ->daily()
+            ->at('02:00')
+            ->withoutOverlapping();
+
+        // System status logging - runs every 6 hours
+        $schedule->command('email:system-status')
+            ->everySixHours()
+            ->withoutOverlapping();
+
+        // Reset daily counters at midnight
+        $schedule->call(function () {
+            \App\Models\EmailAccount::whereDate('daily_sent_date', '<', now()->toDateString())
+                ->update([
+                    'daily_sent' => 0,
+                    'daily_sent_date' => now()->toDateString(),
+                    'warmup_emails_today' => 0,
+                ]);
+        })->daily()->at('00:01');
+
         // Process queues every minute using Laravel's built-in scheduler
         $schedule->command('queue:work database --stop-when-empty --max-jobs=10')
             ->everyMinute()
@@ -26,18 +68,6 @@ class Kernel extends ConsoleKernel
         $schedule->command('queue:prune-failed --hours=48')
             ->daily();
 
-        // Run email health checks every 30 minutes
-        $schedule->command('email:schedule-health-checks')
-            ->everyThirtyMinutes()
-            ->withoutOverlapping(10) // Prevent overlapping runs
-            ->runInBackground()
-            ->appendOutputTo(storage_path('logs/email-health-checks.log'));
-
-        // Run comprehensive health check every 6 hours
-        $schedule->job(new \App\Jobs\EmailAccountHealthCheckJob)
-            ->everySixHours()
-            ->onQueue('email-health');
-
         // Clean up old logs and reset counters daily at 2 AM
         $schedule->call(function () {
             \App\Models\EmailAccount::where('is_connected', true)
@@ -47,22 +77,6 @@ class Kernel extends ConsoleKernel
                     }
                 });
         })->dailyAt('02:00');
-
-        // Monitor queue health every 5 minutes
-        $schedule->call(function () {
-            $queueSize = \Illuminate\Support\Facades\Queue::size('email-validation');
-            if ($queueSize > 100) {
-                \Illuminate\Support\Facades\Log::warning('Email validation queue is getting large', [
-                    'queue_size' => $queueSize,
-                ]);
-            }
-        })->everyFiveMinutes();
-
-        // Run security checks every 4 hours
-        $schedule->job(new \App\Jobs\EmailSecurityCheckJob)
-            ->everyFourHours()
-            ->onQueue('email-security')
-            ->withoutOverlapping(30);
 
         // Run security dashboard daily at 8 AM
         $schedule->command('email:security-dashboard')

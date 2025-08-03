@@ -3,51 +3,30 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Services\ContactLimitService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Laravel\Paddle\Exceptions\PaddleException;
 
 class BillingController extends Controller
 {
-    private array $plans = [
-        'free' => [
-            'id' => 'free',
-            'name' => 'Free',
-            'price' => '$0',
-            'period' => 'month',
-            'description' => 'For small projects and personal use',
-            'popular' => false,
-            'paddle_id' => null,
-        ],
-        'starter' => [
-            'id' => 'starter',
-            'name' => 'Starter',
-            'price' => '$9',
-            'period' => 'month',
-            'description' => 'Perfect for small teams getting started',
-            'popular' => false,
-            'paddle_id' => 'pri_01jy6rz2bh03xnp5p4fv53dgq5',
-        ],
-        'pro' => [
-            'id' => 'pro',
-            'name' => 'Pro',
-            'price' => '$19',
-            'period' => 'month',
-            'description' => 'Best for growing businesses',
-            'popular' => true,
-            'paddle_id' => 'pri_01jygqy3p3t3f0v876wqxx63cy',
-        ],
-    ];
+    protected ContactLimitService $contactLimitService;
+
+    
+    public function __construct(ContactLimitService $contactLimitService)
+    {
+        $this->contactLimitService = $contactLimitService;
+    }
 
     public function index(Request $request)
     {
         $user = $request->user();
-        
+
         // Get subscription data
-        $usage = $this->getUsageData($user);
-        
+        $usageStats = $this->contactLimitService->getUsageStats($user);
+
         return Inertia::render('user/billing-section', [
-            'usage' => $usage,
+            'usage' => $usageStats,
         ]);
     }
 
@@ -55,6 +34,7 @@ class BillingController extends Controller
 
     private function getUsageData($user)
     {
+
         // Customize this based on your app's usage metrics
         return [
             'users' => ['current' => 1, 'limit' => 25],

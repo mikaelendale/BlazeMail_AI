@@ -3,6 +3,7 @@
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\EmailAccountController;
+use App\Http\Controllers\EmailAccountReauthController;
 use App\Http\Controllers\EmailAccountSetupController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\User\DashboardController;
@@ -101,22 +102,24 @@ Route::middleware(['auth', 'verified', 'role:user', 'onboarding'])->group(functi
 
     Route::post('/email/send-bulk', [App\Http\Controllers\User\EmailSenderController::class, 'sendBulk'])
         ->name('email.send-bulk');
-        
+
     // Campaign
 
     Route::prefix('email/campaign')->name('user.email.')->group(function () {
         Route::get('/', [CampaignController::class, 'index'])->name('campaign');
-        Route::post('/filter', [CampaignController::class, 'filter'])->name('campaign.filter');
-        Route::get('/create', [CampaignController::class, 'create'])->name('campaign.create');
-        Route::post('/store', [CampaignController::class, 'store'])->name('campaign.store');
-        Route::get('/{campaign}/setup', [CampaignController::class, 'setup'])->name('campaign.setup');
-        Route::patch('/{campaign}/setup', [CampaignController::class, 'updateSetup'])->name('campaign.updateSetup');
-        Route::patch('/{campaign}/launch', [CampaignController::class, 'launch'])->name('campaign.launch');
-        Route::delete('/{campaign}', [CampaignController::class, 'destroy'])->name('campaign.destroy'); // Existing delete route
-        Route::get('/{campaign}', [CampaignController::class, 'show'])->name('campaign.show');
-        Route::get('/status-completed', [CampaignController::class, 'status_completed'])->name('campaign.status_completed');
-        Route::patch('/{campaign}/status', [CampaignController::class, 'updateStatus'])
-            ->name('campaign.updateStatus');
+        Route::middleware('subscribed')->group(function () {
+            Route::post('/filter', [CampaignController::class, 'filter'])->name('campaign.filter');
+            Route::get('/create', [CampaignController::class, 'create'])->name('campaign.create');
+            Route::post('/store', [CampaignController::class, 'store'])->name('campaign.store');
+            Route::get('/{campaign}/setup', [CampaignController::class, 'setup'])->name('campaign.setup');
+            Route::patch('/{campaign}/setup', [CampaignController::class, 'updateSetup'])->name('campaign.updateSetup');
+            Route::patch('/{campaign}/launch', [CampaignController::class, 'launch'])->name('campaign.launch');
+            Route::delete('/{campaign}', [CampaignController::class, 'destroy'])->name('campaign.destroy'); // Existing delete route
+            Route::get('/{campaign}', [CampaignController::class, 'show'])->name('campaign.show');
+            Route::get('/status-completed', [CampaignController::class, 'status_completed'])->name('campaign.status_completed');
+            Route::patch('/{campaign}/status', [CampaignController::class, 'updateStatus'])
+                ->name('campaign.updateStatus');
+        });
     });
 
     // Connected Accounts
@@ -182,4 +185,11 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
         ->name('settings.email-accounts.setup');
     Route::post('/settings/email-accounts/{account}/setup', [EmailAccountSetupController::class, 'store'])
         ->name('settings.email-accounts.setup.store');
+});
+// 🔥 NEW: Email Account Re-authentication routes
+Route::middleware(['auth', 'verified', 'role:user'])->prefix('email-accounts')->name('email-accounts.')->group(function () {
+    Route::get('/reauth', [EmailAccountReauthController::class, 'index'])->name('reauth.index');
+    Route::post('/{account}/reauth', [EmailAccountReauthController::class, 'startReauth'])->name('reauth.start');
+    Route::post('/{account}/test-connection', [EmailAccountReauthController::class, 'testConnection'])->name('test-connection');
+    Route::delete('/{account}', [EmailAccountReauthController::class, 'removeAccount'])->name('remove');
 });

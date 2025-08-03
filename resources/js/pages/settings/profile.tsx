@@ -51,7 +51,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                 <div className="space-y-6">
                     <HeadingSmall title="Profile information" description="Update your name and email address" />
 
-                    Joined at {auth.user.created_at}
+                    User id {auth.user.id}
                     <form onSubmit={submit} className="space-y-6">
                         <div className="grid gap-2">
                             <Label htmlFor="name">Name</Label>

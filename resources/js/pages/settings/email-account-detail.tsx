@@ -1,5 +1,4 @@
 "use client"
-
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -25,10 +24,10 @@ import {
     Pause,
     Play,
     RefreshCw,
-    Server,
     TrendingUp,
     Zap,
     XCircle,
+    CircleCheck,
 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -108,63 +107,50 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
         encryptionType: account.encryptionType || "tls",
     })
 
-
-
-    // Get status with subtle colors
+    // Get status with semantic colors
     const getStatusBadge = (status: string) => {
         switch (status) {
             case "active":
                 return (
-                    <Badge
-                        variant="outline"
-                        className="border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/20 dark:text-green-400"
-                    >
-                        <CheckCircle className="mr-1 h-3 w-3" />
+                    <Badge variant="success" className="capitalize font-medium">
+                        <CircleCheck className="mr-1 h-3 w-3" />
                         Active
                     </Badge>
                 )
             case "warming":
                 return (
-                    <Badge
-                        variant="outline"
-                        className="border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/20 dark:text-amber-400"
-                    >
+                    <Badge variant="warning" className="capitalize font-medium">
                         <TrendingUp className="mr-1 h-3 w-3" />
                         Warming
                     </Badge>
                 )
             case "paused":
                 return (
-                    <Badge
-                        variant="outline"
-                        className="border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-950/20 dark:text-gray-400"
-                    >
+                    <Badge variant="secondary" className="capitalize font-medium">
                         <Pause className="mr-1 h-3 w-3" />
                         Paused
                     </Badge>
                 )
             case "error":
                 return (
-                    <Badge
-                        variant="outline"
-                        className="border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/20 dark:text-red-400"
-                    >
+                    <Badge variant="destructive" className="capitalize font-medium">
                         <XCircle className="mr-1 h-3 w-3" />
                         Error
                     </Badge>
                 )
             case "pending":
                 return (
-                    <Badge
-                        variant="outline"
-                        className="border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/20 dark:text-blue-400"
-                    >
+                    <Badge variant="info" className="capitalize font-medium">
                         <Clock className="mr-1 h-3 w-3" />
                         Pending
                     </Badge>
                 )
             default:
-                return <Badge variant="outline">{status}</Badge>
+                return (
+                    <Badge variant="outline" className="capitalize font-medium">
+                        {status}
+                    </Badge>
+                )
         }
     }
 
@@ -181,26 +167,26 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
     // Handle connection test
     const handleTestConnection = async () => {
         try {
-            setIsTestingConnection(true);
+            setIsTestingConnection(true)
             router.post(
                 `/email-accounts/${account.id}/test-connection`,
                 { email: account.email },
                 {
                     onSuccess: () => {
-                        toast("Connection test successful!");
-                        setIsTestingConnection(false);
+                        toast.success("Connection test successful!")
+                        setIsTestingConnection(false)
                     },
                     onError: () => {
-                        toast("Connection test failed");
-                        setIsTestingConnection(false);
-                    }
-                }
-            );
+                        toast.error("Connection test failed.")
+                        setIsTestingConnection(false)
+                    },
+                },
+            )
         } catch (error) {
-            toast("An unexpected error occurred");
-            setIsTestingConnection(false);
+            toast.error("An unexpected error occurred during connection test.")
+            setIsTestingConnection(false)
         }
-    };
+    }
 
     // Handle save settings
     const handleSaveSettings = () => {
@@ -208,11 +194,11 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
             preserveScroll: true,
             onSuccess: () => {
                 setIsEditing(false)
-                alert("Settings updated successfully!")
+                toast.success("Settings updated successfully!")
             },
             onError: (errors) => {
                 console.error("Update failed:", errors)
-                alert("Failed to update settings")
+                toast.error("Failed to update settings. Please check your inputs.")
             },
         })
     }
@@ -222,207 +208,56 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
     return (
         <AppLayout>
             <SettingsLayout>
-                <div className="space-y-8">
+                <div className="mx-auto px-1 py-2 space-y-4">
                     {/* Clean Header */}
-                    <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-start gap-4">
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-3">
-                                    <h1 className="text-2xl font-semibold tracking-tight">{account.email}</h1>
-                                    {account.isVerified && <CheckCircle className="h-5 w-5 text-green-500" />}
+                            <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                    <h1 className="text-lg sm:text-3xl font-medium tracking-tight">{account.email}</h1>
+                                    {account.isVerified && <span className="bg-emerald-500 rounded-full"><CircleCheck className="h-5 w-5 text-white " /></span>}
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 flex-wrap">
                                     {getStatusBadge(account.status)}
                                     <Badge variant="outline" className="text-xs font-medium">
                                         {account.provider.toUpperCase()}
                                     </Badge>
+                                    <p className="text-sm text-muted-foreground">
+                                        Created {new Date(account.createdAt).toLocaleDateString()}
+                                    </p>
                                 </div>
-                                <p className="text-sm text-muted-foreground">
-                                    Created {new Date(account.createdAt).toLocaleDateString()}
-                                </p>
                             </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleTestConnection}
-                                disabled={isTestingConnection}
-                                className="gap-2 bg-transparent"
-                            >
-                                {isTestingConnection ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-                                Test Connection
-                            </Button>
-
-                            <Dialog open={isEditing} onOpenChange={setIsEditing}>
-                                <DialogTrigger asChild>
-                                    <Button size="sm" className="gap-2">
-                                        <Edit3 className="h-4 w-4" />
-                                        Edit Settings
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-2xl">
-                                    <DialogHeader>
-                                        <DialogTitle>Edit Account Settings</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="space-y-6">
-                                        <Tabs defaultValue="limits" className="w-full">
-                                            <TabsList className="grid w-full grid-cols-2">
-                                                <TabsTrigger value="limits">Sending Limits</TabsTrigger>
-                                                <TabsTrigger value="connection">Connection</TabsTrigger>
-                                            </TabsList>
-
-                                            <TabsContent value="limits" className="space-y-4 mt-6">
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="dailyLimit">Daily Limit</Label>
-                                                        <Input
-                                                            id="dailyLimit"
-                                                            type="number"
-                                                            value={editData.dailyLimit}
-                                                            onChange={(e) =>
-                                                                setEditData((prev) => ({ ...prev, dailyLimit: Number.parseInt(e.target.value) }))
-                                                            }
-                                                            min="1"
-                                                            max="10000"
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="hourlyLimit">Hourly Limit</Label>
-                                                        <Input
-                                                            id="hourlyLimit"
-                                                            type="number"
-                                                            value={editData.hourlyLimit}
-                                                            onChange={(e) =>
-                                                                setEditData((prev) => ({ ...prev, hourlyLimit: Number.parseInt(e.target.value) }))
-                                                            }
-                                                            min="1"
-                                                            max="1000"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </TabsContent>
-
-                                            <TabsContent value="connection" className="space-y-4 mt-6">
-                                                {account.provider === "imap" ? (
-                                                    <div className="space-y-4">
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div className="space-y-2">
-                                                                <Label htmlFor="imapHost">IMAP Host</Label>
-                                                                <Input
-                                                                    id="imapHost"
-                                                                    value={editData.imapHost}
-                                                                    onChange={(e) => setEditData((prev) => ({ ...prev, imapHost: e.target.value }))}
-                                                                    placeholder="imap.domain.com"
-                                                                />
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <Label htmlFor="imapPort">IMAP Port</Label>
-                                                                <Input
-                                                                    id="imapPort"
-                                                                    type="number"
-                                                                    value={editData.imapPort}
-                                                                    onChange={(e) =>
-                                                                        setEditData((prev) => ({
-                                                                            ...prev,
-                                                                            imapPort: Number.parseInt(e.target.value),
-                                                                        }))
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div className="space-y-2">
-                                                                <Label htmlFor="smtpHost">SMTP Host</Label>
-                                                                <Input
-                                                                    id="smtpHost"
-                                                                    value={editData.smtpHost}
-                                                                    onChange={(e) => setEditData((prev) => ({ ...prev, smtpHost: e.target.value }))}
-                                                                    placeholder="smtp.domain.com"
-                                                                />
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <Label htmlFor="smtpPort">SMTP Port</Label>
-                                                                <Input
-                                                                    id="smtpPort"
-                                                                    type="number"
-                                                                    value={editData.smtpPort}
-                                                                    onChange={(e) =>
-                                                                        setEditData((prev) => ({
-                                                                            ...prev,
-                                                                            smtpPort: Number.parseInt(e.target.value),
-                                                                        }))
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label htmlFor="encryptionType">Encryption</Label>
-                                                            <Select
-                                                                value={editData.encryptionType}
-                                                                onValueChange={(value) => setEditData((prev) => ({ ...prev, encryptionType: value }))}
-                                                            >
-                                                                <SelectTrigger>
-                                                                    <SelectValue />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    <SelectItem value="tls">TLS</SelectItem>
-                                                                    <SelectItem value="ssl">SSL</SelectItem>
-                                                                    <SelectItem value="none">None</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <Alert>
-                                                        <AlertTriangle className="h-4 w-4" />
-                                                        <AlertDescription>
-                                                            OAuth connection settings are managed automatically by the provider.
-                                                        </AlertDescription>
-                                                    </Alert>
-                                                )}
-                                            </TabsContent>
-                                        </Tabs>
-
-                                        <div className="flex justify-end gap-3 pt-4 border-t">
-                                            <Button variant="outline" onClick={() => setIsEditing(false)}>
-                                                Cancel
-                                            </Button>
-                                            <Button onClick={handleSaveSettings}>Save Changes</Button>
-                                        </div>
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
-                        </div>
+                        </div> 
                     </div>
 
-                    {/* Main Content Grid */}
-                    <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+                    {/* Main Content Grid - Adjusted for md screens */}
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-12 lg:gap-8">
                         {/* Left Column - Main Content */}
-                        <div className="space-y-6 lg:col-span-8">
+                        <div className="space-y-6 md:col-span-2 lg:col-span-8">
                             {/* Health Metrics */}
-                            <Card className="border-0 shadow-sm">
+                            <Card className="shadow-none border border-accent">
                                 <CardHeader className="pb-4">
                                     <CardTitle className="text-lg font-medium">Account Health</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-                                        <div className="text-center space-y-1">
-                                            <div className="text-3xl font-bold text-foreground">{healthScore}</div>
+                                    {/* Adjusted grid for health metrics to prevent squishing on md */}
+                                    <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                                        <div className="text-center space-y-1 bg-accent p-4 rounded-xl">
+                                            <div className="text-2xl sm:text-3xl font-medium text-foreground">{healthScore}</div>
                                             <div className="text-sm text-muted-foreground">Health Score</div>
                                         </div>
-                                        <div className="text-center space-y-1">
-                                            <div className="text-3xl font-bold text-foreground capitalize">{account.reputation}</div>
+                                        <div className="text-center space-y-1 bg-accent p-4 rounded-xl">
+                                            <div className="text-2xl sm:text-3xl font-medium text-foreground capitalize">
+                                                {account.reputation}
+                                            </div>
                                             <div className="text-sm text-muted-foreground">Reputation</div>
                                         </div>
-                                        <div className="text-center space-y-1">
-                                            <div className="text-3xl font-bold text-foreground">{account.successRate}%</div>
+                                        <div className="text-center space-y-1 bg-accent p-4 rounded-xl">
+                                            <div className="text-2xl sm:text-3xl font-medium text-foreground">{account.successRate}%</div>
                                             <div className="text-sm text-muted-foreground">Success Rate</div>
                                         </div>
-                                        <div className="text-center space-y-1">
-                                            <div className="text-3xl font-bold text-foreground">{account.bounceRate}%</div>
+                                        <div className="text-center space-y-1 bg-accent p-4 rounded-xl">
+                                            <div className="text-2xl sm:text-3xl font-medium text-foreground">{account.bounceRate}%</div>
                                             <div className="text-sm text-muted-foreground">Bounce Rate</div>
                                         </div>
                                     </div>
@@ -430,12 +265,12 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
                             </Card>
 
                             {/* Usage Statistics */}
-                            <Card className="border-0 shadow-sm">
+                            {/* <Card className="shadow-none border border-accent">
                                 <CardHeader className="pb-4">
                                     <CardTitle className="text-lg font-medium">Usage & Limits</CardTitle>
                                 </CardHeader>
-                                <CardContent className="space-y-6">
-                                    <div className="space-y-3">
+                                <CardContent className="space-y-5">
+                                    <div className="space-y-2">
                                         <div className="flex justify-between text-sm">
                                             <span className="font-medium">Daily Usage</span>
                                             <span className="text-muted-foreground">
@@ -444,8 +279,7 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
                                         </div>
                                         <Progress value={(account.dailySent / account.dailyLimit) * 100} className="h-2" />
                                     </div>
-
-                                    <div className="space-y-3">
+                                    <div className="space-y-2">
                                         <div className="flex justify-between text-sm">
                                             <span className="font-medium">Hourly Usage</span>
                                             <span className="text-muted-foreground">
@@ -454,9 +288,8 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
                                         </div>
                                         <Progress value={(account.hourlySent / account.hourlyLimit) * 100} className="h-2" />
                                     </div>
-
                                     {account.status === "warming" && (
-                                        <div className="space-y-3">
+                                        <div className="space-y-2">
                                             <div className="flex justify-between text-sm">
                                                 <span className="font-medium">Warmup Progress (Day {account.warmupDay})</span>
                                                 <span className="text-muted-foreground">{account.warmupProgress}%</span>
@@ -465,10 +298,10 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
                                         </div>
                                     )}
                                 </CardContent>
-                            </Card>
+                            </Card> */}
 
                             {/* Connection Details */}
-                            <Card className="border-0 shadow-sm">
+                            <Card className="shadow-none border border-accent">
                                 <CardHeader className="pb-4">
                                     <CardTitle className="text-lg font-medium">Connection Details</CardTitle>
                                 </CardHeader>
@@ -478,13 +311,13 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
                                             <>
                                                 <div className="space-y-1">
                                                     <Label className="text-sm font-medium text-muted-foreground">Provider</Label>
-                                                    <div className="text-sm">Google OAuth 2.0</div>
+                                                    <div className="text-sm font-medium">Google OAuth 2.0</div>
                                                 </div>
                                                 <div className="space-y-1">
                                                     <Label className="text-sm font-medium text-muted-foreground">Token Status</Label>
-                                                    <div className="text-sm">
+                                                    <div className="text-sm font-medium">
                                                         {account.tokenExpiresAt ? (
-                                                            <span className="text-green-600">
+                                                            <span className="text-success">
                                                                 Valid until {new Date(account.tokenExpiresAt).toLocaleDateString()}
                                                             </span>
                                                         ) : (
@@ -492,7 +325,7 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div className="space-y-1 md:col-span-2">
+                                                <div className="space-y-1 col-span-1 md:col-span-2">
                                                     <Label className="text-sm font-medium text-muted-foreground">Permissions</Label>
                                                     <div className="text-sm">
                                                         {account.oauthScopes?.length ? (
@@ -513,19 +346,19 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
                                             <>
                                                 <div className="space-y-1">
                                                     <Label className="text-sm font-medium text-muted-foreground">IMAP Server</Label>
-                                                    <div className="text-sm">
+                                                    <div className="text-sm font-medium">
                                                         {account.imapHost || "Not configured"}:{account.imapPort || 993}
                                                     </div>
                                                 </div>
                                                 <div className="space-y-1">
                                                     <Label className="text-sm font-medium text-muted-foreground">SMTP Server</Label>
-                                                    <div className="text-sm">
+                                                    <div className="text-sm font-medium">
                                                         {account.smtpHost || "Not configured"}:{account.smtpPort || 587}
                                                     </div>
                                                 </div>
                                                 <div className="space-y-1">
                                                     <Label className="text-sm font-medium text-muted-foreground">Encryption</Label>
-                                                    <div className="text-sm">{account.encryptionType?.toUpperCase() || "TLS"}</div>
+                                                    <div className="text-sm font-medium">{account.encryptionType?.toUpperCase() || "TLS"}</div>
                                                 </div>
                                             </>
                                         )}
@@ -535,16 +368,16 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
                         </div>
 
                         {/* Right Sidebar */}
-                        <div className="space-y-6 lg:col-span-4">
+                        <div className="space-y-6 md:col-span-1 lg:col-span-4">
                             {/* Quick Actions */}
-                            <Card className="border-0 shadow-sm">
+                            <Card className="shadow-none border border-accent">
                                 <CardHeader className="pb-4">
                                     <CardTitle className="text-lg font-medium">Quick Actions</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-3">
                                     <Button
                                         variant="outline"
-                                        className="w-full justify-start gap-3 bg-transparent"
+                                        className="w-full justify-start gap-3"
                                         onClick={() => router.patch(`/settings/email-accounts/${account.id}/toggle`)}
                                     >
                                         {account.isConnected ? (
@@ -559,10 +392,9 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
                                             </>
                                         )}
                                     </Button>
-
                                     <Button
                                         variant="outline"
-                                        className="w-full justify-start gap-3 bg-transparent"
+                                        className="w-full justify-start gap-3"
                                         onClick={() => setShowTokens(!showTokens)}
                                     >
                                         {showTokens ? (
@@ -581,7 +413,7 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
                             </Card>
 
                             {/* Status & Security */}
-                            <Card className="border-0 shadow-sm">
+                            <Card className="shadow-none border border-accent">
                                 <CardHeader className="pb-4">
                                     <CardTitle className="text-lg font-medium">Status & Security</CardTitle>
                                 </CardHeader>
@@ -591,43 +423,37 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
                                             <span className="text-sm font-medium text-muted-foreground">Status</span>
                                             {getStatusBadge(account.status)}
                                         </div>
-
                                         <Separator />
-
                                         <div className="flex justify-between items-center">
                                             <span className="text-sm font-medium text-muted-foreground">Consecutive Errors</span>
-                                            <Badge variant={account.consecutiveErrors > 0 ? "destructive" : "secondary"}>
+                                            <Badge variant={account.consecutiveErrors > 0 ? "destructive" : "default"}>
                                                 {account.consecutiveErrors}
                                             </Badge>
-                                        </div> 
+                                        </div>
                                     </div>
                                 </CardContent>
                             </Card>
 
                             {/* Activity Timeline */}
-                            <Card className="border-0 shadow-sm">
+                            <Card className="shadow-none border border-accent">
                                 <CardHeader className="pb-4">
                                     <CardTitle className="text-lg font-medium">Recent Activity</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <div className="space-y-3">
+                                    <div className="space-y-3 text-sm">
                                         <div className="flex justify-between">
-                                            <span className="text-sm font-medium text-muted-foreground">Last Activity</span>
-                                            <span className="text-sm">
+                                            <span className="font-medium text-muted-foreground">Last Activity</span>
+                                            <span>
                                                 {account.lastActivity ? new Date(account.lastActivity).toLocaleDateString() : "Never"}
                                             </span>
                                         </div>
-
                                         <div className="flex justify-between">
-                                            <span className="text-sm font-medium text-muted-foreground">Last Sync</span>
-                                            <span className="text-sm">
-                                                {account.lastSync ? new Date(account.lastSync).toLocaleDateString() : "Never"}
-                                            </span>
+                                            <span className="font-medium text-muted-foreground">Last Sync</span>
+                                            <span>{account.lastSync ? new Date(account.lastSync).toLocaleDateString() : "Never"}</span>
                                         </div>
-
                                         <div className="flex justify-between">
-                                            <span className="text-sm font-medium text-muted-foreground">Health Check</span>
-                                            <span className="text-sm">
+                                            <span className="font-medium text-muted-foreground">Health Check</span>
+                                            <span>
                                                 {account.lastHealthCheck ? new Date(account.lastHealthCheck).toLocaleDateString() : "Never"}
                                             </span>
                                         </div>
@@ -637,7 +463,7 @@ export default function EmailAccountDetail({ account, healthHistory, activityLog
 
                             {/* Debug Info (only show when showTokens is true) */}
                             {showTokens && account.metadata && (
-                                <Card className="border-0 shadow-sm">
+                                <Card className="shadow-sm">
                                     <CardHeader className="pb-4">
                                         <CardTitle className="text-lg font-medium">Debug Information</CardTitle>
                                     </CardHeader>

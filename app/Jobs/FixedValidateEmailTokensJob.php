@@ -12,7 +12,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
-class ImprovedValidateEmailTokensJob implements ShouldQueue
+class FixedValidateEmailTokensJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -30,13 +30,12 @@ class ImprovedValidateEmailTokensJob implements ShouldQueue
     public function handle(GmailService $gmailService): void
     {
         try {
-            Log::info('🔧 Starting improved token validation', [
+            Log::info('🔧 Starting FIXED token validation', [
                 'account_id' => $this->emailAccount->id,
                 'email' => $this->emailAccount->email,
                 'status' => $this->emailAccount->status,
                 'consecutive_errors' => $this->emailAccount->consecutive_errors,
                 'last_error' => $this->emailAccount->last_error,
-                'token_expires_at' => $this->emailAccount->token_expires_at?->toISOString(),
             ]);
 
             // Skip if account is not OAuth-based
@@ -48,17 +47,8 @@ class ImprovedValidateEmailTokensJob implements ShouldQueue
                 return;
             }
 
-            // Always update health check timestamp
-            $this->emailAccount->update([
-                'last_health_check' => now(),
-                'last_healing_attempt' => now(),
-                'healing_attempts_today' => ($this->emailAccount->healing_attempts_today ?? 0) + 1,
-            ]);
-
-            // Check if we should skip this account temporarily
-            if ($this->shouldSkipAccount()) {
-                return;
-            }
+            // Always update health check timestamp first
+            $this->emailAccount->update(['last_health_check' => now()]);
 
             // Check if account needs complete re-authentication
             if ($this->needsReAuthentication()) {
@@ -81,7 +71,7 @@ class ImprovedValidateEmailTokensJob implements ShouldQueue
                 $this->handleConnectionFailure($connectionResult['error']);
             }
         } catch (\Exception $e) {
-            Log::error('❌ Token validation job failed', [
+            Log::error('❌ Fixed token validation job failed', [
                 'account_id' => $this->emailAccount->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -90,32 +80,6 @@ class ImprovedValidateEmailTokensJob implements ShouldQueue
             $this->handleConnectionFailure($e->getMessage());
             throw $e;
         }
-    }
-
-    private function shouldSkipAccount(): bool
-    {
-        // Skip if account has too many healing attempts today
-        if (($this->emailAccount->healing_attempts_today ?? 0) >= 10) {
-            Log::info('⏭️ Skipping account with too many healing attempts today', [
-                'account_id' => $this->emailAccount->id,
-                'healing_attempts_today' => $this->emailAccount->healing_attempts_today,
-            ]);
-            return true;
-        }
-
-        // Skip if last healing attempt was very recent (less than 5 minutes ago)
-        if (
-            $this->emailAccount->last_healing_attempt &&
-            $this->emailAccount->last_healing_attempt->gt(now()->subMinutes(5))
-        ) {
-            Log::info('⏭️ Skipping account with very recent healing attempt', [
-                'account_id' => $this->emailAccount->id,
-                'last_healing_attempt' => $this->emailAccount->last_healing_attempt->toISOString(),
-            ]);
-            return true;
-        }
-
-        return false;
     }
 
     private function needsReAuthentication(): bool
@@ -156,23 +120,30 @@ class ImprovedValidateEmailTokensJob implements ShouldQueue
 
     private function handleReAuthenticationNeeded(): void
     {
-        Log::warning('🔐 Marking account for re-authentication', [
+        Log::warning('🔐 Marking account for re-authentication (using suspended status)', [
             'account_id' => $this->emailAccount->id,
             'email' => $this->emailAccount->email,
             'reason' => $this->emailAccount->last_error,
         ]);
 
+        // Use 'suspended' status instead of 'needs_reauth' to avoid constraint issues
         $this->emailAccount->update([
-            'status' => 'needs_reauth',
+            'status' => 'suspended', // Using suspended instead of needs_reauth
             'is_connected' => false,
-            'last_error' => 'Account requires re-authentication: ' . ($this->emailAccount->last_error ?? 'Token invalid'),
+            'last_error' => 'NEEDS_REAUTH: ' . ($this->emailAccount->last_error ?? 'Token invalid'),
             'last_error_at' => now(),
             'metadata' => array_merge($this->emailAccount->metadata ?? [], [
                 'reauth_required' => true,
                 'reauth_reason' => $this->emailAccount->last_error ?? 'Token invalid',
                 'reauth_required_at' => now()->toISOString(),
                 'healing_result' => 'needs_reauth',
+                'status_note' => 'suspended_means_needs_reauth',
             ]),
+        ]);
+
+        Log::info('✅ Account marked for re-authentication (status: suspended)', [
+            'account_id' => $this->emailAccount->id,
+            'email' => $this->emailAccount->email,
         ]);
     }
 
@@ -182,7 +153,6 @@ class ImprovedValidateEmailTokensJob implements ShouldQueue
             Log::info('🔄 Attempting token refresh', [
                 'account_id' => $this->emailAccount->id,
                 'has_refresh_token' => !empty($this->emailAccount->encrypted_refresh_token),
-                'token_expires_at' => $this->emailAccount->token_expires_at?->toISOString(),
             ]);
 
             // Check if we have a refresh token
@@ -221,22 +191,16 @@ class ImprovedValidateEmailTokensJob implements ShouldQueue
             }
 
             // Update the account with new token
-            $updateData = [
+            $this->emailAccount->update([
                 'encrypted_access_token' => $newToken['access_token'],
                 'token_expires_at' => isset($newToken['expires_in']) ?
                     now()->addSeconds($newToken['expires_in']) : null,
                 'last_sync' => now(),
-                'last_token_refresh' => now(),
-                'token_refresh_count' => ($this->emailAccount->token_refresh_count ?? 0) + 1,
-                'token_refresh_failed_at' => null, // Clear previous failure
-            ];
-
-            $this->emailAccount->update($updateData);
+            ]);
 
             Log::info('✅ Token refreshed successfully', [
                 'account_id' => $this->emailAccount->id,
                 'new_expires_at' => $this->emailAccount->fresh()->token_expires_at?->toISOString(),
-                'refresh_count' => $updateData['token_refresh_count'],
             ]);
 
             return ['success' => true];
@@ -244,11 +208,6 @@ class ImprovedValidateEmailTokensJob implements ShouldQueue
             Log::error('❌ Token refresh exception', [
                 'account_id' => $this->emailAccount->id,
                 'error' => $e->getMessage(),
-            ]);
-
-            // Update failure timestamp
-            $this->emailAccount->update([
-                'token_refresh_failed_at' => now(),
             ]);
 
             return [
@@ -342,7 +301,7 @@ class ImprovedValidateEmailTokensJob implements ShouldQueue
             'consecutive_errors' => $this->emailAccount->consecutive_errors,
         ]);
 
-        $updateData = [
+        $this->emailAccount->update([
             'status' => 'active',
             'is_connected' => true,
             'last_health_check' => now(),
@@ -352,35 +311,18 @@ class ImprovedValidateEmailTokensJob implements ShouldQueue
             'last_error' => null,
             'last_error_at' => null,
             'success_rate' => min(100, ($this->emailAccount->success_rate ?? 90) + 5),
-            'auto_healed_at' => now(),
-            'auto_heal_count' => ($this->emailAccount->auto_heal_count ?? 0) + 1,
-        ];
-
-        // Update metadata with healing info
-        $metadata = $this->emailAccount->metadata ?? [];
-        $metadata['last_successful_healing'] = now()->toISOString();
-        $metadata['healing_result'] = 'success';
-        $metadata['gmail_profile'] = $result['profile'] ?? [];
-        $updateData['metadata'] = $metadata;
-
-        // Update healing history
-        $healingHistory = $this->emailAccount->healing_history ?? [];
-        $healingHistory[] = [
-            'timestamp' => now()->toISOString(),
-            'result' => 'success',
-            'previous_status' => $this->emailAccount->status,
-            'previous_errors' => $this->emailAccount->consecutive_errors,
-            'method' => 'token_refresh_and_test',
-        ];
-        $updateData['healing_history'] = array_slice($healingHistory, -10); // Keep last 10 entries
-
-        $this->emailAccount->update($updateData);
+            'metadata' => array_merge($this->emailAccount->metadata ?? [], [
+                'last_successful_healing' => now()->toISOString(),
+                'healing_result' => 'success',
+                'gmail_profile' => $result['profile'] ?? [],
+                'healed_from_status' => $this->emailAccount->status,
+            ]),
+        ]);
 
         Log::info('✅ ACCOUNT SUCCESSFULLY HEALED!', [
             'account_id' => $this->emailAccount->id,
             'email' => $this->emailAccount->email,
             'new_status' => 'active',
-            'heal_count' => $updateData['auto_heal_count'],
             'messages_total' => $result['profile']['messages_total'] ?? 0,
         ]);
     }
@@ -411,10 +353,17 @@ class ImprovedValidateEmailTokensJob implements ShouldQueue
             str_contains($error, 'access_denied')
         ) {
 
-            $updateData['status'] = 'needs_reauth';
+            $updateData['status'] = 'suspended'; // Use suspended instead of needs_reauth
             $updateData['is_connected'] = false;
+            $updateData['last_error'] = 'NEEDS_REAUTH: ' . $error;
+            $updateData['metadata'] = array_merge($this->emailAccount->metadata ?? [], [
+                'reauth_required' => true,
+                'reauth_reason' => $error,
+                'reauth_required_at' => now()->toISOString(),
+                'status_note' => 'suspended_means_needs_reauth',
+            ]);
 
-            Log::warning('🔐 Account needs re-authentication', [
+            Log::warning('🔐 Account needs re-authentication (marked as suspended)', [
                 'account_id' => $this->emailAccount->id,
                 'error' => $error,
             ]);
@@ -428,25 +377,13 @@ class ImprovedValidateEmailTokensJob implements ShouldQueue
                 'error' => $error,
             ]);
         } elseif ($consecutiveErrors >= 3) {
-            $updateData['status'] = 'warning';
-
-            Log::warning('⚠️ Account in warning state', [
+            // Keep current status but log warning
+            Log::warning('⚠️ Account has multiple errors but keeping current status', [
                 'account_id' => $this->emailAccount->id,
                 'consecutive_errors' => $consecutiveErrors,
                 'error' => $error,
             ]);
         }
-
-        // Update healing history
-        $healingHistory = $this->emailAccount->healing_history ?? [];
-        $healingHistory[] = [
-            'timestamp' => now()->toISOString(),
-            'result' => 'failed',
-            'error' => $error,
-            'consecutive_errors' => $consecutiveErrors,
-            'method' => 'token_refresh_and_test',
-        ];
-        $updateData['healing_history'] = array_slice($healingHistory, -10);
 
         $this->emailAccount->update($updateData);
     }
@@ -463,12 +400,18 @@ class ImprovedValidateEmailTokensJob implements ShouldQueue
             'last_error_at' => now(),
             'last_health_check' => now(),
             'consecutive_errors' => $this->emailAccount->consecutive_errors + 1,
-            'token_refresh_failed_at' => now(),
         ];
 
         if (str_contains($error, 'invalid_grant') || str_contains($error, 'unauthorized')) {
-            $updateData['status'] = 'needs_reauth';
+            $updateData['status'] = 'suspended'; // Use suspended instead of needs_reauth
             $updateData['is_connected'] = false;
+            $updateData['last_error'] = 'NEEDS_REAUTH: Token refresh failed: ' . $error;
+            $updateData['metadata'] = array_merge($this->emailAccount->metadata ?? [], [
+                'reauth_required' => true,
+                'reauth_reason' => 'Token refresh failed: ' . $error,
+                'reauth_required_at' => now()->toISOString(),
+                'status_note' => 'suspended_means_needs_reauth',
+            ]);
         } else {
             $updateData['status'] = 'error';
         }
@@ -478,7 +421,7 @@ class ImprovedValidateEmailTokensJob implements ShouldQueue
 
     public function failed(\Throwable $exception): void
     {
-        Log::error('❌ Token validation job failed permanently', [
+        Log::error('❌ Fixed token validation job failed permanently', [
             'account_id' => $this->emailAccount->id,
             'error' => $exception->getMessage(),
             'attempts' => $this->attempts(),

@@ -73,7 +73,7 @@ export default function SettingsLayout({ className, children }: SettingsLayoutPr
 
     return (
         <div className="min-h-screen bg-background">
-            <div className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-1 py-8">
                 <div className="mb-8">
                     <Heading title="Settings" description="Manage your profile and account settings" />
                 </div>
@@ -148,7 +148,7 @@ export default function SettingsLayout({ className, children }: SettingsLayoutPr
                     {/* Main Content */}
                     <div className="lg:col-span-3">
                         <Card>
-                            <CardContent className="p-8">{children}</CardContent>
+                            <CardContent className="p-4">{children}</CardContent>
                         </Card>
                     </div>
                 </div>

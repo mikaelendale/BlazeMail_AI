@@ -9,12 +9,23 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Paddle\Billable;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, Billable;
+    use HasFactory, Notifiable, LogsActivity, HasRoles, Billable;
+
+    /**
+     * Get the options for activity log.
+     *
+     * @return \Spatie\Activitylog\LogOptions
+     */
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults();
+    }
 
     /**
      * The attributes that are mass assignable.

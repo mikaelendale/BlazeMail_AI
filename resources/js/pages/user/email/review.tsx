@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { CheckCircle, XCircle, Clock, Send, Eye, BarChart3, Users, Mail } from "lucide-react"
+import { CheckCircle, XCircle, Clock, Send, Eye, BarChart3, Users, Mail, MailCheckIcon, CircleCheck, MailsIcon, Percent, Circle, X, Ban, Pause, Timer, MailWarning } from "lucide-react"
 import AppLayout from "@/layouts/app-layout"
 
 interface Email {
@@ -46,9 +46,16 @@ interface Props {
         subject: string
         purpose: string
     }
+    emailAccounts: {
+        id: number
+        name: string
+        email: string
+        provider: string
+        status: string
+    }
 }
 
-export default function EmailReview({ batchId, emails, stats, emailTemplate }: Props) {
+export default function EmailReview({ batchId, emails, stats, emailTemplate, emailAccounts }: Props) {
     const [selectedEmails, setSelectedEmails] = useState<number[]>([])
     const [previewEmail, setPreviewEmail] = useState<Email | null>(null)
     const [loading, setLoading] = useState(false)
@@ -118,27 +125,72 @@ export default function EmailReview({ batchId, emails, stats, emailTemplate }: P
 
     const pendingEmails = emails.filter((e) => e.status === "pending")
 
+    const getProviderIcon = (provider: string) => {
+        switch (provider) {
+            case "gmail":
+                return <img src="https://api.iconify.design/logos/google-icon.svg" className="h-4 w-4 sm:h-5 sm:w-5" alt="Google" />
+            case "outlook":
+                return <img src="https://api.iconify.design/logos/microsoft-outlook.svg" className="h-4 w-4 sm:h-5 sm:w-5" alt="Outlook" />
+            case "yahoo":
+                return <img src="https://api.iconify.design/logos/yahoo.svg" className="h-4 w-4 sm:h-5 sm:w-5" alt="Yahoo" />
+            default:
+                return <Mail className="h-4 w-4 text-gray-600" />
+        }
+    }
+
+    const getAccountStatusIcon = (status: string) => {
+        switch (status) {
+            case "error":
+                return <X className="h-4 w-4 text-red-600" />
+            case "active":
+                return <CheckCircle className="h-4 w-4 text-emerald-600" />
+            case "suspended":
+                return <Ban className="h-4 w-4 text-destructive" />
+            case "paused":
+                return <Pause className="h-4 w-4 text-yellow-600" />
+            case "pending":
+                return <Timer className="h-4 w-4 text-gray-400" />
+            default:
+                return <MailWarning className="h-4 w-4 text-yellow-600" />
+        }
+    }
+
     return (
         <AppLayout>
             <Head title="Review Personalized Emails" />
 
-            <div className="min-h-screen bg-muted/30">
-                <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+            <div className="min-h-screen bg-background">
+                <div className="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
                     {/* Header */}
-                    <div className="space-y-2">
-                        <h1 className="text-2xl font-bold tracking-tight">Email Review</h1>
+                    <div className="space-y-2 mb-6">
+                        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary">Email Review</h1>
                         <p className="text-muted-foreground">
-                            Template: <span className="font-medium text-foreground">{emailTemplate.subject}</span>
+                            {emailAccounts.map((account) => (
+                                <span
+                                    key={account.id}
+                                    className="font-medium bg-accent px-3 rounded-2xl py-2 text-primary inline-flex items-center mr-2 gap-2"
+                                >
+                                    {getProviderIcon(account.provider)}
+                                    <span>{account.email}</span>
+                                    <span className="text-xs text-muted-foreground">({account.provider})</span>
+                                    <span className="flex items-center gap-1 ml-2">
+                                        {getAccountStatusIcon(account.status)}
+                                        <span className="capitalize">{account.status}</span>
+                                    </span>
+                                </span>
+                            ))}<br />
+                            Template: <span className="font-medium text-primary">{emailTemplate.subject}</span><br />
+                            Purpose: <span className="font-medium text-primary">{emailTemplate.purpose}</span>
                         </p>
                     </div>
 
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <Card className="border-0 shadow-sm">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <Card className="bg-primary-foreground border-0 shadow-sm">
                             <CardContent className="p-4">
                                 <div className="flex items-center space-x-3">
-                                    <div className="p-2 bg-blue-100 rounded-lg">
-                                        <Users className="h-5 w-5 text-blue-600" />
+                                    <div className="p-2 bg-accent rounded-lg">
+                                        <MailCheckIcon className="h-5 w-5 text-blue-600" />
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-muted-foreground">Total</p>
@@ -148,11 +200,11 @@ export default function EmailReview({ batchId, emails, stats, emailTemplate }: P
                             </CardContent>
                         </Card>
 
-                        <Card className="border-0 shadow-sm">
+                        <Card className="bg-primary-foreground border-0 shadow-sm">
                             <CardContent className="p-4">
                                 <div className="flex items-center space-x-3">
-                                    <div className="p-2 bg-green-100 rounded-lg">
-                                        <BarChart3 className="h-5 w-5 text-green-600" />
+                                    <div className="p-2 bg-accent rounded-lg">
+                                        <Percent className="h-5 w-5 text-green-600" />
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-muted-foreground">Avg Score</p>
@@ -162,11 +214,11 @@ export default function EmailReview({ batchId, emails, stats, emailTemplate }: P
                             </CardContent>
                         </Card>
 
-                        <Card className="border-0 shadow-sm">
+                        <Card className="bg-primary-foreground border-0 shadow-sm">
                             <CardContent className="p-4">
                                 <div className="flex items-center space-x-3">
-                                    <div className="p-2 bg-emerald-100 rounded-lg">
-                                        <CheckCircle className="h-5 w-5 text-emerald-600" />
+                                    <div className="p-2 bg-accent rounded-lg">
+                                        <CircleCheck className="h-5 w-5 text-emerald-600" />
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-muted-foreground">Approved</p>
@@ -176,10 +228,10 @@ export default function EmailReview({ batchId, emails, stats, emailTemplate }: P
                             </CardContent>
                         </Card>
 
-                        <Card className="border-0 shadow-sm">
+                        <Card className="bg-primary-foreground border-0 shadow-sm">
                             <CardContent className="p-4">
                                 <div className="flex items-center space-x-3">
-                                    <div className="p-2 bg-purple-100 rounded-lg">
+                                    <div className="p-2 bg-accent rounded-lg">
                                         <Send className="h-5 w-5 text-purple-600" />
                                     </div>
                                     <div>
@@ -192,24 +244,24 @@ export default function EmailReview({ batchId, emails, stats, emailTemplate }: P
                     </div>
 
                     {/* Action Bar */}
-                    <Card className="border-0 shadow-sm">
+                    <Card className="bg-primary-foreground border-0 shadow-sm mb-6">
                         <CardContent className="p-4">
                             <div className="flex flex-col sm:flex-row gap-3">
                                 <Button
                                     onClick={handleApproveSelected}
                                     disabled={selectedEmails.length === 0 || loading}
-                                    className="flex-1 sm:flex-none"
+                                    className="sm:flex-none  rounded-xl"
                                 >
-                                    <CheckCircle className="h-4 w-4 mr-2" />
+                                    <CircleCheck className="h-4 w-4" />
                                     Approve Selected ({selectedEmails.length})
                                 </Button>
                                 <Button
                                     onClick={handleSendApproved}
                                     disabled={stats.approved === 0 || loading}
-                                    variant="secondary"
-                                    className="flex-1 sm:flex-none"
+                                    variant="outline"
+                                    className=" sm:flex-none rounded-xl"
                                 >
-                                    <Send className="h-4 w-4 mr-2" />
+                                    <MailsIcon className="h-4 w-4" />
                                     Send Approved ({stats.approved})
                                 </Button>
                             </div>
@@ -234,7 +286,7 @@ export default function EmailReview({ batchId, emails, stats, emailTemplate }: P
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {emails.map((email) => (
-                                <Card key={email.id} className="border border-border/50 hover:border-border transition-colors">
+                                <Card key={email.id} className="border border-none transition-colors shadow-none">
                                     <CardContent className="p-4">
                                         <div className="flex flex-col lg:flex-row lg:items-start gap-4">
                                             {/* Left: Checkbox and Contact Info */}
@@ -266,12 +318,9 @@ export default function EmailReview({ batchId, emails, stats, emailTemplate }: P
                                             {/* Right: Badges and Actions */}
                                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 lg:flex-col lg:items-end">
                                                 <div className="flex items-center space-x-2">
-                                                    <Badge variant={getScoreBadge(email.personalization_score)}>
-                                                        {email.personalization_score}%
-                                                    </Badge>
-                                                    <Badge variant="secondary" className="text-xs">
-                                                        {email.model_used}
-                                                    </Badge>
+                                                     <Badge variant={getScoreBadge(email.personalization_score)}>
+                                                        {email.personalization_score}% Personalized
+                                                    </Badge> 
                                                 </div>
                                                 <div className="flex items-center space-x-2">
                                                     <div className="flex items-center space-x-1">

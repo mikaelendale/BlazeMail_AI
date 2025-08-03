@@ -230,7 +230,7 @@ class EmailAccountHealthCheckJob implements ShouldQueue
                 'reason' => $reason,
             ]);
 
-            ValidateEmailTokensJob::dispatch($account)
+            ImprovedValidateEmailTokensJob::dispatch($account)
                 ->onQueue('email-validation')
                 ->delay(now()->addMinutes(rand(1, 10))); // Random delay to spread load
         }

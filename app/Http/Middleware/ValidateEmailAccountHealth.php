@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Jobs\ValidateEmailTokensJob;
+use App\Jobs\ImprovedValidateEmailTokensJob;
 use App\Models\EmailAccount;
 use Closure;
 use Illuminate\Http\Request;
@@ -29,9 +29,8 @@ class ValidateEmailAccountHealth
                         'account_id' => $account->id,
                         'route' => $request->route()?->getName(),
                     ]);
-
                     // Dispatch token validation job
-                    ValidateEmailTokensJob::dispatch($account)
+                    ImprovedValidateEmailTokensJob::dispatch($account)
                         ->onQueue('email-validation');
                 }
             }
