@@ -26,24 +26,5 @@ export default function TrialStatus() {
         );
     }
 
-    if (customer.plan !== 'free') {
-        return (
-            <Alert className="mb-6 border-green-400/40 bg-green-100/40">
-                <AlertDescription>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <span className="ml-2 text-green-800">Your account is active and ready to use.</span>
-                        </div>
-                        <Link href="/billing">
-                            <Button size="sm" variant="outline" className="border-green-400 text-green-900 hover:bg-green-200">
-                                Manage Account
-                            </Button>
-                        </Link>
-                    </div>
-                </AlertDescription>
-            </Alert>
-        );
-    }
-
     return null;
 }

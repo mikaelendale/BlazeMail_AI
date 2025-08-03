@@ -71,7 +71,7 @@ return [
     ],
     // NEW: Credit amounts per plan
     'credits' => [
-        'free_plan_monthly' => 50, // Credits for free users, monthly
+        'free_plan_monthly' => 30, // Credits for free users, monthly
         'growth_plan_monthly' => 2000, // Credits for Growth plan, monthly
         'scale_plan_monthly' => 5000, // Credits for Scale plan, monthly
     ],

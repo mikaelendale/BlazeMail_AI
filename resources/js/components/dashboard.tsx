@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { Link, usePage } from '@inertiajs/react';
-import { BarChart3, Clock, Mail, Plus, Sparkles, TrendingUp, X, Zap } from 'lucide-react';
+import { BadgeCheck, BarChart3, Clock, Mail, Plus, Sparkles, TrendingUp, X, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { RecentEmails } from './recent-emails';
 import TrialStatus from './trial-status';
@@ -60,6 +60,7 @@ export function MainDashboard({ user = mockUser, usageStats = mockUsageStats, re
     const [showAlert, setShowAlert] = useState(user.isNewUser);
     const monthlyUsagePercentage = (usageStats.emailsThisMonth / usageStats.monthlyLimit) * 100;
     const [showComingSoon, setShowComingSoon] = useState(false);
+    
 
     return (
         <div className="min-h-screen bg-background">
@@ -68,7 +69,8 @@ export function MainDashboard({ user = mockUser, usageStats = mockUsageStats, re
                 {/* Header */}
                 <div className="mb-8 flex items-center justify-between">
                     <div>
-                        <h1 className="mb-1 text-3xl font-bold text-foreground">Hey {user.name} 👋</h1>
+                        <h1 className="mb-1 text-3xl font-bold text-foreground">Hey {user.name}👋🏽
+                        </h1>
                         <p className="text-muted-foreground">
                             {user.email} • {customer.plan}
                         </p>
@@ -82,7 +84,7 @@ export function MainDashboard({ user = mockUser, usageStats = mockUsageStats, re
                 </div>
                 <TrialStatus/>
                 {/* Stats Cards */}
-                <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+                {/* <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground">This Month</CardTitle>
@@ -118,7 +120,7 @@ export function MainDashboard({ user = mockUser, usageStats = mockUsageStats, re
                             <p className="text-xs text-muted-foreground">All time generated</p>
                         </CardContent>
                     </Card>
-                </div>
+                </div> */}
 
                 {/* Quick Actions */}
                 <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-4">

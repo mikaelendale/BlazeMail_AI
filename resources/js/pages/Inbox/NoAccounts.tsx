@@ -50,27 +50,7 @@ export default function NoAccountsPage({ message, action_text, connect_url }: Pr
                                 </div>
                             </div>
                         </CardContent>
-                    </Card>
-
-                    {/* Features */}
-                    <div className="mt-8 grid gap-4 md:grid-cols-2">
-                        <div className="p-4 text-center">
-                            <h4 className="mb-2 font-medium">📧 Unified Inbox</h4>
-                            <p className="text-sm text-muted-foreground">Manage multiple email accounts in one place</p>
-                        </div>
-                        <div className="p-4 text-center">
-                            <h4 className="mb-2 font-medium">🎯 Cold Email Detection</h4>
-                            <p className="text-sm text-muted-foreground">Automatically identify and organize cold emails</p>
-                        </div>
-                        <div className="p-4 text-center">
-                            <h4 className="mb-2 font-medium">⚡ Real-time Sync</h4>
-                            <p className="text-sm text-muted-foreground">Keep emails synchronized across platforms</p>
-                        </div>
-                        <div className="p-4 text-center">
-                            <h4 className="mb-2 font-medium">📊 Analytics</h4>
-                            <p className="text-sm text-muted-foreground">Track email performance and engagement</p>
-                        </div>
-                    </div>
+                    </Card> 
                 </div>
             </div>
         </AppLayout>

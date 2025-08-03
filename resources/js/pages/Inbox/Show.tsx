@@ -240,9 +240,6 @@ export default function EmailMessagePage({ message, thread_messages, error }: Pr
                                 <Button variant="ghost" size="sm" onClick={handleDelete} className="rounded-xl">
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="sm" className="rounded-xl">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
                             </div>
                         </div>
 

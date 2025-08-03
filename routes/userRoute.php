@@ -187,9 +187,9 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
         ->name('settings.email-accounts.setup.store');
 });
 // 🔥 NEW: Email Account Re-authentication routes
-Route::middleware(['auth', 'verified', 'role:user'])->prefix('email-accounts')->name('email-accounts.')->group(function () {
-    Route::get('/reauth', [EmailAccountReauthController::class, 'index'])->name('reauth.index');
-    Route::post('/{account}/reauth', [EmailAccountReauthController::class, 'startReauth'])->name('reauth.start');
-    Route::post('/{account}/test-connection', [EmailAccountReauthController::class, 'testConnection'])->name('test-connection');
-    Route::delete('/{account}', [EmailAccountReauthController::class, 'removeAccount'])->name('remove');
-});
+// Route::middleware(['auth', 'verified', 'role:user'])->prefix('email-accounts')->name('email-accounts.')->group(function () {
+//     Route::get('/reauth', [EmailAccountReauthController::class, 'index'])->name('reauth.index');
+//     Route::post('/{account}/reauth', [EmailAccountReauthController::class, 'startReauth'])->name('reauth.start');
+//     Route::post('/{account}/test-connection', [EmailAccountReauthController::class, 'testConnection'])->name('test-connection');
+//     Route::delete('/{account}', [EmailAccountReauthController::class, 'removeAccount'])->name('remove');
+// });

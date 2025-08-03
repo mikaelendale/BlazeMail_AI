@@ -222,9 +222,16 @@ class EmailAccountController extends Controller
     /**
      * Show email account details - ENHANCED WITH REAUTH DATA 📊
      */
-    public function show(EmailAccount $emailAccount): Response
+    public function show($emailAccount): Response
     {
-        if ($emailAccount->user_id !== Auth::id()) {
+        // Only allow numeric IDs, not slugs or other strings
+        if (!is_numeric($emailAccount) || intval($emailAccount) != $emailAccount) {
+            abort(404, "Invalid email account ID.");
+        }
+
+        $emailAccount = EmailAccount::find($emailAccount);
+
+        if (!$emailAccount || $emailAccount->user_id !== Auth::id()) {
             abort(404, "Email account doesn't exist");
         }
 

@@ -62,7 +62,7 @@ class InboxController extends Controller
                 return Inertia::render('Inbox/NoAccounts', [
                     'message' => 'No email accounts connected',
                     'action_text' => 'Connect your first email account to start using the inbox.',
-                    'connect_url' => route('email-accounts.index'),
+                    'connect_url' => route('settings.email-accounts'),
                 ]);
             }
 
