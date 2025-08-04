@@ -565,7 +565,7 @@ export const OptimizedSidebar = memo(function OptimizedSidebar({
                                             <SelectItem value="blazemail-70b">
                                                 <div className="flex items-center gap-2">
                                                     <div className="h-2 w-2 rounded-full bg-primary"></div>
-                                                    BlazeMail-70B (Fast + Smart)
+                                                    BlazeMail (Fast + Smart)
                                                 </div>
                                             </SelectItem>
                                             {/* <SelectItem value="blazemail-lite">

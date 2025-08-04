@@ -117,8 +117,11 @@ export default function Navbar() {
                             </Tooltip>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Link href="/dashboard" method="post" className="h-10 w-10 rounded-full  bg-accent">
-                                        <LogIn className="h-5 w-5 mx-auto text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" />
+                                    <Link
+                                        href="/dashboard"
+                                        className="flex h-10 w-10 items-center justify-center rounded-full bg-accent"
+                                    >
+                                        <LogIn className="h-5 w-5 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" />
                                     </Link>
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom" className="rounded-lg border px-3 py-1.5 text-sm text-background">

@@ -149,7 +149,7 @@ class EmailGenerateController extends Controller
             ]);
 
             return Inertia::render('user/email/generate', [
-                'error' => 'Failed to generate email: ' . $e->getMessage(),
+                'error' => 'Failed to generate email: AI generation error. Credits have been refunded.',
                 'submittedData' => $data,
                 'strategy_costs' => $this->creditService->getStrategyCosts(),
                 'user_balance' => $request->user()->fresh()->credit_balance,

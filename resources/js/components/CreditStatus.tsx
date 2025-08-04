@@ -1,4 +1,4 @@
-import { usePage } from "@inertiajs/react"
+import { Link, usePage } from "@inertiajs/react"
 import { AlertTriangle, CoinsIcon, Zap } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -42,8 +42,8 @@ export default function CreditStatus({ showDetails = false, showActions = true, 
             <div className="flex items-center space-x-2">
                 <div className={`flex items-center space-x-1 ${getStatusColor()}`}>
                     {getStatusIcon()}
-                    <a href="/credits"> <span className="font-medium">{credits.balance.toLocaleString()}</span>
-                    <span className="text-md text-muted-foreground">&nbsp;credits</span></a>
+                    <Link href="/credits"> <span className="font-medium">{credits.balance.toLocaleString()}</span>
+                    <span className="text-md text-muted-foreground">&nbsp;credits</span></Link>
                 </div>
 
                 {credits.account_status !== "active" && <Badge variant="destructive">Account {credits.account_status}</Badge>}
@@ -55,7 +55,7 @@ export default function CreditStatus({ showDetails = false, showActions = true, 
                         {getStatusMessage()}
                         {showActions && (
                             <Button size="sm" variant="outline" className="ml-2 bg-transparent" asChild>
-                                <a href="/credits">Top Up</a>
+                                <Link href="/credits">Top Up</Link>
                             </Button>
                         )}
                     </AlertDescription>
