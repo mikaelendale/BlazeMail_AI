@@ -10,8 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { router } from '@inertiajs/react'; 
-import { AlertTriangle, ArrowLeft, BarChart3, CheckCircle, Clock, Eye, Filter, Mail, Search, Send, Settings, Tag, Users, X } from 'lucide-react';
+import { Link, router } from '@inertiajs/react'; 
+import { AlertTriangle, ArrowLeft, BarChart3, CheckCircle, Clock, Eye, Filter, Mail, Pointer, PointerOff, Search, Send, Settings, Tag, Users, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface EmailAccount {
@@ -275,10 +275,34 @@ export default function CampaignSetup({
                         </div>
                     </div>
 
+                    
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                         {/* Main Configuration */}
                         <div className="space-y-6 lg:col-span-2">
                             {/* Email Account Selection */}
+                            <Card className="rounded-3xl border border-accent bg-card">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-2 text-lg">
+                                        <Pointer className="h-5 w-5 text-primary" />
+                                        Personalizarion
+
+                                        <Switch />
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="space-y-3">
+                                        <div className="flex">
+                                            <div>
+                                                <span className="font-medium">Make the emails Personalized on send</span>
+                                                <span className="ml-2">
+                                                   Enable out AI to personalize the emails with the recipient's name, company, and other details.
+                                                </span> 
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
                             <Card className="rounded-3xl border border-accent bg-card">
                                 <CardHeader className="pb-4">
                                     <CardTitle className="flex items-center gap-2 text-lg">
@@ -291,11 +315,10 @@ export default function CampaignSetup({
                                         {email_accounts.map((account) => (
                                             <div
                                                 key={account.id}
-                                                className={`cursor-pointer rounded-2xl border p-4 transition-all duration-200 hover:shadow-md ${
-                                                    selectedEmailAccount === account.id.toString()
+                                                className={`cursor-pointer rounded-2xl border p-4 transition-all duration-200 hover:shadow-md ${selectedEmailAccount === account.id.toString()
                                                         ? 'border-primary bg-primary/5'
                                                         : 'border-accent bg-muted/30'
-                                                }`}
+                                                    }`}
                                                 onClick={() => setSelectedEmailAccount(account.id.toString())}
                                             >
                                                 <div className="flex items-center justify-between">

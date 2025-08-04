@@ -615,6 +615,7 @@ class CampaignController extends Controller
                 ];
             });
 
+            dd($emailAccounts);
         // Get contact statistics
         $contactStats = Cache::remember("contact_stats_{$campaign->user_id}", 300, function () {
             $contacts = Contact::forUser(Auth::id())->active();

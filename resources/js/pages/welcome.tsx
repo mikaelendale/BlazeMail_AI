@@ -22,7 +22,7 @@ export default function Welcome() {
                 <Feature id="features" />
                 <About/>
                 <ThreeCards />
-                {/* <ProblemSolutionSection /> */}
+                <ProblemSolutionSection />
                 <HowItWorks />
                 <TestimonialCard />
                 <Pricing />
