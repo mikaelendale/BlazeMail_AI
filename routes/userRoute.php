@@ -130,7 +130,6 @@ Route::middleware(['auth', 'verified', 'role:user', 'onboarding'])->group(functi
     //     return Inertia::render('settings/connected-account-details');
     // })->name('settings.connected');
 
-
     // Email accounts routes with health check middleware
     Route::get('/settings/email-accounts', [EmailAccountController::class, 'index'])
         ->name('settings.email-accounts');

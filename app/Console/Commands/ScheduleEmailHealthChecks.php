@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Jobs\EmailAccountHealthCheckJob;
+use App\Jobs\ImprovedValidateEmailTokensJob;
 use App\Jobs\ValidateEmailTokensJob;
 use App\Models\EmailAccount;
 use Illuminate\Console\Command;
@@ -51,7 +52,7 @@ class ScheduleEmailHealthChecks extends Command
         $this->info("Scheduling health check for account: {$account->email}");
 
         // Schedule immediate token validation
-        ValidateEmailTokensJob::dispatch($account)
+        ImprovedValidateEmailTokensJob::dispatch($account)
             ->onQueue('email-validation');
 
         $this->info("✓ Token validation scheduled for {$account->email}");
@@ -82,7 +83,7 @@ class ScheduleEmailHealthChecks extends Command
             // Spread the jobs over time to avoid rate limits
             $delay = now()->addMinutes($index * 2 + rand(1, 5));
 
-            ValidateEmailTokensJob::dispatch($account)
+            ImprovedValidateEmailTokensJob::dispatch($account)
                 ->onQueue('email-validation')
                 ->delay($delay);
 
