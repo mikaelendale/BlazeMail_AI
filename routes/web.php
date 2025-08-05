@@ -37,16 +37,16 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
         ->name('user.onboarding.submit')
         ->middleware('onboardingComplete');
 });
+// social logins
+Route::get('/auth/{provider}/redirect', ProviderRedirectController::class)->name('auth.redirect')->middleware(['throttle:5,1']);
+Route::get('/auth/{provider}/callback', ProviderCallbackController::class)->name('auth.callback')->middleware(['throttle:5,1']);
+
 
 
 //landing pages
 // Route::get('/', [LandingPageController::class, 'index'])->name('home');
 // Route::get('/pricing', [LandingPageController::class, 'pricing'])->name('pricing');
 // Route::get('/features', [LandingPageController::class, 'features'])->name('features');
-// //social logins
-// Route::get('/auth/{provider}/redirect', ProviderRedirectController::class)->name('auth.redirect')->middleware(['throttle:5,1']);
-// Route::get('/auth/{provider}/callback', ProviderCallbackController::class)->name('auth.callback')->middleware(['throttle:5,1']);
-
 // // Changelog 
 // Route::get('/changelog', [ChangelogController::class, 'index'])->name('changelog');
 // Route::get('/privacy', [LegalController::class, 'privacy'])->name('privacy');
