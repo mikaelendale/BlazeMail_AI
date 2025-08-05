@@ -53,6 +53,15 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    /*|--------------------------------------------------------------------------
+    | Subdomain Url
+    |--------------------------------------------------------------------------
+    | This URL is used to generate subdomain URLs for the application.
+    |
+    */
+
+    'subdomain_url' => env('APP_SUBDOMAIN_URL', 'https://app.blazemail.ai'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

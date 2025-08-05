@@ -29,20 +29,6 @@ use Inertia\Inertia;
 */
 
 
-//landing pages
-Route::get('/', [LandingPageController::class, 'index'])->name('home');
-Route::get('/pricing', [LandingPageController::class, 'pricing'])->name('pricing');
-Route::get('/features', [LandingPageController::class, 'features'])->name('features');
-//social logins
-Route::get('/auth/{provider}/redirect', ProviderRedirectController::class)->name('auth.redirect')->middleware(['throttle:5,1']);
-Route::get('/auth/{provider}/callback', ProviderCallbackController::class)->name('auth.callback')->middleware(['throttle:5,1']);
-
-// Changelog 
-Route::get('/changelog', [ChangelogController::class, 'index'])->name('changelog');
-Route::get('/privacy', [LegalController::class, 'privacy'])->name('privacy');
-Route::get('/terms', [LegalController::class, 'terms'])->name('terms');
-
-
 Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
     Route::get('onboarding', [OnboardingController::class, 'index'])
         ->name('user.onboarding')
@@ -51,6 +37,20 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
         ->name('user.onboarding.submit')
         ->middleware('onboardingComplete');
 });
+
+
+//landing pages
+// Route::get('/', [LandingPageController::class, 'index'])->name('home');
+// Route::get('/pricing', [LandingPageController::class, 'pricing'])->name('pricing');
+// Route::get('/features', [LandingPageController::class, 'features'])->name('features');
+// //social logins
+// Route::get('/auth/{provider}/redirect', ProviderRedirectController::class)->name('auth.redirect')->middleware(['throttle:5,1']);
+// Route::get('/auth/{provider}/callback', ProviderCallbackController::class)->name('auth.callback')->middleware(['throttle:5,1']);
+
+// // Changelog 
+// Route::get('/changelog', [ChangelogController::class, 'index'])->name('changelog');
+// Route::get('/privacy', [LegalController::class, 'privacy'])->name('privacy');
+// Route::get('/terms', [LegalController::class, 'terms'])->name('terms');
 
 //blog
 
@@ -77,16 +77,15 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
 // Route::get('/newsletter/verify/{token}', [NewsletterController::class, 'verify'])->name('newsletter.verify');
 // Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
 
+//support routes
+// Route::get('/support', function () {
+//     return Inertia::render('support');
+// })->name('support.index');
+
 // Credit management routes
 Route::middleware('auth')->group(function () {
     Route::get('/credits', [CreditController::class, 'index'])->name('credits.index'); 
 });
-
-
-//support routes
-Route::get('/support', function () {
-    return Inertia::render('support');
-})->name('support.index');
 
 Route::get('/unsubscribe/{token}', UnsubscribeController::class)->name('unsubscribe');
 // New route for email open tracking
