@@ -15,7 +15,7 @@ class SoonMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (config('app.status')->is('coming-soon')) {
+        if (config('app.status') === 'coming-soon') {
             return redirect()->route('coming-soon');
         }
 
