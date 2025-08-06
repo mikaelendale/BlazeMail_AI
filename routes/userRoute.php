@@ -17,7 +17,7 @@ use App\Http\Controllers\User\EmailSenderController;
 use App\Http\Middleware\ValidateEmailAccountHealth;
 use Inertia\Inertia;
 
-Route::middleware(['auth', 'verified', 'role:user', 'onboarding'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:user', 'onboarding', 'soon'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('my-emails', [MyEmailsController::class, 'index'])->name('myemails');
@@ -172,7 +172,7 @@ Route::middleware(['auth', 'verified', 'role:user', 'onboarding'])->group(functi
     Route::delete('/inbox/messages', [InboxController::class, 'destroy'])->name('inbox.destroy');
 });
 
-Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:user', 'soon'])->group(function () {
     // Gmail OAuth routes 
     Route::get('/oauth/gmail/start', [GmailOAuthController::class, 'start'])
         ->name('oauth.gmail.start');

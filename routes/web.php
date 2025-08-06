@@ -29,7 +29,7 @@ use Inertia\Inertia;
 */
 
 
-Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:user', 'soon'])->group(function () {
     Route::get('onboarding', [OnboardingController::class, 'index'])
         ->name('user.onboarding')
         ->middleware('onboardingComplete');
@@ -38,10 +38,12 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
         ->middleware('onboardingComplete');
 });
 // social logins
-Route::get('/auth/{provider}/redirect', ProviderRedirectController::class)->name('auth.redirect')->middleware(['throttle:5,1']);
-Route::get('/auth/{provider}/callback', ProviderCallbackController::class)->name('auth.callback')->middleware(['throttle:5,1']);
+Route::get('/auth/{provider}/redirect', ProviderRedirectController::class)->name('auth.redirect')->middleware(['throttle:5,1', 'soon']);
+Route::get('/auth/{provider}/callback', ProviderCallbackController::class)->name('auth.callback')->middleware(['throttle:5,1', 'soon']);
 
-
+Route::get('/soon', function () {
+    return Inertia::render('ComingSoon');
+})->name('coming-soon');
 
 //landing pages
 // Route::get('/', [LandingPageController::class, 'index'])->name('home');
@@ -83,7 +85,7 @@ Route::get('/auth/{provider}/callback', ProviderCallbackController::class)->name
 // })->name('support.index');
 
 // Credit management routes
-Route::middleware('auth')->group(function () {
+Route::middleware('auth', 'soon')->group(function () {
     Route::get('/credits', [CreditController::class, 'index'])->name('credits.index'); 
 });
 

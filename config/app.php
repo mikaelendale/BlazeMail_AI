@@ -62,6 +62,15 @@ return [
 
     'subdomain_url' => env('APP_SUBDOMAIN_URL', 'https://app.blazemail.ai'),
 
+    /*|--------------------------------------------------------------------------
+    | App Status
+    |--------------------------------------------------------------------------
+    | This value determines the current status of the application.
+    |
+    */
+
+    'status' => env('APP_STATUS', 'production'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

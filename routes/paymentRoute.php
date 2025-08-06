@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Paddle\Subscription;
 use Laravel\Paddle\Transaction;
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'soon'])->group(function () {
     // Subscription routes
     Route::get('/subscribe', [SubscriptionController::class, 'subscribe'])->name('subscribe');
     Route::post('/subscription/swap', [SubscriptionController::class, 'swap'])->name('subscription.swap');
