@@ -71,9 +71,9 @@ return [
     ],
     // NEW: Credit amounts per plan
     'credits' => [
-        'free_plan_monthly' => 30, // Credits for free users, monthly
-        'growth_plan_monthly' => 2000, // Credits for Growth plan, monthly
-        'scale_plan_monthly' => 5000, // Credits for Scale plan, monthly
+        'free_plan_monthly' => env('FREE_PLAN_MONTHLY_CREDITS', 30), // Credits for free users, monthly
+        'growth_plan_monthly' => env('GROWTH_PLAN_MONTHLY_CREDITS', 2000), // Credits for Growth plan, monthly
+        'scale_plan_monthly' => env('SCALE_PLAN_MONTHLY_CREDITS', 5000), // Credits for Scale plan, monthly
     ],
     'groq' => [
         'api_key' => env('GROQ_API_KEY'),
