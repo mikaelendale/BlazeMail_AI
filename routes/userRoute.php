@@ -105,7 +105,7 @@ Route::middleware(['auth', 'verified', 'role:user', 'onboarding', 'soon'])->grou
 
     // Campaign
 
-    Route::prefix('email/campaign')->name('user.email.')->group(function () {
+    Route::prefix('email/campaign')->middleware('campaign')->name('user.email.')->group(function () {
         Route::get('/', [CampaignController::class, 'index'])->name('campaign');
         Route::middleware('subscribed')->group(function () {
             Route::post('/filter', [CampaignController::class, 'filter'])->name('campaign.filter');

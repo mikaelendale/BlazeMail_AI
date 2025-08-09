@@ -82,4 +82,7 @@ return [
     'payment' => [
         'status' => env('PAYMENT_STATUS', 'open'), 
     ],
+    'campaign' => [
+        'status' => env('CAMPAIGN_STATUS', 'open'),
+    ],
 ];

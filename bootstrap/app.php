@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'credits' => \App\Http\Middleware\CheckCredits::class,
             'soon' => \App\Http\Middleware\SoonMiddleware::class,
             'payment' => \App\Http\Middleware\PaymentGate::class,
+            'campaign' => \App\Http\Middleware\CampaignStatus::class,
         ]);
 
         $middleware->web(append: [
