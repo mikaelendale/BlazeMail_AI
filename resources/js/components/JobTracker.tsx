@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { router } from "@inertiajs/react"
 import { motion, AnimatePresence } from "framer-motion"
+import { toast } from "sonner"
 
 interface JobProgress {
   id: number
@@ -268,24 +269,28 @@ export default function JobTracker({ initialBatchId }: Props) {
     }
   }
 
-  const handleSendEmails = async (job: JobProgress) => {
-    if (job.batch_id && job.status === "completed") {
-      try {
-        const response = await fetch(`/emails/review/${job.batch_id}/send-all`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "",
-          },
-        })
-        if (response.ok) {
-          console.log("Emails sent successfully")
+  const handleSendEmails = (job: JobProgress) => {
+    if (!job.batch_id || job.status !== "completed") return
+
+    const toastId = toast.loading("Sending emails...")
+
+    router.post(
+      `/emails/review/${job.batch_id}/send-all`,
+      {},
+      {
+        onSuccess: () => {
+          toast.success("Emails sent successfully", { id: toastId })
           fetchJobs()
-        }
-      } catch (error) {
-        console.error("Failed to send emails:", error)
+        },
+        onError: () => {
+          toast.error("Failed to send emails", { id: toastId })
+        },
+        onFinish: () => {
+          toast.dismiss(toastId)
+        },
+        preserveScroll: true,
       }
-    }
+    )
   }
 
   const handleDismissJob = async (jobId: number) => {
@@ -382,92 +387,92 @@ export default function JobTracker({ initialBatchId }: Props) {
         <div className="fixed bottom-4 left-4 md:left-4 md:transform-none transform z-50 space-y-2 w-96">
           {/* Header Card */}
 
-            <Card className="border-none bg-primary-foreground backdrop-blur-md relative overflow-hidden">
-              {/* Progress overlay for header when minimized - NO ANIMATION */}
-              {isMinimized && hasProcessingJobs && (
-                <div className="absolute inset-0 pointer-events-none">
-                  <div
-                    className="h-full bg-accent transition-all duration-300"
-                    style={{
-                      width: `${getOverallProgress()}%`,
-                    }}
-                  // className="h-full bg-accent transition-all duration-300 ease-out"
-                  // style={{
-                  // width: `${job.progress_percentage || 0}%`,
-                  // }}
-                  />
-                </div>
-              )}
+          <Card className="border-none bg-primary-foreground backdrop-blur-md relative overflow-hidden">
+            {/* Progress overlay for header when minimized - NO ANIMATION */}
+            {isMinimized && hasProcessingJobs && (
+              <div className="absolute inset-0 pointer-events-none">
+                <div
+                  className="h-full bg-accent transition-all duration-300"
+                  style={{
+                    width: `${getOverallProgress()}%`,
+                  }}
+                // className="h-full bg-accent transition-all duration-300 ease-out"
+                // style={{
+                // width: `${job.progress_percentage || 0}%`,
+                // }}
+                />
+              </div>
+            )}
 
-              <CardContent className="p-3 relative z-10">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`h-2 w-2 rounded-full ${connectionStatus === "connected"
-                        ? "bg-primary"
-                        : connectionStatus === "connecting"
-                          ? "bg-yellow-500 animate-pulse"
-                          : "bg-destructive"
-                        }`}
-                    />
-                    <span className="text-sm font-medium text-foreground">Processes</span>
-                    <span className="text-sm text-muted-foreground">({jobs.length})</span>
-                    {activeJobs.length > 0 && (
-                      <Badge className="text-xs bg-primary/10 text-primary border-primary/20">
-                        {activeJobs.length} active
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => router.get("/jobs")}
-                          className="h-6 w-6 p-0 hover:bg-accent text-muted-foreground"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>View all</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setIsMinimized(!isMinimized)}
-                          className="h-6 w-6 p-0 hover:bg-accent text-muted-foreground"
-                        >
-                          {isMinimized ? "+" : "-"}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{isMinimized ? "Expand" : "Minimize"}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={handleHideTracker}
-                          className="h-6 w-6 p-0 hover:bg-accent text-muted-foreground"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Hide</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
+            <CardContent className="p-3 relative z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`h-2 w-2 rounded-full ${connectionStatus === "connected"
+                      ? "bg-primary"
+                      : connectionStatus === "connecting"
+                        ? "bg-yellow-500 animate-pulse"
+                        : "bg-destructive"
+                      }`}
+                  />
+                  <span className="text-sm font-medium text-foreground">Processes</span>
+                  <span className="text-sm text-muted-foreground">({jobs.length})</span>
+                  {activeJobs.length > 0 && (
+                    <Badge className="text-xs bg-primary/10 text-primary border-primary/20">
+                      {activeJobs.length} active
+                    </Badge>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex items-center gap-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => router.get("/jobs")}
+                        className="h-6 w-6 p-0 hover:bg-accent text-muted-foreground"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>View all</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setIsMinimized(!isMinimized)}
+                        className="h-6 w-6 p-0 hover:bg-accent text-muted-foreground"
+                      >
+                        {isMinimized ? "+" : "-"}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{isMinimized ? "Expand" : "Minimize"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleHideTracker}
+                        className="h-6 w-6 p-0 hover:bg-accent text-muted-foreground"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Hide</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Job Cards */}
           <AnimatePresence>
@@ -576,21 +581,6 @@ export default function JobTracker({ initialBatchId }: Props) {
                                     </Tooltip>
                                   </>
                                 )}
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => handleDismissJob(job.id)}
-                                      className="h-6 w-6 p-0 hover:bg-accent text-foreground hover:text-destructive transition-colors"
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Dismiss</p>
-                                  </TooltipContent>
-                                </Tooltip>
                               </div>
                             </div>
                           </div>

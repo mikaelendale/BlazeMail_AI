@@ -33,11 +33,9 @@ class RegisteredUserController extends Controller
     {
         $firstName = strtolower(Str::before($name, ' '));
         $emailInitials = strtolower(Str::substr($email, 0, 2));
-
         do {
             $code = $firstName . $emailInitials . random_int(100, 999);
         } while (User::where('own_referral_code', $code)->exists());
-
         return $code;
     }
 
@@ -51,7 +49,8 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            // Removed 'confirmed' rule from password validation
+            'password' => ['required', Rules\Password::defaults()],
         ]);
 
         $ownReferralCode = $this->generateUniqueReferralCode($request->name, $request->email);
@@ -71,6 +70,7 @@ class RegisteredUserController extends Controller
         Mail::to($user->email)->send(new WelcomeEmail($user));
 
         Auth::login($user);
+
         session()->forget('referral_code');
 
         return redirect()->intended(route('dashboard', absolute: false));

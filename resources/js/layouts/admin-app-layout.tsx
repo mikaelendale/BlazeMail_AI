@@ -24,7 +24,19 @@ export default ({ children, breadcrumbs, ...props }: AdminAppLayoutProps) => {
             <AdminNavbar />
             <ModeToggle/>
             <div style={{ paddingLeft: 24, paddingRight: 24, marginTop: 80 }}>{children}</div>
-            <Toaster />
+
+            <Toaster expand
+                toastOptions={{
+                    style: {
+                        background: 'var(--primary-foreground)',
+                        borderColor: 'var(--accent)',
+                        color: 'var(--primary)',
+                        borderRadius: '20px', // Modern, moderately rounded corners
+                    },
+                }
+                }
+                theme="system"
+            />
         </AppLayoutTemplate>
     );
 };

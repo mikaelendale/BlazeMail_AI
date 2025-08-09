@@ -35,7 +35,6 @@ export function EmailCreationStep({ onNext, onPrev, onboardingData, updateOnboar
 
     const generateEmail = async () => {
         setGenerating(true);
-
         // Console log the data that would be sent to backend
         const emailGenerationData = {
             recipientName: onboardingData.emailData.recipientName,
@@ -45,41 +44,36 @@ export function EmailCreationStep({ onNext, onPrev, onboardingData, updateOnboar
             customGoal: onboardingData.customGoal,
             userInfo: onboardingData.userInfo,
         };
-
         console.log('🚀 Email Generation Request Data:', emailGenerationData);
 
         try {
             // Simulate API delay
             await new Promise((resolve) => setTimeout(resolve, 2000));
-
             // Mock response data
             const mockResponse = {
                 content: `Hi ${onboardingData.emailData.recipientName || 'there'},
 
 I hope this email finds you well. I came across your profile and was impressed by your work in the ${onboardingData.userInfo.industry || 'industry'}.
 
-${
-    onboardingData.userGoal === 'freelancer'
-        ? "I'd love to discuss potential freelance opportunities and how my skills could benefit your projects."
-        : onboardingData.userGoal === 'b2b'
-          ? "I'd love to explore potential collaboration opportunities between our companies."
-          : onboardingData.userGoal === 'sales'
-            ? 'I wanted to reach out regarding our solution that could help streamline your operations.'
-            : "I'd love to connect and explore how we might work together."
-}
+${onboardingData.userGoal === 'freelancer'
+                        ? "I'd love to discuss potential freelance opportunities and how my skills could benefit your projects."
+                        : onboardingData.userGoal === 'b2b'
+                            ? "I'd love to explore potential collaboration opportunities between our companies."
+                            : onboardingData.userGoal === 'sales'
+                                ? 'I wanted to reach out regarding our solution that could help streamline your operations.'
+                                : "I'd love to connect and explore how we might work together."
+                    }
 
 Would you be available for a brief 15-minute call next week to discuss this further?
 
 Best regards,
-${onboardingData.userInfo.name || 'Your Name'}
-${onboardingData.userInfo.company ? `\n${onboardingData.userInfo.company}` : ''}`,
+${onboardingData.userInfo.name || 'Your Name'}${onboardingData.userInfo.company ? `\n${onboardingData.userInfo.company}` : ''}`,
                 subject:
                     onboardingData.emailData.subject ||
                     `${onboardingData.userGoal === 'freelancer' ? 'Freelance Services' : onboardingData.userGoal === 'b2b' ? 'Partnership Opportunity' : onboardingData.userGoal === 'sales' ? 'Solution for Your Business' : "Let's Connect"} - ${onboardingData.userInfo.name || 'Your Name'}`,
             };
 
             console.log('✅ Mock Email Generation Response:', mockResponse);
-
             handleEmailDataChange('content', mockResponse.content);
             if (!onboardingData.emailData.subject) {
                 handleEmailDataChange('subject', mockResponse.subject);
@@ -107,13 +101,11 @@ Best regards,
 ${onboardingData.userInfo.name || 'Your Name'}`,
             tone: 'professional' as const,
         };
-
         updateOnboardingData({ emailData: demoData });
     };
 
     const sendTestEmail = async () => {
         setSending(true);
-
         // Console log the data that would be sent to backend
         const testEmailData = {
             to: onboardingData.emailData.recipientName,
@@ -122,15 +114,12 @@ ${onboardingData.userInfo.name || 'Your Name'}`,
             userInfo: onboardingData.userInfo,
             timestamp: new Date().toISOString(),
         };
-
         console.log('📧 Test Email Send Request Data:', testEmailData);
 
         try {
             // Simulate API delay
             await new Promise((resolve) => setTimeout(resolve, 1500));
-
             console.log('✅ Test email sent successfully!');
-
             updateOnboardingData({ firstEmailSent: true });
             onNext();
         } catch (error) {
@@ -144,9 +133,9 @@ ${onboardingData.userInfo.name || 'Your Name'}`,
 
     return (
         <div className="space-y-8 py-8">
-            <div className="space-y-4 text-center">
+            <div className="space-y-4 flex flex-col items-center text-center">
                 <h2 className="text-3xl font-bold">Create Your First Email</h2>
-                <p className="text-muted-foreground">Let's create a personalized email using AI</p>
+                <p className="text-muted-foreground max-w-sm">Let's create a personalized email using AI</p>
                 <Button onClick={handleAutoFill} variant="outline" size="sm" className="bg-accent/50 hover:bg-accent">
                     <Sparkles className="mr-2 h-4 w-4" />
                     Auto Fill for Test
@@ -170,7 +159,6 @@ ${onboardingData.userInfo.name || 'Your Name'}`,
                             </div>
                         )}
                     </div>
-
                     <div className="space-y-2">
                         <Label htmlFor="tone">Email Tone</Label>
                         <Select value={onboardingData.emailData.tone} onValueChange={(value) => handleEmailDataChange('tone', value)}>
@@ -226,18 +214,6 @@ ${onboardingData.userInfo.name || 'Your Name'}`,
                         </div>
                     )}
                 </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-8">
-                <Button variant="ghost" onClick={onPrev}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                </Button>
-
-                <Button onClick={sendTestEmail} disabled={!isValid || sending} size="lg">
-                    {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                    Send Test Email
-                </Button>
             </div>
         </div>
     );

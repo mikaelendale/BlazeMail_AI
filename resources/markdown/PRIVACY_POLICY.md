@@ -1,148 +1,100 @@
-# Privacy Policy
+# BlazeMail AI - Privacy Policy
 
-**Last updated: July 26, 2025**
+**Last Updated: August 6, 2025**
 
-At BlazeMail, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our email marketing service.
+BlazeMail AI ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website blazemail.ai and use our Service. Please read this Privacy Policy carefully. If you do not agree with the terms of this Privacy Policy, please do not access the Service.
 
-## Information We Collect
+## 1. Information We Collect
 
-### Personal Information
-- **Account Information**: Name, email address, company name, and billing information
-- **Profile Data**: Job title, industry, company size, and marketing preferences
-- **Contact Information**: Phone number, mailing address, and emergency contacts
+We may collect information about you in a variety of ways. The information we may collect via the Service depends on the content and materials you use, and includes:
 
-### Usage Data
-- **Email Campaign Data**: Email content, recipient lists, send times, and performance metrics
-- **Analytics Information**: Open rates, click-through rates, bounce rates, and engagement statistics
-- **Platform Usage**: Features used, time spent, pages visited, and user interactions
+### 1.1. Personal Data
 
-### Technical Information
-- **Device Data**: IP address, browser type, operating system, and device identifiers
-- **Cookies and Tracking**: Session data, preferences, and behavioral analytics
-- **Log Information**: Server logs, error reports, and security events
+Personally identifiable information, such as your name, email address, and billing information, that you voluntarily give to us when you register with the Service or when you choose to participate in various activities related to the Service, such as online chat and message boards.
 
-## How We Use Your Information
+### 1.2. Gmail Account Data
 
-### Service Delivery
-- **Email Campaign Management**: Creating, sending, and tracking your email campaigns
-- **List Management**: Organizing and segmenting your subscriber lists
-- **Analytics and Reporting**: Providing detailed performance insights and recommendations
-- **Customer Support**: Responding to inquiries and resolving technical issues
+When you connect your Gmail account to BlazeMail AI via OAuth, we access certain information from your Gmail account. We only access the necessary permissions to provide our Service, which include:
+- **Sending Emails:** We send emails on your behalf from your Gmail account.
+- **Email Metadata:** We access metadata of emails sent through our platform (e.g., open and reply status, subject lines) for the purpose of providing analytics and improving our Service. We do not read the content of your emails.
+- **Contacts:** If you choose to import contacts for outreach, we will access your Gmail contacts.
 
-### Platform Improvement
-- **Feature Development**: Enhancing existing features and developing new capabilities
-- **Performance Optimization**: Improving platform speed, reliability, and user experience
-- **Security Enhancement**: Protecting against fraud, abuse, and security threats
-- **Research and Development**: Analyzing usage patterns to inform product decisions
+**We do NOT store your Gmail password.** Your Gmail account access is managed securely through Google OAuth 2.0.
 
-### Communication
-- **Service Updates**: Notifying you about new features, updates, and maintenance
-- **Marketing Communications**: Sending relevant product information and promotional content
-- **Educational Content**: Providing tips, best practices, and industry insights
-- **Legal Notices**: Communicating policy changes and legal requirements
+### 1.3. Derivative Data
 
-## Information Sharing and Disclosure
+Information our servers automatically collect when you access the Service, such as your IP address, your browser type, your operating system, your access times, and the pages you have viewed directly before and after accessing the Service.
 
-### Third-Party Service Providers
-We work with trusted partners to deliver our services:
+### 1.4. Financial Data
 
-- **Analytics Providers**: Google Analytics, and custom analytics tools
-- **Payment Processors**: Paddle secure payment gateways
+Financial information, such as data related to your payment method (e.g., valid credit card number, card brand, expiration date) that we may collect when you purchase, order, return, exchange, or request information about our services from the Service. We store only very limited, if any, financial information that we collect. Otherwise, all financial information is stored by our payment processor, [e.g., Stripe, PayPal], and you are encouraged to review their privacy policy.
 
-### Legal Requirements
-We may disclose information when required by law:
+## 2. How We Use Your Information
 
-- **Legal Process**: Responding to subpoenas, court orders, and legal requests
-- **Safety Protection**: Preventing harm to users, the public, or our platform
-- **Rights Enforcement**: Protecting our intellectual property and contractual rights
-- **Regulatory Compliance**: Meeting industry regulations and government requirements
+Having accurate information about you permits us to provide you with a smooth, efficient, and customized experience. Specifically, we may use information collected about you via the Service to:
 
-### Business Transfers
-In the event of a merger, acquisition, or sale:
+- Create and manage your account.
+- Process your transactions and send you related information, including purchase confirmations and invoices.
+- Enable user-to-user communications.
+- Generate and send personalized cold emails on your behalf.
+- Monitor and analyze usage and trends to improve your experience with the Service.
+- Notify you of updates to the Service.
+- Offer new products, services, and/or recommendations to you.
+- Perform other business activities as needed.
 
-- **Due Diligence**: Sharing information with potential buyers or partners
-- **Asset Transfer**: Including user data in business asset transfers
-- **Continuity Protection**: Ensuring service continuity during ownership changes
-- **User Notification**: Informing users of significant business changes
+## 3. Disclosure of Your Information
 
-## Data Security and Protection
+We may share information we have collected about you in certain situations. Your information may be disclosed as follows:
 
-### Security Measures
-- **Encryption**: All data transmitted using TLS/SSL encryption protocols
-- **Access Controls**: Role-based permissions and multi-factor authentication
-- **Regular Audits**: Security assessments and vulnerability testing
-- **Incident Response**: Rapid response procedures for security breaches
+### 3.1. By Law or to Protect Rights
 
-### Data Storage
-- **Geographic Location**: Data stored in secure facilities in the United States and EU
-- **Backup Systems**: Regular backups with encryption and access controls
-- **Retention Policies**: Data retained only as long as necessary for business purposes
-- **Secure Deletion**: Permanent deletion of data when no longer needed
+If we believe the release of information about you is necessary to respond to legal process, to investigate or remedy potential violations of our policies, or to protect the rights, property, and safety of others, we may share your information as permitted or required by any applicable law, rule, or regulation.
 
-## Your Privacy Rights
+### 3.2. Third-Party Service Providers
 
-### Access and Control
-- **Data Access**: Request copies of your personal information
-- **Data Correction**: Update or correct inaccurate information
-- **Data Deletion**: Request deletion of your personal data
-- **Data Portability**: Export your data in a machine-readable format
+We may share your information with third parties that perform services for us or on our behalf, including payment processing, data analysis, email delivery, hosting services, customer service, and marketing assistance.
 
-### Communication Preferences
-- **Email Preferences**: Control marketing and promotional communications
-- **Notification Settings**: Manage service and security notifications
-- **Cookie Preferences**: Control cookie usage and tracking preferences
-- **Account Settings**: Update privacy and security settings
+### 3.3. Marketing Communications
 
-## Cookies and Tracking Technologies
+With your consent, or with an opportunity for you to withdraw consent, we may share your information with third parties for marketing purposes, as permitted by law.
 
-### Types of Cookies
-- **Essential Cookies**: Required for platform functionality and security
-- **Analytics Cookies**: Used to understand user behavior and improve services
-- **Marketing Cookies**: Used for advertising and promotional purposes
-- **Preference Cookies**: Store user preferences and settings
+### 3.4. Business Transfers
 
-### Cookie Management
-- **Browser Settings**: Control cookies through your browser preferences
-- **Opt-Out Tools**: Use industry opt-out tools and preferences
-- **Cookie Policy**: Detailed information in our Cookie Policy
-- **Regular Review**: Periodic review and update of cookie practices
+If we reorganize or sell all or a portion of our assets, undergo a merger, or are acquired by another entity, we may transfer your information to the successor entity. If we go out of business or enter bankruptcy, your information would be an asset transferred or acquired by a third party.
 
-## International Data Transfers
+## 4. Security of Your Information
 
-### Cross-Border Processing
-- **Adequate Protection**: Ensuring appropriate safeguards for international transfers
-- **Standard Contractual Clauses**: Using EU-approved transfer mechanisms
-- **Certification Programs**: Participating in recognized privacy frameworks
-- **Local Requirements**: Complying with local data protection laws
+We use administrative, technical, and physical security measures to help protect your personal information. While we have taken reasonable steps to secure the personal information you provide to us, please be aware that despite our efforts, no security measures are perfect or impenetrable, and no method of data transmission can be guaranteed against any interception or other type of misuse.
 
-## Children's Privacy
+## 5. Policy for Children
 
-### Age Restrictions
-- **Minimum Age**: Services not intended for users under 16 years old
-- **Parental Consent**: Required for users under 18 in certain jurisdictions
-- **Data Collection**: No intentional collection of children's personal information
-- **Account Termination**: Immediate termination of accounts for underage users
+We do not knowingly solicit information from or market to children under the age of 13. If you become aware of any data we have collected from children under age 13, please contact us using the contact information provided below.
 
-## Changes to This Privacy Policy
+## 6. Controls for Do-Not-Track Features
 
-### Policy Updates
-- **Regular Review**: Annual review and update of privacy practices
-- **Material Changes**: Notification of significant policy changes
-- **Effective Date**: Clear indication of when changes take effect
-- **Historical Versions**: Maintaining records of previous policy versions
+Most web browsers and some mobile operating systems include a Do-Not-Track ("DNT") feature or setting you can activate to signal your privacy preference not to have data about your online browsing activities monitored and collected. No uniform technology standard for recognizing and implementing DNT signals has been finalized. As such, we do not currently respond to DNT browser signals or any other mechanism that automatically communicates your choice not to be tracked online.
 
-## Contact Information
+## 7. Your Privacy Rights
 
-### Privacy Questions
-For privacy-related inquiries, contact us at:
+Depending on your location, you may have the following rights regarding your personal data:
 
-- **Email**: privacy@blazemail.com
-- **Address**: BlazeMail Privacy Team, 123 Tech Street, San Francisco, CA 94105
-- **Phone**: +1 (555) 123-4567
-- **Response Time**: We respond to privacy inquiries within 30 days
+- **Right to Access:** You have the right to request copies of your personal data.
+- **Right to Rectification:** You have the right to request that we correct any information you believe is inaccurate or complete information you believe is incomplete.
+- **Right to Erasure:** You have the right to request that we erase your personal data, under certain conditions.
+- **Right to Restrict Processing:** You have the right to request that we restrict the processing of your personal data, under certain conditions.
+- **Right to Object to Processing:** You have the right to object to our processing of your personal data, under certain conditions.
+- **Right to Data Portability:** You have the right to request that we transfer the data that we have collected to another organization, or directly to you, under certain conditions.
 
-### Data Protection Officer
-- **EU Representative**: Available for EU residents and GDPR inquiries
-- **Contact Method**: dpo@blazemail.com
-- **Responsibilities**: Overseeing privacy compliance and user rights
+To exercise any of these rights, please contact us at support@blazemail.ai.
+
+## 8. Changes to This Privacy Policy
+
+We may update this Privacy Policy from time to time. The updated version will be indicated by an updated "Last Updated" date and the updated version will be effective as soon as it is accessible. We encourage you to review this Privacy Policy frequently to be informed of how we are protecting your information.
+
+## 9. Contact Us
+
+If you have questions or comments about this Privacy Policy, please contact us at:
+
+BlazeMail AI
+Email: support@blazemail.ai
 

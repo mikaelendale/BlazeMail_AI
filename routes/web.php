@@ -42,6 +42,9 @@ Route::get('/auth/{provider}/redirect', ProviderRedirectController::class)->name
 Route::get('/auth/{provider}/callback', ProviderCallbackController::class)->name('auth.callback')->middleware(['throttle:5,1', 'soon']);
 
 Route::get('/soon', function () {
+    if (config('app.status') !== 'coming-soon') {
+        abort(404);
+    }
     return Inertia::render('ComingSoon');
 })->name('coming-soon');
 
@@ -63,7 +66,7 @@ Route::get('/soon', function () {
 //     Route::get('/tag/{tag:slug}', [BlogController::class, 'tag'])->name('tag');
 //     Route::get('/author/{user:name}', [BlogController::class, 'author'])->name('author');
 //     Route::get('/{post:slug}', [BlogController::class, 'show'])->name('show');
-    
+
 //     // Comments
 //     Route::middleware('auth')->group(function () {
 //         Route::post('/{post:slug}/comments', [CommentController::class, 'store'])->name('comments.store');
@@ -86,7 +89,7 @@ Route::get('/soon', function () {
 
 // Credit management routes
 Route::middleware('auth', 'soon')->group(function () {
-    Route::get('/credits', [CreditController::class, 'index'])->name('credits.index'); 
+    Route::get('/credits', [CreditController::class, 'index'])->name('credits.index');
 });
 
 Route::get('/unsubscribe/{token}', UnsubscribeController::class)->name('unsubscribe');

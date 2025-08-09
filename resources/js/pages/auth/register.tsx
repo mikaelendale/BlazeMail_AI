@@ -13,7 +13,6 @@ type RegisterForm = {
     name: string;
     email: string;
     password: string;
-    password_confirmation: string;
 };
 
 export default function Register() {
@@ -21,7 +20,6 @@ export default function Register() {
         name: '',
         email: '',
         password: '',
-        password_confirmation: '',
         platform: navigator.userAgent || '',
     });
     // console.log(localStorage.getItem('blazemail_ref'));
@@ -29,7 +27,7 @@ export default function Register() {
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         post(route('register'), {
-            onFinish: () => reset('password', 'password_confirmation'),
+            onFinish: () => reset('password'),
         });
     };
     const handleSocialLogin = (provider: 'google' | 'github') => {
@@ -67,6 +65,7 @@ export default function Register() {
                             onChange={(e) => setData('name', e.target.value)}
                             disabled={processing}
                             placeholder="Full name"
+                            className='bg-primary-foreground border border-accent rounded-xl'
                         />
                         <InputError message={errors.name} className="mt-2" />
                     </div>
@@ -83,6 +82,7 @@ export default function Register() {
                             onChange={(e) => setData('email', e.target.value)}
                             disabled={processing}
                             placeholder="email@example.com"
+                            className='bg-primary-foreground border border-accent rounded-xl'
                         />
                         <InputError message={errors.email} />
                     </div>
@@ -99,34 +99,19 @@ export default function Register() {
                             onChange={(e) => setData('password', e.target.value)}
                             disabled={processing}
                             placeholder="Password"
+                            className='bg-primary-foreground border border-accent rounded-xl'
                         />
                         <InputError message={errors.password} />
                     </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="password_confirmation">Confirm password</Label>
-                        <Input
-                            id="password_confirmation"
-                            type="password"
-                            required
-                            tabIndex={4}
-                            autoComplete="new-password"
-                            value={data.password_confirmation}
-                            onChange={(e) => setData('password_confirmation', e.target.value)}
-                            disabled={processing}
-                            placeholder="Confirm password"
-                        />
-                        <InputError message={errors.password_confirmation} />
-                    </div>
-
-                    <Button type="submit" className="mt-2 w-full" tabIndex={5} disabled={processing}>
+                    <Button size={'lg'} type="submit" className="mt-2 w-full" tabIndex={5} disabled={processing}>
                         {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
                         Create account
                     </Button>
                 </div>
                 <div
                     onClick={handleGoogleLogin}
-                    className="w-full cursor-pointer rounded-xl border border-gray-200 bg-gray-50 p-4 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white focus:outline-none active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800 dark:focus:ring-offset-gray-900"
+                    className="w-full cursor-pointer rounded-xl shadow-sm border border-accent bg-primary-foreground p-4 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-accent focus:outline-none active:scale-[0.98] "
                     tabIndex={0}
                     role="button"
                     onKeyDown={(e) => e.key === 'Enter' && handleGoogleLogin()}
@@ -167,7 +152,7 @@ export default function Register() {
                 {/* GitHub Login Card */}
                 <div
                     onClick={handleGithubLogin}
-                    className="w-full cursor-pointer rounded-xl border border-gray-200 bg-gray-50 p-4 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-white focus:outline-none active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800 dark:focus:ring-offset-gray-900"
+                    className="w-full cursor-pointer rounded-xl shadow-sm border border-accent bg-primary-foreground p-4 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-accent focus:outline-none active:scale-[0.98]"
                     tabIndex={0}
                     role="button"
                     onKeyDown={(e) => e.key === 'Enter' && handleGithubLogin()}

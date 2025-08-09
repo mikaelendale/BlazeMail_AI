@@ -1,4 +1,5 @@
-import AuthLayoutTemplate from '@/layouts/auth/auth-split-layout';
+import { ModeToggle } from '@/components/ui/mode-toggle';
+import AuthLayoutTemplate from '@/layouts/auth/auth-simple-layout';
 import { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { useEffect } from 'react';
@@ -11,12 +12,22 @@ export default function AuthLayout({ children, title, description, ...props }: {
         if (flash?.success) toast.success(flash.success);
         if (flash?.error) toast.error(flash.error);
     }, [flash]);
-    console.log('fla`sh', flash);
-    // toast.success('Welcome back!');
     return (
         <AuthLayoutTemplate title={title} description={description} {...props}>
+            <ModeToggle className='fixed right-4 top-4 z-50' />
             {children}
-            <Toaster/>
+            <Toaster  expand 
+                toastOptions={{
+                    style: {
+                        background: 'var(--primary-foreground)',
+                        borderColor: 'var(--accent)',
+                        color: 'var(--primary)',
+                        borderRadius: '20px', // Modern, moderately rounded corners
+                    },
+                }
+                }
+                theme="system"
+            />
         </AuthLayoutTemplate>
     );
 }

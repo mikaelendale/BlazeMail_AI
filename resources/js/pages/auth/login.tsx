@@ -59,6 +59,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
                             placeholder="email@example.com"
+                            className='bg-primary-foreground border border-accent rounded-xl'
                         />
                         <InputError message={errors.email} />
                     </div>
@@ -81,6 +82,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
                             placeholder="Password"
+                            className='bg-primary-foreground border border-accent rounded-xl'
                         />
                         <InputError message={errors.password} />
                     </div>
@@ -96,14 +98,14 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                         <Label htmlFor="remember">Remember me</Label>
                     </div>
 
-                    <Button type="submit" className="mt-4 w-full" tabIndex={4} disabled={processing}>
+                    <Button type="submit" size={'lg'} className="mt-4 w-full " tabIndex={4} disabled={processing}>
                         {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
                         Log in
                     </Button>
                 </div>
                 <div
                     onClick={handleGoogleLogin}
-                    className="w-full cursor-pointer rounded-xl border border-gray-200 bg-gray-50 p-4 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white focus:outline-none active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800 dark:focus:ring-offset-gray-900"
+                    className="w-full cursor-pointer rounded-xl shadow-sm border border-accent bg-primary-foreground p-4 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-accent focus:outline-none active:scale-[0.98] "
                     tabIndex={0}
                     role="button"
                     onKeyDown={(e) => e.key === 'Enter' && handleGoogleLogin()}
@@ -144,7 +146,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                 {/* GitHub Login Card */}
                 <div
                     onClick={handleGithubLogin}
-                    className="w-full cursor-pointer rounded-xl border border-gray-200 bg-gray-50 p-4 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-white focus:outline-none active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800 dark:focus:ring-offset-gray-900"
+                    className="w-full cursor-pointer rounded-xl shadow-sm border border-accent bg-primary-foreground p-4 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-accent focus:outline-none active:scale-[0.98]"
                     tabIndex={0}
                     role="button"
                     onKeyDown={(e) => e.key === 'Enter' && handleGithubLogin()}

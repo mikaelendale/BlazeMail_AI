@@ -17,8 +17,9 @@ class NotificationController extends Controller
                 'timestamp' => $notification->created_at->diffForHumans(),
                 'isRead' => $notification->read(),
                 'type' => $notification->data['type'] ?? 'system',
-                'actionLabel' => $notification->data['actionLabel'] ?? null,
-                'actionUrl' => $notification->data['actionUrl'] ?? null,
+                'actionLabel' => $notification->data['action_text'] ?? null,
+                'actionText' => $notification->data['action_text'] ?? null,
+                'actionUrl' => $notification->data['action_url'] ?? null,
             ];
         });
         // dd($notifications, Auth::user()->id);

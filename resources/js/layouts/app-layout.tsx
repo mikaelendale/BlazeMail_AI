@@ -1,9 +1,10 @@
 import AppNavbar from '@/components/app-navbar';
 import FloatingActionButtons from '@/components/floating-logout';
 import JobTracker from '@/components/JobTracker';
+import PusherDebugger from '@/components/pusher-debugger';
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
-import { type BreadcrumbItem } from '@/types';
+import { SharedData, type BreadcrumbItem } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { useEffect, type ReactNode } from 'react';
 import { toast } from 'sonner';
@@ -14,7 +15,7 @@ interface AppLayoutProps {
 }
 
 export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => {
-    const { flash } = usePage().props as any;
+    const { flash } = usePage<SharedData>().props as any;
 
     useEffect(() => {
         if (flash?.success) toast.success(flash.success);
@@ -23,7 +24,7 @@ export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => {
     return (
         <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
             <AppNavbar />
-            <ModeToggle />
+            {/* <ModeToggle /> */}
             <div style={{ paddingLeft: 24, paddingRight: 24, marginTop: 80 }}>{children}</div>
             <FloatingActionButtons />
             <JobTracker />

@@ -125,7 +125,7 @@ class GmailOAuthController extends Controller
                 'state' => $state,
             ]);
             return redirect($returnUrl)
-                ->with('error', 'Gmail authorization failed: ' . $errorMessage);
+                ->with('error', 'Gmail authorization failed');
         }
 
         $code = $request->query('code');
@@ -158,7 +158,7 @@ class GmailOAuthController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             return redirect($returnUrl)
-                ->with('error', 'Failed to connect Gmail account: ' . $e->getMessage());
+                ->with('error', 'Failed to connect Gmail account' );
         }
     }
 }

@@ -177,36 +177,45 @@ class EmailReviewController extends Controller
     {
         $user = auth()->user();
 
+        Log::info("Starting sendAll for batch {$batch} by user {$user->id}");
+
         $preparedEmails = PreparedEmail::where('batch_id', $batch)
             ->where('user_id', $user->id)
             ->where('status', 'pending')
             ->with(['emailAccount'])
             ->get();
 
+        Log::info("Found {$preparedEmails->count()} pending emails to send for batch {$batch}");
+
         if ($preparedEmails->isEmpty()) {
+            Log::warning("No emails found to send for batch {$batch}");
             return response()->json(['error' => 'No emails found to send'], 400);
         }
 
-        // Auto-approve all emails and send them
         $gmailService = app(GmailService::class);
         $sent = 0;
         $failed = 0;
 
         foreach ($preparedEmails as $email) {
             try {
-                // Auto-approve
+                Log::info("Auto-approving email ID {$email->id}");
                 $email->update(['status' => 'approved']);
 
-                // Simulate sending (uncomment for real sending)
-                $result = [
-                    'success' => true,
-                    'message_id' => uniqid('sent_', true)
-                ];
+                Log::info("Sending email ID {$email->id} to {$email->contact_email} via account {$email->emailAccount->email}");
 
                 // Real sending:
-                // $result = $gmailService->sendEmail([...]);
+                $result = $gmailService->sendEmail(
+                    $email->emailAccount,
+                    [
+                        'to' => $email->contact_email,
+                        'from' => $email->emailAccount->email,
+                        'subject' => $email->subject,
+                        'body' => $email->body
+                    ]
+                );
 
                 if ($result['success']) {
+                    Log::info("Email ID {$email->id} sent successfully, message_id: {$result['message_id']}");
                     $email->update([
                         'status' => 'sent',
                         'sent_at' => now(),
@@ -214,6 +223,7 @@ class EmailReviewController extends Controller
                     ]);
                     $sent++;
                 } else {
+                    Log::error("Email ID {$email->id} failed to send: " . ($result['error'] ?? 'Unknown error'));
                     $email->update([
                         'status' => 'failed',
                         'send_error' => $result['error'] ?? 'Unknown error'
@@ -224,24 +234,20 @@ class EmailReviewController extends Controller
                 usleep(500000); // 0.5 second delay
 
             } catch (Exception $e) {
+                Log::error("Exception while sending email ID {$email->id}: " . $e->getMessage());
                 $email->update([
                     'status' => 'failed',
                     'send_error' => $e->getMessage()
                 ]);
                 $failed++;
-
-                Log::error('Failed to send email', [
-                    'email_id' => $email->id,
-                    'error' => $e->getMessage()
-                ]);
             }
         }
 
-        return response()->json([
-            'success' => true,
-            'sent' => $sent,
-            'failed' => $failed,
-            'message' => "Auto-sent {$sent} emails" . ($failed > 0 ? ", {$failed} failed" : "")
-        ]);
+        Log::info("Finished sendAll for batch {$batch}: {$sent} sent, {$failed} failed");
+
+        return redirect()->back()->with(
+            'success',
+            "Auto-sent {$sent} emails" . ($failed > 0 ? ", {$failed} failed" : "")
+        );
     }
 }

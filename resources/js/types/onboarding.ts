@@ -40,27 +40,23 @@ export interface UserInfo {
     company: string;
     industry: string;
     phone?: string;
+}
+
+export interface UsageAndIntegrations {
     emailVolume?: string;
     campaignGoal?: string;
     crm?: string;
     referralSource?: string;
 }
 
-export interface EmailData {
-    recipientName: string;
-    subject: string;
-    content: string;
-    tone: 'professional' | 'friendly' | 'casual' | 'formal';
-}
-
 export interface OnboardingData {
     emailConnected: boolean;
     profileCompleted: boolean;
-    firstEmailSent: boolean;
+    // New field for usage and integrations
+    usageAndIntegrationsCompleted: boolean;
+    usageAndIntegrations: UsageAndIntegrations;
     userGoal: string;
     customGoal: string;
     userInfo: UserInfo;
-    emailData: EmailData;
 }
-
-export type OnboardingStep = 'welcome' | 'survey' | 'email-creation' | 'completion';
+ 

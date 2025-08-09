@@ -15,7 +15,19 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWi
                 {/* <AppSidebarHeader breadcrumbs={breadcrumbs} /> */}
                 {children}
             </AppContent>
-            <Toaster/>
+
+            <Toaster expand
+                toastOptions={{
+                    style: {
+                        background: 'var(--primary-foreground)',
+                        borderColor: 'var(--accent)',
+                        color: 'var(--primary)',
+                        borderRadius: '20px', // Modern, moderately rounded corners
+                    },
+                }
+                }
+                theme="system"
+            />
         </AppShell>
     );
 }

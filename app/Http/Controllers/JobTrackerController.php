@@ -66,6 +66,7 @@ class JobTrackerController extends Controller
             'formatted_jobs_count' => $formattedJobs->count()
         ]);
 
+        
         return response()->json($formattedJobs);
     }
 

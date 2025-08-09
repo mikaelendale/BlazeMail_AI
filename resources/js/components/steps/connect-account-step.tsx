@@ -1,31 +1,14 @@
 'use client';
 
-import type React from 'react';
-
-import { Alert, AlertDescription } from '@/components/ui/alert';
-
-import { Badge } from '@/components/ui/badge';
-
 import { Button } from '@/components/ui/button';
-
-import { Card, CardContent } from '@/components/ui/card'; 
-
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Clock, Server, Trash2 } from 'lucide-react';
-
-import { useEffect, useState } from 'react';
-
-interface OnboardingData {   emailConnected?: boolean;
-}
-
-interface ConnectAccountStepProps {
-    onNext: () => void;
-    onPrev: () => void;
-    onboardingData: OnboardingData;
-    updateOnboardingData: (updates: Partial<OnboardingData>) => void;
-    // Add these props to get real data from Laravel
-    connectedAccounts?: EmailConnection[];
-    flashMessage?: { type: 'success' | 'error'; message: string };
-}
+import type { React } from 'react';
+import type { OnboardingData } from '@/types/onboarding';
+import { useState, useEffect } from 'react';
 
 interface EmailConnection {
     id: number;
@@ -40,6 +23,25 @@ interface EmailConnection {
     reputation: 'excellent' | 'good' | 'fair' | 'poor' | 'unknown';
 }
 
+interface ConnectAccountStepProps {
+    onNext: () => void;
+    onPrev: () => void;
+    onboardingData: OnboardingData;
+    updateOnboardingData: (updates: Partial<OnboardingData>) => void;
+    connectedAccounts?: EmailConnection[];
+    flashMessage?: { type: 'success' | 'error'; message: string };
+    accounts?: any[];
+    providers?: any[];
+    isValid?: boolean;
+}
+
+// Validation function for connect account step
+export const validateConnectAccountStep = (data: OnboardingData, accounts: any[] = []): boolean => {
+    // This step is skippable, so it's always valid
+    // But we can check if email is connected for better UX
+    return true; // Always valid since it's skippable
+};
+
 export function ConnectAccountStep({
     onNext,
     onPrev,
@@ -47,12 +49,14 @@ export function ConnectAccountStep({
     updateOnboardingData,
     connectedAccounts = [],
     flashMessage,
-    accounts = [], 
+    accounts = [],
     providers = [],
-}: ConnectAccountStepProps) { 
+    isValid = true,
+}: ConnectAccountStepProps) {
+    const [code, setCode] = useState(['', '', '', '']);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
-    const [isConnecting, setIsConnecting] = useState<string | null>(null); 
+    const [isConnecting, setIsConnecting] = useState<string | null>(null);
 
     const oauthProviders = [
         {
@@ -86,6 +90,33 @@ export function ConnectAccountStep({
         },
     ];
 
+    const handleCodeChange = (index: number, value: string) => {
+        if (value.length <= 1 && /^\d*$/.test(value)) {
+            const newCode = [...code];
+            newCode[index] = value;
+            setCode(newCode);
+
+            // Auto-focus next input
+            if (value && index < 3) {
+                const nextInput = document.getElementById(`code-${index + 1}`);
+                nextInput?.focus();
+            }
+        }
+    };
+
+    const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
+        if (e.key === 'Backspace' && !code[index] && index > 0) {
+            const prevInput = document.getElementById(`code-${index - 1}`);
+            prevInput?.focus();
+        }
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        updateOnboardingData({ emailConnected: true });
+        onNext();
+    };
+
     // Handle Gmail OAuth - REAL REDIRECT WITH RETURN URL! 🔥
     const handleGmailConnect = () => {
         console.log("Starting Gmail OAuth...")
@@ -97,8 +128,7 @@ export function ConnectAccountStep({
         return
     }
 
-
-   const getProviderIcon = (provider: string) => {
+    const getProviderIcon = (provider: string) => {
         switch (provider) {
             case 'gmail':
                 return <img src="https://api.iconify.design/logos/google-icon.svg" className="h-5 w-5" alt="Gmail" />;
@@ -142,12 +172,12 @@ export function ConnectAccountStep({
     };
 
     return (
-        
-        <div className="mx-auto max-w-md px-4 py-8">
+        <div className="mx-auto text-center justify-center sm:max-w-md max-w-sm px-4 py-8">
             <div className="mb-8 text-center">
                 <h2 className="mb-2 text-2xl font-semibold">Connect Email</h2>
                 <p className="text-sm text-muted-foreground">Connect your email to continue</p>
-            </div> 
+            </div>
+
             {/* Connected Accounts - REAL DATA! */}
             {accounts.length > 0 && (
                 <div className="mb-8">
@@ -156,19 +186,21 @@ export function ConnectAccountStep({
                         {accounts.map((account) => (
                             <Card key={account.id} className="border border-border">
                                 <CardContent className="p-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                        <div className="flex flex-1 items-center gap-3 min-w-0">
                                             <div className="flex items-center gap-2">
                                                 {getProviderIcon(account.provider)}
                                                 <div className="min-w-0">
                                                     <div className="mb-1 flex items-center gap-2">
-                                                        <p className="truncate font-medium text-foreground">{account.email}</p>
+                                                        <p className="truncate font-medium text-foreground max-w-[190px] sm:max-w-none">
+                                                            {account.email}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                                        <span>Added {formatDate(account.createdAt)}</span>
                                                         <Badge className={`text-xs ${getStatusColor(account.status)}`}>
                                                             <span className="ml-1 capitalize">{account.status}</span>
                                                         </Badge>
-                                                    </div>
-                                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                                        <span>Added {formatDate(account.createdAt)}</span> 
                                                     </div>
                                                 </div>
                                             </div>
@@ -180,14 +212,13 @@ export function ConnectAccountStep({
                     </div>
                 </div>
             )}
-
             {/* OAuth Providers */}
             <div className="grid grid-cols-2 gap-3">
                 {oauthProviders.map((provider) => (
                     <Button
                         key={provider.id}
-                        variant="outline"
-                        className={`relative h-12 w-full justify-start bg-transparent ${!provider.enabled ? 'cursor-not-allowed opacity-50' : ''}`}
+                        variant="neutral"
+                        className={`relative rounded-xl h-12 w-full justify-start  ${!provider.enabled ? 'cursor-not-allowed opacity-50' : ''}`}
                         onClick={() => provider.id === 'gmail' && provider.enabled && handleGmailConnect()}
                         disabled={!provider.enabled || isConnecting === provider.id}
                     >
@@ -202,7 +233,6 @@ export function ConnectAccountStep({
                             />
                         )}
                         {isConnecting === provider.id ? 'Connecting...' : provider.name}
-
                         {provider.coming_soon && (
                             <span className="absolute -top-1 -right-1 rounded bg-orange-500 px-1 py-0.5 text-[10px] text-white">Soon</span>
                         )}
@@ -218,22 +248,12 @@ export function ConnectAccountStep({
                         create.{' '}
                         <a href="/privacy" className="text-blue-600 underline">
                             Privacy policy
-                    </a>
+                        </a>
                         .
                     </p>
                 </AlertDescription>
             </Alert>
 
-            <div className="flex justify-between pt-8">
-                <Button variant="ghost" onClick={onPrev}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                </Button>
-                <Button onClick={onNext}>
-                    {accounts.length > 0 ? 'Continue' : 'Skip'}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-            </div>
         </div>
     );
 }

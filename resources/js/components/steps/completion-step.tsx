@@ -9,21 +9,42 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { OnboardingData } from '@/types/onboarding';
 import { router } from '@inertiajs/react';
 import { ArrowRight, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+
 const STORAGE_KEY = 'blazemail_onboarding';
 
 interface CompletionStepProps {
     onboardingData: OnboardingData;
     onFinalSubmit?: (formData: FormData) => Promise<void>;
     isSubmitting?: boolean;
+    isValid?: boolean;
 }
 
-export function CompletionStep({ onboardingData, onFinalSubmit, isSubmitting = false }: CompletionStepProps) {
+// Validation function for completion step
+export const validateCompletionStep = (data: OnboardingData): boolean => {
+    // Completion step is always valid - user just needs to submit
+    return true;
+};
+
+export function CompletionStep({ onboardingData, onFinalSubmit, isSubmitting = false, isValid = true }: CompletionStepProps) {
     const [newsletter, setNewsletter] = useState(true);
-    const [rating, setRating] = useState('');  
+    const [rating, setRating] = useState('');
+    const [localIsValid, setLocalIsValid] = useState(isValid);
+
+    // Update local validation when data changes
+    useEffect(() => {
+        const valid = validateCompletionStep(onboardingData);
+        setLocalIsValid(valid);
+    }, [onboardingData]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (!localIsValid) {
+            toast.error('Please complete all required steps before submitting');
+            return;
+        }
 
         const formData = new FormData();
         Object.entries(onboardingData).forEach(([key, value]) => {
@@ -34,7 +55,7 @@ export function CompletionStep({ onboardingData, onFinalSubmit, isSubmitting = f
             }
         });
         formData.append('newsletter', String(newsletter));
-        formData.append('rating', rating); 
+        formData.append('rating', rating);
 
         router.post(route('user.onboarding.submit'), formData, {
             isSubmitting: true,
@@ -48,23 +69,29 @@ export function CompletionStep({ onboardingData, onFinalSubmit, isSubmitting = f
                     replace: true,
                 });
             },
+            onError: (error) => {
+                toast.error('Error submitting onboarding data');
+            },
+            onFinish: () => {
+                // Optionally handle any cleanup or final actions
+            },
             preserveScroll: true,
         });
     };
 
     return (
         <div className="space-y-8 py-12">
-            <div className="space-y-6 text-center">
+            <div className="space-y-4 flex flex-col items-center text-center">
                 <div className="space-y-4">
-                    <h1 className="text-4xl font-bold"> You're All Set!</h1>
-                    <p className="mx-auto max-w-md text-xl text-muted-foreground">
+                    <h1 className="text-3xl font-bold"> You're All Set!</h1>
+                    <p className="mx-auto max-w-sm text-muted-foreground">
                         Welcome to BlazeMail! You're ready to create amazing AI-powered emails.
                     </p>
                 </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-4">
+                <div className="space-y-4 flex flex-col items-center text-center">
                     <h3 className="text-lg font-semibold">Before you go...</h3>
 
                     {/* Newsletter Signup */}
@@ -107,23 +134,27 @@ export function CompletionStep({ onboardingData, onFinalSubmit, isSubmitting = f
                     </div>
                 </div>
 
-                <Button type="submit" size="lg" className="w-full" onClick={handleSubmit} disabled={isSubmitting}>
-                    {isSubmitting ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Completing Setup...
-                        </>
-                    ) : (
-                        <>
-                            Complete & Go to Dashboard
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                        </>
-                    )}
-                </Button>
+                <div className="flex justify-center">
+                    <Button
+                        type="submit"
+                        size="default"
+                        className="mt-5 items-center text-center"
+                        disabled={isSubmitting || !localIsValid}
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Completing Setup...
+                            </>
+                        ) : (
+                            <>
+                                Complete & Go to Dashboard
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                            </>
+                        )}
+                    </Button>
+                </div> 
             </form>
-            <Button onClick={() => localStorage.removeItem(STORAGE_KEY)}>
-                clear data
-            </Button>
         </div>
     );
 }

@@ -17,22 +17,29 @@ export function ProgressBar({ currentStep, totalSteps, steps }: ProgressBarProps
     const currentStepConfig = steps[currentStep];
 
     return (
-        <div className="w-full border-b rounded-2xl bg-accent">
-            <div className="mx-auto max-w-2xl p-4">
-                <div className="mb-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
-                            Step {currentStep + 1} of {totalSteps}
-                        </span>
-                        {currentStepConfig.skippable && (
-                            <Badge variant="default"  className="text-xs size-min">
-                                Optional
-                            </Badge>
-                        )}
+        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+            <div className="mx-auto max-w-7xl px-4 py-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold">BlazeMail Setup</span>
+                            {currentStepConfig.skippable && (
+                                <Badge variant="secondary" className="text-xs">
+                                    Optional
+                                </Badge>
+                            )}
+                        </div>
+                        <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>Step {currentStep + 1} of {totalSteps}</span>
+                            <span>•</span>
+                            <span>{currentStepConfig.title}</span>
+                        </div>
                     </div>
-                    <span className="text-sm font-medium">{Math.round(progress)}%</span>
+                    <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium">{Math.round(progress)}%</span>
+                        <Progress value={progress} className="w-24 h-2" />
+                    </div>
                 </div>
-                <Progress value={progress} className="h-2" /> 
             </div>
         </div>
     );

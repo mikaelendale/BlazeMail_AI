@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\ImprovedValidateEmailTokensJob;
 use App\Jobs\ValidateEmailTokensJob;
 use App\Models\EmailAccount;
 use Illuminate\Console\Command;
@@ -32,7 +33,7 @@ class HealErrorEmailAccounts extends Command
             $this->info("Found {$errorAccounts->count()} accounts in error state. Dispatching validation jobs...");
 
             foreach ($errorAccounts as $account) {
-                ValidateEmailTokensJob::dispatch($account)
+                ImprovedValidateEmailTokensJob::dispatch($account)
                     ->onQueue('email-validation')
                     ->delay(now()->addSeconds(rand(1, 30))); // Add a small random delay to spread load
 

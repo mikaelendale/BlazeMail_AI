@@ -1,179 +1,83 @@
-# Terms of Service
+# BlazeMail AI - Terms of Service
 
-**Last updated: January 15, 2024**
+**Last Updated: August 6, 2025**
 
-Welcome to BlazeMail! These Terms of Service ("Terms") govern your use of our email marketing platform and services.
+Welcome to BlazeMail AI! These Terms of Service ("Terms") govern your access to and use of the BlazeMail AI website, services, and applications (collectively, the "Service"). By accessing or using the Service, you agree to be bound by these Terms. If you do not agree to these Terms, you may not access or use the Service.
 
-## Acceptance of Terms
+## 1. Acceptance of Terms
 
-### Agreement to Terms
-By accessing or using BlazeMail, you agree to be bound by these Terms and our Privacy Policy. If you disagree with any part of these terms, you may not access the service.
+BlazeMail AI is provided by [Your Company Name/Founder Name, e.g., Manus AI, on behalf of BlazeMail AI]. By creating an account, accessing, or using the Service, you confirm that you are at least 18 years old and that you agree to these Terms. If you are using the Service on behalf of an organization, you are agreeing to these Terms for that organization and promising that you have the authority to bind that organization to these Terms.
 
-### Eligibility
-- **Age Requirement**: You must be at least 18 years old to use our services
-- **Legal Capacity**: You must have the legal authority to enter into this agreement
-- **Business Use**: Services are intended for legitimate business purposes only
-- **Compliance**: You must comply with all applicable laws and regulations
+## 2. Changes to Terms
 
-## Account Registration and Security
+We may modify these Terms at any time. We will notify you of any material changes by posting the new Terms on the Service or by sending you an email. Your continued use of the Service after such changes constitutes your acceptance of the new Terms. If you do not agree to the new Terms, you must stop using the Service.
 
-### Account Creation
-- **Accurate Information**: Provide truthful and complete registration information
-- **Account Responsibility**: You are responsible for all activities under your account
-- **Security Measures**: Maintain the confidentiality of your login credentials
-- **Unauthorized Access**: Notify us immediately of any unauthorized account access
+## 3. Your Account
 
-### Account Types
-- **Individual Accounts**: For personal and small business use
-- **Team Accounts**: For collaborative team environments
-- **Enterprise Accounts**: For large organizations with custom requirements
-- **Trial Accounts**: Limited-time access with restricted features
+To use certain features of the Service, you must register for an account. You agree to provide accurate, current, and complete information during the registration process and to update such information to keep it accurate, current, and complete. You are responsible for safeguarding your password and for any activities or actions under your account. You agree to notify us immediately of any unauthorized use of your account.
 
-## Acceptable Use Policy
+## 4. Use of the Service
 
-### Permitted Uses
-- **Email Marketing**: Legitimate marketing communications to consenting recipients
-- **Newsletters**: Regular updates and information sharing with subscribers
-- **Transactional Emails**: Order confirmations, receipts, and service notifications
-- **Educational Content**: Training materials and informational resources
+### 4.1. License to Use
 
-### Prohibited Activities
-- **Spam**: Sending unsolicited bulk email or spam messages
-- **Illegal Content**: Distributing illegal, harmful, or offensive content
-- **Fraud**: Engaging in fraudulent, deceptive, or misleading practices
-- **Harassment**: Harassing, threatening, or abusing other users or recipients
+Subject to your compliance with these Terms, BlazeMail AI grants you a limited, non-exclusive, non-transferable, non-sublicensable license to access and use the Service for your personal or internal business purposes.
 
-### Content Standards
-- **Truthful Marketing**: All marketing claims must be accurate and substantiated
-- **Consent Requirements**: Recipients must have explicitly opted in to receive emails
-- **Unsubscribe Options**: All emails must include clear unsubscribe mechanisms
-- **Industry Compliance**: Adherence to CAN-SPAM, GDPR, and other relevant regulations
+### 4.2. Prohibited Conduct
 
-## Subscription Plans and Billing
+You agree not to:
 
-### Plan Types
-- **Free Plan**: Limited features and sending volume
-- **Starter Plan**: Basic features for small businesses
-- **Professional Plan**: Advanced features for growing businesses
-- **Enterprise Plan**: Custom solutions for large organizations
+- Use the Service for any illegal or unauthorized purpose.
+- Send unsolicited or unauthorized advertising, promotional materials, spam, or any other form of solicitation.
+- Impersonate any person or entity, or falsely state or otherwise misrepresent your affiliation with a person or entity.
+- Interfere with or disrupt the integrity or performance of the Service or data contained therein.
+- Attempt to gain unauthorized access to the Service or its related systems or networks.
+- Use the Service to send emails that are deceptive, misleading, or violate any applicable laws or regulations (e.g., CAN-SPAM Act, GDPR).
+- Use the Service to generate or send content that is hateful, threatening, abusive, or otherwise objectionable.
 
-### Billing Terms
-- **Payment Methods**: Credit card, PayPal, and wire transfer options
-- **Billing Cycles**: Monthly or annual subscription options
-- **Auto-Renewal**: Subscriptions automatically renew unless cancelled
-- **Price Changes**: 30-day notice for subscription price changes
+### 4.3. Gmail Integration
 
-### Refund Policy
-- **Satisfaction Guarantee**: 30-day money-back guarantee for new subscribers
-- **Prorated Refunds**: Partial refunds for mid-cycle cancellations
-- **Usage-Based Charges**: No refunds for consumed email credits or usage
-- **Dispute Resolution**: Fair resolution process for billing disputes
+BlazeMail AI integrates with your Gmail account via OAuth. By connecting your Gmail account, you grant BlazeMail AI permission to:
 
-## Intellectual Property Rights
+- Send emails on your behalf from your Gmail account.
+- Read email metadata (e.g., open and reply tracking, subject lines) for analytics purposes.
+- Access your contacts for outreach purposes (if you choose to import them).
 
-### Our Rights
-- **Platform Ownership**: BlazeMail owns all rights to the platform and technology
-- **Trademark Protection**: BlazeMail trademarks and logos are protected
-- **Content License**: We grant you a limited license to use our platform
-- **Feedback Rights**: We may use your feedback to improve our services
+We do not store your Gmail password. Your data is handled in accordance with our Privacy Policy.
 
-### Your Rights
-- **Content Ownership**: You retain ownership of your email content and data
-- **License Grant**: You grant us a license to process and deliver your content
-- **Data Portability**: You can export your data at any time
-- **Third-Party Content**: You are responsible for respecting third-party rights
+## 5. Intellectual Property
 
-## Data Protection and Privacy
+All intellectual property rights in the Service and its content (excluding your User Content) are owned by BlazeMail AI or its licensors. You may not use any of our trademarks, logos, or other proprietary graphics without our prior written permission.
 
-### Data Processing
-- **Lawful Basis**: We process data based on contract performance and legitimate interests
-- **Data Minimization**: We collect only necessary data for service delivery
-- **Purpose Limitation**: Data used only for specified, legitimate purposes
-- **Retention Limits**: Data retained only as long as necessary
+## 6. User Content
 
-### Your Responsibilities
-- **Recipient Consent**: Ensure you have proper consent to email recipients
-- **Data Accuracy**: Maintain accurate and up-to-date contact information
-- **Privacy Compliance**: Comply with applicable privacy laws and regulations
-- **Security Measures**: Implement appropriate security measures for your data
+You are solely responsible for the content of the emails you send using the Service ("User Content"). You represent and warrant that you have all necessary rights to your User Content and that your User Content does not infringe or violate any third-party rights.
 
-## Service Availability and Support
+## 7. Fees and Payment
 
-### Service Levels
-- **Uptime Commitment**: 99.9% uptime service level agreement
-- **Maintenance Windows**: Scheduled maintenance with advance notice
-- **Performance Standards**: Reasonable email delivery speeds and reliability
-- **Monitoring Systems**: Continuous monitoring of service performance
+Some features of the Service may require payment. You agree to pay all applicable fees as described on the Service. All fees are non-refundable unless otherwise stated in our Refund Policy. We reserve the right to change our prices at any time.
 
-### Support Services
-- **Documentation**: Comprehensive help documentation and tutorials
-- **Email Support**: Support ticket system with response time commitments
-- **Live Chat**: Real-time support during business hours
-- **Phone Support**: Available for Professional and Enterprise plans
+## 8. Termination
 
-## Limitation of Liability
+We may terminate or suspend your access to the Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach these Terms. Upon termination, your right to use the Service will immediately cease.
 
-### Service Disclaimers
-- **As-Is Basis**: Services provided "as is" without warranties
-- **No Guarantees**: No guarantee of specific results or outcomes
-- **Third-Party Services**: Not responsible for third-party service failures
-- **Force Majeure**: Not liable for events beyond our reasonable control
+## 9. Disclaimer of Warranties
 
-### Liability Limits
-- **Monetary Limits**: Liability limited to amounts paid in the preceding 12 months
-- **Consequential Damages**: No liability for indirect or consequential damages
-- **Business Losses**: Not responsible for lost profits or business opportunities
-- **Data Loss**: Limited liability for data loss or corruption
+The Service is provided on an "AS IS" and "AS AVAILABLE" basis. BlazeMail AI makes no warranties, express or implied, regarding the Service, including but not limited to implied warranties of merchantability, fitness for a particular purpose, and non-infringement.
 
-## Termination and Suspension
+## 10. Limitation of Liability
 
-### Termination Rights
-- **User Termination**: You may terminate your account at any time
-- **Our Termination**: We may terminate accounts for Terms violations
-- **Immediate Suspension**: Suspension for serious violations or security threats
-- **Notice Requirements**: Reasonable notice for non-emergency terminations
+In no event shall BlazeMail AI, its directors, employees, or agents be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from (i) your access to or use of or inability to access or use the Service; (ii) any conduct or content of any third party on the Service; (iii) any content obtained from the Service; and (iv) unauthorized access, use, or alteration of your transmissions or content, whether based on warranty, contract, tort (including negligence), or any other legal theory, whether or not we have been informed of the possibility of such damage.
 
-### Post-Termination
-- **Data Access**: Limited time to export your data after termination
-- **Service Cessation**: Immediate cessation of service access
-- **Outstanding Obligations**: Payment obligations survive termination
-- **Data Deletion**: Secure deletion of data after retention period
+## 11. Indemnification
 
-## Dispute Resolution
+You agree to defend, indemnify, and hold harmless BlazeMail AI and its licensees and licensors, and their employees, contractors, agents, officers, and directors, from and against any and all claims, damages, obligations, losses, liabilities, costs or debt, and expenses (including but not limited to attorney's fees), resulting from or arising out of (a) your use and access of the Service, by you or any person using your account and password; or (b) a breach of these Terms.
 
-### Informal Resolution
-- **Direct Communication**: Attempt to resolve disputes through direct contact
-- **Good Faith Efforts**: Both parties commit to good faith resolution attempts
-- **Documentation**: Maintain records of dispute resolution efforts
-- **Escalation Process**: Clear escalation path for unresolved issues
+## 12. Governing Law
 
-### Formal Procedures
-- **Governing Law**: Disputes governed by California state law
-- **Jurisdiction**: Exclusive jurisdiction in California state and federal courts
-- **Arbitration Option**: Binding arbitration available for certain disputes
-- **Class Action Waiver**: Waiver of class action and jury trial rights
+These Terms shall be governed and construed in accordance with the laws of [Your Country/State], without regard to its conflict of law provisions.
 
-## Changes to Terms
+## 13. Contact Us
 
-### Modification Rights
-- **Update Authority**: We reserve the right to modify these Terms
-- **Notice Requirements**: 30-day advance notice for material changes
-- **Continued Use**: Continued use constitutes acceptance of modified Terms
-- **Objection Rights**: Right to terminate if you disagree with changes
+If you have any questions about these Terms, please contact us at support@blazemail.ai.
 
-## Contact Information
-
-### Legal Inquiries
-For legal questions or concerns:
-
-- **Email**: legal@blazemail.com
-- **Address**: BlazeMail Legal Department, 123 Tech Street, San Francisco, CA 94105
-- **Phone**: +1 (555) 123-4567
-- **Business Hours**: Monday-Friday, 9 AM - 5 PM PST
-
-### General Support
-- **Support Email**: support@blazemail.com
-- **Help Center**: help.blazemail.com
-- **Community Forum**: community.blazemail.com
-- **Status Page**: status.blazemail.com
-
+---
