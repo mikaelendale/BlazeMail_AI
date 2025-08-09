@@ -345,22 +345,7 @@ export const OptimizedSidebar = memo(function OptimizedSidebar({
 
                     {/* Scrollable Content */}
                     <div className="custom-scrollbar flex-1 space-y-6 overflow-y-auto p-6">
-                        {/* Personalization Toggle */}
-                        <div className="flex items-center justify-between rounded-xl bg-muted/30 p-3">
-                            <div className="flex items-center gap-2">
-                                <Label className="text-sm font-medium">Personalization</Label>
-                                <Tooltip>
-                                    <TooltipTrigger>
-                                        <HelpCircle className="h-3 w-3 text-muted-foreground" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Enable for individual, personalized emails</p>
-                                        <p>Disable for generic, one-size-fits-all emails</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </div>
-                            <Switch checked={formData.personalization} onCheckedChange={handleSwitchChange('personalization')} />
-                        </div>
+                        {/* Personalization fields always visible */}
 
                         {/* Basic Info */}
                         <div className="space-y-4">
@@ -391,60 +376,52 @@ export const OptimizedSidebar = memo(function OptimizedSidebar({
                                         className="h-10 rounded-xl border-border text-sm transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                                     />
                                 </div>
-
-                                {/* Conditional fields based on personalization */}
-                                {formData.personalization && (
-                                    <>
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-1">
-                                                <Label className="text-xs font-medium text-muted-foreground">
-                                                    Recipient <span className="text-destructive">*</span>
-                                                </Label>
-                                                <Tooltip>
-                                                    <TooltipTrigger>
-                                                        <HelpCircle className="h-3 w-3 text-muted-foreground" />
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Who you're writing to (required for personalized emails)</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </div>
-                                            <Input
-                                                placeholder="Sarah Johnson"
-                                                value={formData.recipient}
-                                                onChange={handleInputChange('recipient')}
-                                                className={`h-10 rounded-xl border-border text-sm transition-all duration-200 focus:ring-2 focus:ring-primary/20 ${
-                                                    formData.personalization && !formData.recipient ? 'border-destructive/50' : ''
-                                                }`}
-                                                required={formData.personalization}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-1">
-                                                <Label className="text-xs font-medium text-muted-foreground">
-                                                    Target Audience <span className="text-destructive">*</span>
-                                                </Label>
-                                                <Tooltip>
-                                                    <TooltipTrigger>
-                                                        <HelpCircle className="h-3 w-3 text-muted-foreground" />
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Type of person you're targeting (required for personalized emails)</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </div>
-                                            <Input
-                                                placeholder="SaaS founders"
-                                                value={formData.audience}
-                                                onChange={handleInputChange('audience')}
-                                                className={`h-10 rounded-xl border-border text-sm transition-all duration-200 focus:ring-2 focus:ring-primary/20 ${
-                                                    formData.personalization && !formData.audience ? 'border-destructive/50' : ''
-                                                }`}
-                                                required={formData.personalization}
-                                            />
-                                        </div>
-                                    </>
-                                )}
+                                {/* Recipient - always visible */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-1">
+                                        <Label className="text-xs font-medium text-muted-foreground">
+                                            Recipient <span className="text-destructive">*</span>
+                                        </Label>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Who you're writing to (required)</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </div>
+                                    <Input
+                                        placeholder="Sarah Johnson"
+                                        value={formData.recipient}
+                                        onChange={handleInputChange('recipient')}
+                                        className={`h-10 rounded-xl border-border text-sm transition-all duration-200 focus:ring-2 focus:ring-primary/20 ${!formData.recipient ? 'border-destructive/50' : ''}`}
+                                        required
+                                    />
+                                </div>
+                                {/* Target Audience - always visible */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-1">
+                                        <Label className="text-xs font-medium text-muted-foreground">
+                                            Target Audience <span className="text-destructive">*</span>
+                                        </Label>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Type of person you're targeting (required)</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </div>
+                                    <Input
+                                        placeholder="SaaS founders"
+                                        value={formData.audience}
+                                        onChange={handleInputChange('audience')}
+                                        className={`h-10 rounded-xl border-border text-sm transition-all duration-200 focus:ring-2 focus:ring-primary/20 ${!formData.audience ? 'border-destructive/50' : ''}`}
+                                        required
+                                    />
+                                </div>
                             </div>
                         </div>
 
