@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'onboardingComplete' => \App\Http\Middleware\onboardingCompleteMiddleware::class,
             'credits' => \App\Http\Middleware\CheckCredits::class,
             'soon' => \App\Http\Middleware\SoonMiddleware::class,
+            'payment' => \App\Http\Middleware\PaymentGate::class,
         ]);
 
         $middleware->web(append: [
