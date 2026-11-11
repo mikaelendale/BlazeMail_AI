@@ -12,7 +12,7 @@ class TestWebhookSignature extends Command
 
     public function handle()
     {
-        $webhookSecret = config('cashier.webhook_secret');
+        $webhookSecret = config('services.paddle.webhook_secret');
 
         if (empty($webhookSecret)) {
             $this->error('PADDLE_WEBHOOK_SECRET is not set in .env file');

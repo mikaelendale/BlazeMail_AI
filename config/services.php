@@ -68,6 +68,7 @@ return [
         'growth_annual_amount' => env('GROWTH_ANNUAL_SUBSCRIPTION_AMOUNT'),
         'scale_monthly_amount' => env('SCALE_MONTHLY_SUBSCRIPTION_AMOUNT'),
         'scale_annual_amount' => env('SCALE_ANNUAL_SUBSCRIPTION_AMOUNT'),
+        'webhook_secret' => env('PADDLE_WEBHOOK_SECRET'),
     ],
     // NEW: Credit amounts per plan
     'credits' => [

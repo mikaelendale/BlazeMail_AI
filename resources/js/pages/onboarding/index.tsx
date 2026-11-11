@@ -368,10 +368,10 @@ export default function OnboardingWizard({ accounts, providers }: { accounts: an
                                     <div
                                         key={index}
                                         className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentStepIndex
-                                                ? 'bg-orange-500 w-6'
-                                                : index < currentStepIndex
-                                                    ? 'bg-orange-400'
-                                                    : 'bg-accent'
+                                            ? 'bg-orange-500 w-6'
+                                            : index < currentStepIndex
+                                                ? 'bg-orange-400'
+                                                : 'bg-accent'
                                             }`}
                                     />
                                 ))}

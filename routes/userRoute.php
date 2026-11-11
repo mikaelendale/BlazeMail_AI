@@ -73,15 +73,15 @@ Route::middleware(['auth', 'verified', 'role:user', 'onboarding', 'soon'])->grou
         ->name('user.email.generate.send.bulk');
     //scam checker 
     // 🔥 JOB MANAGEMENT ROUTES
-    Route::get('/jobs', [App\Http\Controllers\JobTrackerController::class, 'index'])
-        ->name('jobs.index');
+    // Route::get('/jobs', [App\Http\Controllers\JobTrackerController::class, 'index'])
+    //     ->name('jobs.index');
 
-    // 🔥 JOB TRACKER API ROUTES
-    Route::get('/api/jobs/recent', [App\Http\Controllers\JobTrackerController::class, 'getRecentJobs'])
-        ->name('jobs.recent');
+    // // 🔥 JOB TRACKER API ROUTES
+    // Route::get('/api/jobs/recent', [App\Http\Controllers\JobTrackerController::class, 'getRecentJobs'])
+    //     ->name('jobs.recent');
 
-    Route::get('/api/jobs/{batchId}/progress', [App\Http\Controllers\JobTrackerController::class, 'getJobProgress'])
-        ->name('jobs.progress.api');
+    // Route::get('/api/jobs/{batchId}/progress', [App\Http\Controllers\JobTrackerController::class, 'getJobProgress'])
+    //     ->name('jobs.progress.api');
 
     // 🔥 EMAIL REVIEW ROUTES
     Route::get('/emails/review/{batch}', [App\Http\Controllers\EmailReviewController::class, 'review'])

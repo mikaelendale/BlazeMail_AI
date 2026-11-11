@@ -42,7 +42,7 @@
     </script>
     <style>
         * {
-            font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'";
+            font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji' ";
 
         }
 
@@ -60,7 +60,7 @@
             --accent: 210 40% 96%;
             --accent-foreground: 222.2 84% 4.9%;
             --border: 214.3 31.8% 91.4%;
-        } 
+        }
     </style>
     @paddleJS
 </head>
@@ -105,7 +105,7 @@
     $options = $checkout->options();
     $options['settings']['frameTarget'] = 'paddle-checkout';
     $options['settings']['frameInitialHeight'] = 366;
-    ?>
+    ?> 
 
     <div class="paddle-checkout">
         <script>

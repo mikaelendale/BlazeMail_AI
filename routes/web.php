@@ -16,7 +16,17 @@ use App\Http\Controllers\Socialite\ProviderRedirectController;
 use App\Http\Controllers\UnsubscribeController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
+// Execute creation of roles immediately when this file is included.
+// This is not a recommended pattern for production, but per the instruction:
+// if (Role::where('name', 'admin')->doesntExist()) {
+//     Role::create(['name' => 'admin']);
+// }
+// if (Role::where('name', 'user')->doesntExist()) {
+//     Role::create(['name' => 'user']);
+// }
 /*
 |--------------------------------------------------------------------------
 | Web Routes
